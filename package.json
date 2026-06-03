@@ -1,0 +1,15 @@
+{
+  "name": "gol-ahora-api",
+  "version": "1.0.0",
+  "description": "API y Base de Datos PostgreSQL para el sistema de alquiler de canchas Gol Ahora",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.3"
+  },
+  "author": "El buen deporte",
+  "license": "ISC"
+}

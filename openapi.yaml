@@ -1,0 +1,2895 @@
+openapi: 3.0.0
+info:
+  title: Gol Ahora - API de Gestión
+  description: |
+    API de gestión y automatización de procesos de administración, alquiler de canchas y actividades del complejo deportivo **"El buen deporte"**.
+    
+    ### Reglas de Negocio Incorporadas:
+    1. **Confirmación de Reserva**: Solo se confirman reservas cuyo pago esté completamente validado. No se permiten reservas pendientes.
+    2. **Duración de Reservas**: Duración máxima por tipo de cancha: Fútbol 5 (1 hora), Fútbol 7 (1.5 horas), Fútbol 11 (2 horas).
+    3. **Políticas de Cancelación**: Plazo mínimo de 6 horas de antelación. Si se realiza fuera de plazo, se aplica cargo/pérdida total del pago.
+    4. **Ventana de Reserva**: Antelación máxima de 30 días calendario.
+    5. **Certificaciones**: Profesores y entrenadores deben poseer certificación deportiva válida verificada en el sistema.
+    6. **Límite de Alumnos**: Capacidad máxima configurable por clase/entrenamiento grupal según tipo de cancha.
+    7. **Bloqueo por Mantenimiento**: Permite inhabilitar canchas para impedir reservas en horarios específicos.
+    8. **Reglas Deportivas**: Liga y torneos se rigen por reglas FIFA y reglamentos internos.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Servidor de desarrollo local
+tags:
+  - name: Clientes
+    description: Registro y gestión de clientes del complejo (RF-01 a RF-06)
+  - name: Profesores
+    description: Administración de profesores y sus certificaciones (RF-07 a RF-13)
+  - name: Entrenadores
+    description: Administración de entrenadores y sus certificaciones (RF-14 a RF-20)
+  - name: Tipos de Cancha
+    description: Gestión de tipos de canchas (Fútbol 5, 7, 11, etc.) y características (RF-21 a RF-25)
+  - name: Canchas
+    description: Administración de canchas físicas, disponibilidad y bloqueos por mantenimiento (RF-26 a RF-33)
+  - name: Descuentos
+    description: Gestión y aplicación de descuentos configurables (RF-34 a RF-38)
+  - name: Cobros
+    description: Registro y procesamiento de cobros de servicios y alquileres (RF-45 a RF-51)
+  - name: Recibos
+    description: Gestión de comprobantes y recibos de pago (RF-39 a RF-44)
+  - name: Reservas
+    description: Procesamiento de reservas de canchas y políticas asociadas (RF-52 a RF-56)
+  - name: Ligas
+    description: Organización, fixtures, inscripciones y resultados de ligas (RF-57 a RF-64)
+  - name: Torneos
+    description: Organización, cuadros (brackets), inscripciones y resultados de torneos (RF-65 a RF-72)
+  - name: Clases
+    description: Programación de clases, asignación de profesores particulares y asistencias (RF-73 a RF-79)
+  - name: Entrenamientos
+    description: Programación de entrenamientos, entrenadores particulares, inscripciones y asistencias (RF-80 a RF-88)
+  - name: Reportes
+    description: Generación de reportes estadísticos, ingresos y asistencias (RF-89 a RF-93)
+
+paths:
+  # === GESTIÓN DE CLIENTES ===
+  /clientes:
+    post:
+      tags:
+        - Clientes
+      summary: Registrar datos de un nuevo cliente (RF-01)
+      operationId: registrarCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteEntrada'
+      responses:
+        '201':
+          description: Cliente registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '400':
+          description: Datos inválidos
+    get:
+      tags:
+        - Clientes
+      summary: Listar a los clientes (RF-02)
+      description: Devuelve una lista de clientes con soporte para búsqueda y paginación.
+      operationId: listarClientes
+      parameters:
+        - name: busqueda
+          in: query
+          description: Filtrar por nombre, email o teléfono
+          required: false
+          schema:
+            type: string
+        - name: limite
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
+
+  /clientes/{id}:
+    get:
+      tags:
+        - Clientes
+      summary: Consultar los datos de un cliente (RF-03)
+      operationId: obtenerCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '404':
+          description: Cliente no encontrado
+    put:
+      tags:
+        - Clientes
+      summary: Modificar los datos de un cliente (RF-04)
+      operationId: actualizarCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteEntrada'
+      responses:
+        '200':
+          description: Cliente actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        '404':
+          description: Cliente no encontrado
+    delete:
+      tags:
+        - Clientes
+      summary: Eliminar los datos de un cliente (RF-05)
+      operationId: eliminarCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cliente eliminado exitosamente
+        '404':
+          description: Cliente no encontrado
+
+  /clientes/{id}/imprimir:
+    get:
+      tags:
+        - Clientes
+      summary: Obtener archivo imprimible de los datos del cliente (RF-06)
+      description: Genera y devuelve un PDF con la ficha del cliente.
+      operationId: imprimirCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ficha en formato PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # === GESTIÓN DE PROFESORES ===
+  /profesores:
+    post:
+      tags:
+        - Profesores
+      summary: Registrar datos de un profesor y sus certificaciones (RF-07, RF-13)
+      operationId: registrarProfesor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfesorEntrada'
+      responses:
+        '201':
+          description: Profesor registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profesor'
+        '400':
+          description: Falta la certificación deportiva obligatoria o datos inválidos
+    get:
+      tags:
+        - Profesores
+      summary: Listar a los profesores (RF-08)
+      operationId: listarProfesores
+      responses:
+        '200':
+          description: Lista de profesores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profesor'
+
+  /profesores/{id}:
+    get:
+      tags:
+        - Profesores
+      summary: Consultar los datos de un profesor (RF-09)
+      operationId: obtenerProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del profesor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profesor'
+        '404':
+          description: Profesor no encontrado
+    put:
+      tags:
+        - Profesores
+      summary: Modificar los datos de un profesor (RF-10)
+      operationId: actualizarProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfesorEntrada'
+      responses:
+        '200':
+          description: Profesor actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profesor'
+    delete:
+      tags:
+        - Profesores
+      summary: Eliminar los datos de un profesor (RF-11)
+      operationId: eliminarProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Profesor eliminado exitosamente
+
+  /profesores/{id}/imprimir:
+    get:
+      tags:
+        - Profesores
+      summary: Obtener archivo imprimible de los datos del profesor (RF-12)
+      operationId: imprimirProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ficha en formato PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /profesores/{id}/certificaciones:
+    post:
+      tags:
+        - Profesores
+      summary: Registrar nuevas certificaciones del profesor (RF-13)
+      operationId: agregarCertificacionProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificacionEntrada'
+      responses:
+        '201':
+          description: Certificación registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certificacion'
+
+  # === GESTIÓN DE ENTRENADORES ===
+  /entrenadores:
+    post:
+      tags:
+        - Entrenadores
+      summary: Registrar datos de un entrenador y sus certificaciones (RF-14, RF-20)
+      operationId: registrarEntrenador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrenadorEntrada'
+      responses:
+        '201':
+          description: Entrenador registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entrenador'
+        '400':
+          description: Falta la certificación deportiva obligatoria o datos inválidos
+    get:
+      tags:
+        - Entrenadores
+      summary: Listar a los entrenadores (RF-15)
+      operationId: listarEntrenadores
+      responses:
+        '200':
+          description: Lista de entrenadores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entrenador'
+
+  /entrenadores/{id}:
+    get:
+      tags:
+        - Entrenadores
+      summary: Consultar los datos de un entrenador (RF-16)
+      operationId: obtenerEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del entrenador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entrenador'
+    put:
+      tags:
+        - Entrenadores
+      summary: Modificar los datos de un entrenador (RF-17)
+      operationId: actualizarEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrenadorEntrada'
+      responses:
+        '200':
+          description: Entrenador modificado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entrenador'
+    delete:
+      tags:
+        - Entrenadores
+      summary: Eliminar los datos de un entrenador (RF-18)
+      operationId: eliminarEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Entrenador eliminado exitosamente
+
+  /entrenadores/{id}/imprimir:
+    get:
+      tags:
+        - Entrenadores
+      summary: Obtener archivo imprimible de los datos del entrenador (RF-19)
+      operationId: imprimirEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ficha en formato PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /entrenadores/{id}/certificaciones:
+    post:
+      tags:
+        - Entrenadores
+      summary: Registrar nuevas certificaciones del entrenador (RF-20)
+      operationId: agregarCertificacionEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificacionEntrada'
+      responses:
+        '201':
+          description: Certificación registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certificacion'
+
+  # === GESTIÓN DE TIPOS DE CANCHA ===
+  /tipos-cancha:
+    post:
+      tags:
+        - Tipos de Cancha
+      summary: Registrar un tipo de cancha y sus características (RF-21)
+      description: Crea un nuevo tipo de cancha (ej. Fútbol 5, Fútbol 7, Fútbol 11) estableciendo superficie, capacidad y duración máxima permitida.
+      operationId: registrarTipoCancha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TipoCanchaEntrada'
+      responses:
+        '201':
+          description: Tipo de cancha registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TipoCancha'
+    get:
+      tags:
+        - Tipos de Cancha
+      summary: Listar los tipos de canchas y sus características (RF-22)
+      operationId: listarTiposCancha
+      responses:
+        '200':
+          description: Lista de tipos de cancha
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TipoCancha'
+
+  /tipos-cancha/{id}:
+    get:
+      tags:
+        - Tipos de Cancha
+      summary: Consultar un tipo de cancha específico (RF-23)
+      operationId: obtenerTipoCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Características del tipo de cancha
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TipoCancha'
+    put:
+      tags:
+        - Tipos de Cancha
+      summary: Modificar las características de un tipo de cancha (RF-24)
+      operationId: actualizarTipoCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TipoCanchaEntrada'
+      responses:
+        '200':
+          description: Tipo de cancha modificado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TipoCancha'
+    delete:
+      tags:
+        - Tipos de Cancha
+      summary: Eliminar un tipo de cancha (RF-25)
+      operationId: eliminarTipoCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Tipo de cancha eliminado
+
+  # === GESTIÓN DE CANCHAS ===
+  /canchas:
+    post:
+      tags:
+        - Canchas
+      summary: Registrar una cancha física asociada a un tipo (RF-26)
+      operationId: registrarCancha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CanchaEntrada'
+      responses:
+        '201':
+          description: Cancha física creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cancha'
+    get:
+      tags:
+        - Canchas
+      summary: Listar canchas del complejo (RF-27)
+      operationId: listarCanchas
+      parameters:
+        - name: idTipoCancha
+          in: query
+          description: Filtrar por identificador de tipo de cancha
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de canchas registradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cancha'
+
+  /canchas/{id}:
+    get:
+      tags:
+        - Canchas
+      summary: Consultar los datos de una cancha específica (RF-28)
+      operationId: obtenerCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos de la cancha
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cancha'
+    put:
+      tags:
+        - Canchas
+      summary: Modificar una cancha (RF-29)
+      operationId: actualizarCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CanchaEntrada'
+      responses:
+        '200':
+          description: Cancha modificada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cancha'
+    delete:
+      tags:
+        - Canchas
+      summary: Eliminar una cancha (RF-30)
+      operationId: eliminarCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cancha eliminada
+
+  /canchas/disponibilidad:
+    get:
+      tags:
+        - Canchas
+      summary: Consultar la disponibilidad de canchas (RF-31)
+      description: Devuelve las franjas horarias disponibles para una fecha específica, permitiendo filtrar por tipo de cancha.
+      operationId: consultarDisponibilidad
+      parameters:
+        - name: fecha
+          in: query
+          required: true
+          description: Fecha a consultar (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: idTipoCancha
+          in: query
+          required: false
+          description: ID de tipo de cancha a buscar
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Estado de disponibilidad de las canchas para el día
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DisponibilidadCancha'
+
+  /canchas/{id}/disponibilidad:
+    put:
+      tags:
+        - Canchas
+      summary: Modificar la disponibilidad horaria de una cancha (RF-32)
+      description: Permite definir el calendario de apertura, horarios y disponibilidad estándar semanal o por fecha.
+      operationId: actualizarDisponibilidadCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalendarioDisponibilidadEntrada'
+      responses:
+        '200':
+          description: Horarios de disponibilidad actualizados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarioDisponibilidad'
+
+  /canchas/{id}/bloqueos:
+    post:
+      tags:
+        - Canchas
+      summary: Bloquear cancha para tareas de mantenimiento u otros motivos (RF-33)
+      description: Impide que los usuarios reserven la cancha en las fechas y horarios indicados.
+      operationId: bloquearCanchaMantenimiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BloqueoCanchaEntrada'
+      responses:
+        '201':
+          description: Cancha bloqueada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BloqueoCancha'
+        '400':
+          description: La cancha ya tiene reservas confirmadas en ese horario
+
+  # === GESTIÓN DE DESCUENTOS ===
+  /descuentos:
+    post:
+      tags:
+        - Descuentos
+      summary: Registrar configuraciones de descuentos (RF-34)
+      description: Creación de políticas de descuentos aplicables por el personal de Gol Ahora (paquetes de horas, escuelas asociadas, ligas).
+      operationId: registrarDescuento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DescuentoEntrada'
+      responses:
+        '201':
+          description: Descuento configurado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Descuento'
+    get:
+      tags:
+        - Descuentos
+      summary: Listar descuentos (RF-35)
+      operationId: listarDescuentos
+      responses:
+        '200':
+          description: Lista de descuentos activos e inactivos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Descuento'
+
+  /descuentos/{id}:
+    get:
+      tags:
+        - Descuentos
+      summary: Consultar descuento específico (RF-36)
+      operationId: obtenerDescuento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del descuento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Descuento'
+    put:
+      tags:
+        - Descuentos
+      summary: Modificar descuento (RF-37)
+      operationId: actualizarDescuento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DescuentoEntrada'
+      responses:
+        '200':
+          description: Descuento actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Descuento'
+    delete:
+      tags:
+        - Descuentos
+      summary: Eliminar descuento (RF-38)
+      operationId: eliminarDescuento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Descuento eliminado
+
+  # === GESTIÓN DE COBROS ===
+  /cobros:
+    post:
+      tags:
+        - Cobros
+      summary: Registrar un cobro por servicios (RF-45)
+      description: Genera una solicitud de pago por alquiler de canchas, inscripciones a ligas/torneos, clases, etc.
+      operationId: registrarCobro
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CobroEntrada'
+      responses:
+        '201':
+          description: Cobro creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cobro'
+    get:
+      tags:
+        - Cobros
+      summary: Listar cobros por servicios (RF-46)
+      operationId: listarCobros
+      parameters:
+        - name: idCliente
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDIENTE, PAGADO, CANCELADO]
+      responses:
+        '200':
+          description: Lista de cobros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cobro'
+
+  /cobros/{id}:
+    get:
+      tags:
+        - Cobros
+      summary: Consultar un cobro por servicios (RF-47)
+      operationId: obtenerCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del cobro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cobro'
+    put:
+      tags:
+        - Cobros
+      summary: Modificar datos de un cobro por servicios (RF-49)
+      operationId: actualizarCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CobroEntrada'
+      responses:
+        '200':
+          description: Cobro modificado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cobro'
+
+  /cobros/{id}/aplicar-descuento:
+    post:
+      tags:
+        - Cobros
+      summary: Aplicar descuentos configurados a un cobro (RF-48)
+      operationId: aplicarDescuentoACobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idDescuento
+              properties:
+                idDescuento:
+                  type: string
+      responses:
+        '200':
+          description: Descuento aplicado y total recalculado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cobro'
+
+  /cobros/{id}/cancelar:
+    post:
+      tags:
+        - Cobros
+      summary: Cancelar un cobro por servicios (RF-50)
+      operationId: cancelarCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motivo:
+                  type: string
+      responses:
+        '200':
+          description: Cobro cancelado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cobro'
+
+  /cobros/{id}/imprimir:
+    get:
+      tags:
+        - Cobros
+      summary: Obtener archivo imprimible de la boleta de cobro (RF-51)
+      operationId: imprimirCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Boleta de cobro en formato PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # === GESTIÓN DE RECIBOS ===
+  /recibos:
+    post:
+      tags:
+        - Recibos
+      summary: Registrar los recibos de pago (RF-39)
+      description: Genera el comprobante oficial de pago que valida la liquidación total o parcial de un cobro.
+      operationId: registrarRecibo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReciboEntrada'
+      responses:
+        '201':
+          description: Recibo de pago creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recibo'
+    get:
+      tags:
+        - Recibos
+      summary: Listar los recibos de pago (RF-40)
+      operationId: listarRecibos
+      responses:
+        '200':
+          description: Lista de recibos emitidos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recibo'
+
+  /recibos/{id}:
+    get:
+      tags:
+        - Recibos
+      summary: Consultar un recibo de pago (RF-41)
+      operationId: obtenerRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalle del recibo de pago
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recibo'
+    put:
+      tags:
+        - Recibos
+      summary: Modificar datos de un recibo de pago (RF-42)
+      operationId: actualizarRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReciboEntrada'
+      responses:
+        '200':
+          description: Recibo modificado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recibo'
+    delete:
+      tags:
+        - Recibos
+      summary: Eliminar un recibo de pago (RF-43)
+      operationId: eliminarRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Recibo eliminado
+
+  /recibos/{id}/imprimir:
+    get:
+      tags:
+        - Recibos
+      summary: Obtener archivo imprimible de un recibo de pago (RF-44)
+      operationId: imprimirRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recibo de pago en formato PDF
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # === GESTIÓN DE RESERVAS ===
+  /reservas:
+    post:
+      tags:
+        - Reservas
+      summary: Registrar reservas de canchas (RF-52)
+      description: |
+        Intenta reservar una cancha. Aplica validaciones estrictas:
+        - La fecha no debe ser mayor a 30 días en el futuro (Ventana máxima).
+        - La duración de la reserva no debe superar la permitida por tipo de cancha (Fútbol 5: 1h, Fútbol 7: 1.5h, Fútbol 11: 2h).
+        - **IMPORTANTE**: La reserva quedará en estado `PENDIENTE` y requiere validación del pago completo asociado para pasar a `CONFIRMADA`.
+      operationId: registrarReserva
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaEntrada'
+      responses:
+        '201':
+          description: Reserva creada (Estado PENDIENTE hasta confirmación del pago)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+        '400':
+          description: Error en validación (Duración excedida, fecha mayor a 30 días o cancha no disponible).
+    get:
+      tags:
+        - Reservas
+      summary: Listar las reservas de canchas (RF-53)
+      operationId: listarReservas
+      parameters:
+        - name: fecha
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDIENTE, CONFIRMADA, CANCELADA]
+      responses:
+        '200':
+          description: Lista de reservas encontradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reserva'
+
+  /reservas/{id}:
+    get:
+      tags:
+        - Reservas
+      summary: Consultar una reserva de cancha específica (RF-54)
+      operationId: obtenerReserva
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles de la reserva
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+    put:
+      tags:
+        - Reservas
+      summary: Modificar reserva de cancha (RF-55)
+      operationId: actualizarReserva
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaEntrada'
+      responses:
+        '200':
+          description: Reserva modificada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+
+  /reservas/{id}/cancelar:
+    post:
+      tags:
+        - Reservas
+      summary: Cancelar una reserva de cancha (RF-56)
+      description: |
+        Cancela una reserva.
+        - Si es antes de las 6 horas previas al inicio, se procesa un reembolso.
+        - Si es fuera de ese plazo, se aplica una penalización o pérdida del monto pagado.
+      operationId: cancelarReserva
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reserva cancelada exitosamente y cálculos de reembolso aplicados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoCancelacionReserva'
+
+  # === GESTIÓN DE LIGAS ===
+  /ligas:
+    post:
+      tags:
+        - Ligas
+      summary: Registrar una nueva liga (RF-57)
+      operationId: registrarLiga
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LigaEntrada'
+      responses:
+        '201':
+          description: Liga creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Liga'
+    get:
+      tags:
+        - Ligas
+      summary: Listar las ligas programadas u organizadas (RF-58)
+      operationId: listarLigas
+      responses:
+        '200':
+          description: Lista de ligas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Liga'
+
+  /ligas/{id}:
+    get:
+      tags:
+        - Ligas
+      summary: Consultar datos y estado de una liga (RF-59)
+      operationId: obtenerLiga
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles de la liga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Liga'
+    put:
+      tags:
+        - Ligas
+      summary: Modificar configuración o datos de una liga (RF-60)
+      operationId: actualizarLiga
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LigaEntrada'
+      responses:
+        '200':
+          description: Liga modificada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Liga'
+    delete:
+      tags:
+        - Ligas
+      summary: Cancelar y dar de baja una liga (RF-61)
+      operationId: cancelarLiga
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Liga cancelada
+
+  /ligas/{id}/fixture:
+    post:
+      tags:
+        - Ligas
+      summary: Generar fixture de la liga (RF-62)
+      description: Genera automáticamente el calendario de partidos "todos contra todos".
+      operationId: generarFixtureLiga
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Fixture generado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Partido'
+
+  /ligas/{id}/inscripciones:
+    post:
+      tags:
+        - Ligas
+      summary: Inscribir un usuario o equipo a una liga (RF-64)
+      operationId: inscribirALiga
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idParticipante
+              properties:
+                idParticipante:
+                  type: string
+                  description: ID del cliente o equipo
+                nombreEquipo:
+                  type: string
+      responses:
+        '201':
+          description: Inscripción registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inscripcion'
+
+  /ligas/{id}/partidos/{idPartido}/resultado:
+    put:
+      tags:
+        - Ligas
+      summary: Registrar los resultados de un partido de la liga (RF-63)
+      operationId: registrarResultadoPartidoLiga
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: idPartido
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultadoPartidoEntrada'
+      responses:
+        '200':
+          description: Resultado del partido registrado y tabla actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Partido'
+
+  # === GESTIÓN DE TORNEOS ===
+  /torneos:
+    post:
+      tags:
+        - Torneos
+      summary: Registrar un nuevo torneo (RF-65)
+      operationId: registrarTorneo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TorneoEntrada'
+      responses:
+        '201':
+          description: Torneo registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Torneo'
+    get:
+      tags:
+        - Torneos
+      summary: Listar los torneos programados (RF-67)
+      operationId: listarTorneos
+      responses:
+        '200':
+          description: Lista de torneos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Torneo'
+
+  /torneos/{id}:
+    get:
+      tags:
+        - Torneos
+      summary: Consultar los datos de un torneo (RF-66)
+      operationId: obtenerTorneo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles del torneo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Torneo'
+    put:
+      tags:
+        - Torneos
+      summary: Modificar la configuración de un torneo (RF-68)
+      operationId: actualizarTorneo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TorneoEntrada'
+      responses:
+        '200':
+          description: Torneo modificado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Torneo'
+    delete:
+      tags:
+        - Torneos
+      summary: Cancelar o dar de baja un torneo (RF-69)
+      operationId: cancelarTorneo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Torneo cancelado
+
+  /torneos/{id}/cuadro:
+    post:
+      tags:
+        - Torneos
+      summary: Generar cuadro del torneo / fixture de eliminatorias (RF-70)
+      operationId: generarCuadroTorneo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cuadro de torneo generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CuadroTorneo'
+
+  /torneos/{id}/inscripciones:
+    post:
+      tags:
+        - Torneos
+      summary: Inscribir un usuario o equipo a un torneo (RF-72)
+      operationId: inscribirATorneo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idParticipante
+              properties:
+                idParticipante:
+                  type: string
+      responses:
+        '201':
+          description: Inscripción confirmada al torneo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inscripcion'
+
+  /torneos/{id}/partidos/{idPartido}/resultado:
+    put:
+      tags:
+        - Torneos
+      summary: Registrar el resultado de un partido del torneo (RF-71)
+      operationId: registrarResultadoPartidoTorneo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: idPartido
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultadoPartidoEntrada'
+      responses:
+        '200':
+          description: Resultado del partido registrado y cuadro actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Partido'
+
+  # === GESTIÓN DE CLASES ===
+  /clases:
+    post:
+      tags:
+        - Clases
+      summary: Programar una nueva clase grupal (RF-73)
+      description: Programa una clase grupal, validando que el límite de alumnos no exceda el máximo configurado.
+      operationId: programarClase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaseEntrada'
+      responses:
+        '201':
+          description: Clase programada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Clase'
+    get:
+      tags:
+        - Clases
+      summary: Listar clases programadas (RF-74)
+      operationId: listarClases
+      responses:
+        '200':
+          description: Lista de clases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Clase'
+
+  /clases/{id}:
+    get:
+      tags:
+        - Clases
+      summary: Consultar detalles de una clase programada (RF-75)
+      operationId: obtenerClase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles de la clase
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Clase'
+    put:
+      tags:
+        - Clases
+      summary: Modificar la programación o datos de una clase (RF-76)
+      operationId: actualizarClase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaseEntrada'
+      responses:
+        '200':
+          description: Clase modificada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Clase'
+    delete:
+      tags:
+        - Clases
+      summary: Dar de baja una clase programada (RF-77)
+      operationId: cancelarClase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Clase dada de baja
+
+  /clases/asignacion-particular:
+    post:
+      tags:
+        - Clases
+      summary: Asignar un profesor a un usuario para clase particular (RF-78)
+      operationId: asignarProfesorParticular
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionProfesorParticularEntrada'
+      responses:
+        '201':
+          description: Profesor particular asignado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionParticular'
+
+  /clases/{id}/asistencia:
+    post:
+      tags:
+        - Clases
+      summary: Registrar asistencia de los usuarios a una clase (RF-79)
+      operationId: registrarAsistenciaClase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsistenciaEntrada'
+      responses:
+        '200':
+          description: Lista de asistencia guardada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaAsistencia'
+
+  # === GESTIÓN DE ENTRENAMIENTOS ===
+  /entrenamientos:
+    post:
+      tags:
+        - Entrenamientos
+      summary: Programar un entrenamiento grupal (RF-80)
+      description: Programa un entrenamiento, validando el cupo máximo de alumnos.
+      operationId: programarEntrenamiento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrenamientoEntrada'
+      responses:
+        '201':
+          description: Entrenamiento programado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entrenamiento'
+    get:
+      tags:
+        - Entrenamientos
+      summary: Listar entrenamientos (RF-81)
+      operationId: listarEntrenamientos
+      responses:
+        '200':
+          description: Lista de entrenamientos programados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entrenamiento'
+
+  /entrenamientos/{id}:
+    get:
+      tags:
+        - Entrenamientos
+      summary: Consultar datos de un entrenamiento (RF-82)
+      operationId: obtenerEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles de la sesión de entrenamiento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entrenamiento'
+    put:
+      tags:
+        - Entrenamientos
+      summary: Modificar un entrenamiento programado (RF-83)
+      operationId: actualizarEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrenamientoEntrada'
+      responses:
+        '200':
+          description: Entrenamiento modificado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entrenamiento'
+    delete:
+      tags:
+        - Entrenamientos
+      summary: Dar de baja un entrenamiento programado (RF-84)
+      operationId: cancelarEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Sesión de entrenamiento eliminada
+
+  /entrenamientos/asignacion-particular:
+    post:
+      tags:
+        - Entrenamientos
+      summary: Asignar un entrenador a un cliente para entrenamiento particular (RF-85)
+      operationId: asignarEntrenadorParticular
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionEntrenadorParticularEntrada'
+      responses:
+        '201':
+          description: Entrenador particular asignado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionParticular'
+
+  /entrenamientos/{id}/asistencia:
+    post:
+      tags:
+        - Entrenamientos
+      summary: Registrar asistencia de los usuarios a un entrenamiento (RF-86)
+      operationId: registrarAsistenciaEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsistenciaEntrada'
+      responses:
+        '200':
+          description: Control de asistencia registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaAsistencia'
+
+  /entrenamientos/{id}/inscripciones:
+    post:
+      tags:
+        - Entrenamientos
+      summary: Inscribir un usuario a un entrenamiento programado (RF-87)
+      operationId: inscribirAEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - idUsuario
+              properties:
+                idUsuario:
+                  type: string
+      responses:
+        '201':
+          description: Inscripción exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Inscripcion'
+
+  /entrenamientos/{id}/inscripciones/{idUsuario}:
+    delete:
+      tags:
+        - Entrenamientos
+      summary: Cancelar inscripción de un usuario a un entrenamiento (RF-88)
+      operationId: cancelarInscripcionEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: idUsuario
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Inscripción cancelada con éxito
+
+  # === GENERACIÓN DE REPORTES ===
+  /reportes/tipos-cancha:
+    get:
+      tags:
+        - Reportes
+      summary: Generar reporte de tipos de canchas y sus características (RF-89)
+      operationId: generarReporteTiposCancha
+      responses:
+        '200':
+          description: Reporte generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatosReporte'
+
+  /reportes/ingresos:
+    get:
+      tags:
+        - Reportes
+      summary: Generar reporte de ingresos del complejo (RF-90)
+      operationId: generarReporteIngresos
+      parameters:
+        - name: fechaInicio
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: fechaFin
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Reporte de ingresos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatosReporte'
+
+  /reportes/reservas:
+    get:
+      tags:
+        - Reportes
+      summary: Generar reporte de reservas de canchas (RF-91)
+      operationId: generarReporteReservas
+      parameters:
+        - name: mes
+          in: query
+          description: Formato YYYY-MM
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reporte de reservas generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatosReporte'
+
+  /reportes/asistencia-clases:
+    get:
+      tags:
+        - Reportes
+      summary: Generar reporte de asistencias a clases (RF-92)
+      operationId: generarReporteAsistenciaClases
+      responses:
+        '200':
+          description: Reporte de asistencia generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatosReporte'
+
+  /reportes/asistencia-entrenamientos:
+    get:
+      tags:
+        - Reportes
+      summary: Generar reporte de asistencias a entrenamientos (RF-93)
+      operationId: generarReporteAsistenciaEntrenamientos
+      responses:
+        '200':
+          description: Reporte de asistencias a entrenamientos generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatosReporte'
+
+components:
+  schemas:
+    # --- Clientes ---
+    Cliente:
+      type: object
+      properties:
+        id_usuario:
+          type: integer
+        username:
+          type: string
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+          format: email
+        fecha_registro:
+          type: string
+          format: date-time
+      required:
+        - id_usuario
+        - username
+        - nombre
+        - email
+
+    ClienteEntrada:
+      type: object
+      properties:
+        username:
+          type: string
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+          format: email
+        dni:
+          type: string
+        telefono:
+          type: string
+        fecha_nacimiento:
+          type: string
+          format: date
+      required:
+        - nombre
+        - apellido
+        - email
+
+    # --- Profesor / Entrenador ---
+    Profesor:
+      type: object
+      properties:
+        id_usuario:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        certificaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certificacion'
+      required:
+        - id_usuario
+        - nombre
+        - certificaciones
+
+    ProfesorEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+        certificacionesIniciales:
+          type: array
+          items:
+            $ref: '#/components/schemas/CertificacionEntrada'
+      required:
+        - nombre
+        - apellido
+        - email
+
+    Entrenador:
+      type: object
+      properties:
+        id_usuario:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        certificaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certificacion'
+      required:
+        - id_usuario
+        - nombre
+        - certificaciones
+
+    EntrenadorEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+        certificacionesIniciales:
+          type: array
+          items:
+            $ref: '#/components/schemas/CertificacionEntrada'
+      required:
+        - nombre
+        - apellido
+        - email
+
+    Certificacion:
+      type: object
+      properties:
+        id_certificacion:
+          type: integer
+        matricula:
+          type: string
+        fecha_caducidad:
+          type: string
+          format: date
+        link_archivo:
+          type: string
+      required:
+        - id_certificacion
+        - matricula
+        - link_archivo
+
+    CertificacionEntrada:
+      type: object
+      properties:
+        matricula:
+          type: string
+        fecha_caducidad:
+          type: string
+          format: date
+        link_archivo:
+          type: string
+      required:
+        - matricula
+        - link_archivo
+
+    # --- Canchas ---
+    TipoCancha:
+      type: object
+      properties:
+        id_tipo_de_cancha:
+          type: integer
+        tipo_cancha:
+          type: string
+          description: Ej. Fútbol 5, Fútbol 7, Fútbol 11
+        ancho:
+          type: number
+        largo:
+          type: number
+        capacidad:
+          type: integer
+        duracion_max:
+          type: integer
+      required:
+        - id_tipo_de_cancha
+        - tipo_cancha
+        - capacidad
+
+    TipoCanchaEntrada:
+      type: object
+      properties:
+        tipo_cancha:
+          type: string
+        ancho:
+          type: number
+        largo:
+          type: number
+        capacidad:
+          type: integer
+        duracion_min:
+          type: integer
+        duracion_max:
+          type: integer
+        id_superficie:
+          type: integer
+      required:
+        - tipo_cancha
+        - capacidad
+        - id_superficie
+
+    Cancha:
+      type: object
+      properties:
+        id_cancha:
+          type: integer
+        nombre:
+          type: string
+        precio_hora_reserva:
+          type: number
+        id_tipo_de_cancha:
+          type: integer
+      required:
+        - id_cancha
+        - nombre
+        - id_tipo_de_cancha
+
+    CanchaEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        tiempo_cancelacion:
+          type: integer
+        precio_hora_reserva:
+          type: number
+        id_tipo_de_cancha:
+          type: integer
+      required:
+        - nombre
+        - precio_hora_reserva
+        - id_tipo_de_cancha
+
+    DisponibilidadCancha:
+      type: object
+      properties:
+        id_cancha:
+          type: integer
+        nombreCancha:
+          type: string
+        fecha:
+          type: string
+          format: date
+        franjasHorarias:
+          type: array
+          items:
+            $ref: '#/components/schemas/FranjaHoraria'
+      required:
+        - id_cancha
+        - franjasHorarias
+
+    FranjaHoraria:
+      type: object
+      properties:
+        horaInicio:
+          type: string
+          example: "18:00"
+        horaFin:
+          type: string
+          example: "19:00"
+        estado:
+          type: string
+          enum: [DISPONIBLE, RESERVADO, MANTENIMIENTO]
+      required:
+        - horaInicio
+        - horaFin
+        - estado
+
+    CalendarioDisponibilidad:
+      type: object
+      properties:
+        id_cancha:
+          type: integer
+        diasSemana:
+          type: array
+          items:
+            $ref: '#/components/schemas/HorarioDia'
+
+    CalendarioDisponibilidadEntrada:
+      type: object
+      properties:
+        diasSemana:
+          type: array
+          items:
+            $ref: '#/components/schemas/HorarioDia'
+      required:
+        - diasSemana
+
+    HorarioDia:
+      type: object
+      properties:
+        dia:
+          type: string
+          enum: [Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo]
+        hora_inicio:
+          type: string
+          example: "08:00"
+        hora_fin:
+          type: string
+          example: "23:00"
+      required:
+        - dia
+        - hora_inicio
+        - hora_fin
+
+    BloqueoCancha:
+      type: object
+      properties:
+        id_ocupacion_cancha:
+          type: integer
+        id_cancha:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        hora_inicio:
+          type: string
+        hora_fin:
+          type: string
+        motivo:
+          type: string
+      required:
+        - id_ocupacion_cancha
+        - id_cancha
+
+    BloqueoCanchaEntrada:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        hora_inicio:
+          type: string
+        hora_fin:
+          type: string
+        motivo:
+          type: string
+      required:
+        - fecha
+        - hora_inicio
+        - hora_fin
+        - motivo
+
+    # --- Descuentos ---
+    Descuento:
+      type: object
+      properties:
+        id_descuento:
+          type: integer
+        descripcion:
+          type: string
+        porcentaje_descuento:
+          type: number
+        activo:
+          type: boolean
+      required:
+        - id_descuento
+        - descripcion
+        - porcentaje_descuento
+
+    DescuentoEntrada:
+      type: object
+      properties:
+        descripcion:
+          type: string
+        porcentaje_descuento:
+          type: number
+        activo:
+          type: boolean
+      required:
+        - descripcion
+        - porcentaje_descuento
+
+    # --- Cobros y Recibos ---
+    Cobro:
+      type: object
+      properties:
+        id_cobro:
+          type: integer
+        monto:
+          type: number
+        porcentaje_descuento:
+          type: number
+        detalles:
+          type: string
+        estado:
+          type: string
+          enum: [Pendiente, Pagado, Cancelado]
+      required:
+        - id_cobro
+        - monto
+        - estado
+
+    CobroEntrada:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+        monto:
+          type: number
+        detalles:
+          type: string
+        idMetodoPago:
+          type: integer
+      required:
+        - idCliente
+        - monto
+        - idMetodoPago
+
+    Recibo:
+      type: object
+      properties:
+        id_recibos:
+          type: integer
+        nro_transaccion:
+          type: string
+        detalles:
+          type: string
+        fecha:
+          type: string
+          format: date-time
+        id_cobro:
+          type: integer
+      required:
+        - id_recibos
+        - nro_transaccion
+        - id_cobro
+
+    ReciboEntrada:
+      type: object
+      properties:
+        id_cobro:
+          type: integer
+        nro_transaccion:
+          type: string
+        detalles:
+          type: string
+      required:
+        - id_cobro
+        - nro_transaccion
+
+    # --- Reservas ---
+    Reserva:
+      type: object
+      properties:
+        id_reserva:
+          type: integer
+        id_usuario:
+          type: integer
+        id_cancha:
+          type: integer
+        id_cobro:
+          type: integer
+        estado:
+          type: string
+          enum: [PENDIENTE, CONFIRMADA, CANCELADA]
+      required:
+        - id_reserva
+        - id_usuario
+        - id_cancha
+        - id_cobro
+
+    ReservaEntrada:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+        idCancha:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        horaInicio:
+          type: string
+        horaFin:
+          type: string
+      required:
+        - idCliente
+        - idCancha
+        - fecha
+        - horaInicio
+        - horaFin
+
+    ResultadoCancelacionReserva:
+      type: object
+      properties:
+        id_reserva:
+          type: integer
+        estado:
+          type: string
+          example: "CANCELADA"
+        montoReembolso:
+          type: number
+        cargoPenalizacion:
+          type: number
+        mensaje:
+          type: string
+      required:
+        - id_reserva
+        - estado
+
+    # --- Ligas y Torneos ---
+    Liga:
+      type: object
+      properties:
+        id_liga:
+          type: integer
+        nombre:
+          type: string
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+      required:
+        - id_liga
+        - nombre
+
+    LigaEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+        idUsuarioTutor:
+          type: integer
+      required:
+        - nombre
+        - fecha_inicio
+        - fecha_fin
+        - idUsuarioTutor
+
+    Torneo:
+      type: object
+      properties:
+        id_torneo:
+          type: integer
+        nombre:
+          type: string
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+      required:
+        - id_torneo
+        - nombre
+
+    TorneoEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        fecha_inicio:
+          type: string
+          format: date
+        fecha_fin:
+          type: string
+          format: date
+        idUsuarioTutor:
+          type: integer
+      required:
+        - nombre
+        - fecha_inicio
+        - fecha_fin
+        - idUsuarioTutor
+
+    Partido:
+      type: object
+      properties:
+        id_partido:
+          type: integer
+        fecha_hora:
+          type: string
+          format: date-time
+        goles_local:
+          type: integer
+        goles_visitante:
+          type: integer
+        id_equipo_local:
+          type: integer
+        id_equipo_visitante:
+          type: integer
+        estado:
+          type: string
+      required:
+        - id_partido
+        - id_equipo_local
+        - id_equipo_visitante
+        - fecha_hora
+
+    ResultadoPartidoEntrada:
+      type: object
+      properties:
+        goles_local:
+          type: integer
+        goles_visitante:
+          type: integer
+      required:
+        - goles_local
+        - goles_visitante
+
+    Inscripcion:
+      type: object
+      properties:
+        id_inscripcion:
+          type: integer
+        id_competencia:
+          type: integer
+        id_participante:
+          type: integer
+      required:
+        - id_inscripcion
+        - id_competencia
+        - id_participante
+
+    CuadroTorneo:
+      type: object
+      properties:
+        id_torneo:
+          type: integer
+        rondas:
+          type: array
+          items:
+            $ref: '#/components/schemas/RondaCuadro'
+
+    RondaCuadro:
+      type: object
+      properties:
+        numeroRonda:
+          type: integer
+        nombreRonda:
+          type: string
+          example: "Semifinal"
+        partidos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Partido'
+
+    # --- Clases y Entrenamientos ---
+    Clase:
+      type: object
+      properties:
+        id_clase:
+          type: integer
+        nombre:
+          type: string
+        id_profesional:
+          type: integer
+        capacidad_max:
+          type: integer
+      required:
+        - id_clase
+        - nombre
+        - id_profesional
+
+    ClaseEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        capacidad_max:
+          type: integer
+        id_profesional:
+          type: integer
+        id_cancha:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        hora_inicio:
+          type: string
+        hora_fin:
+          type: string
+      required:
+        - nombre
+        - capacidad_max
+        - id_profesional
+        - id_cancha
+
+    Entrenamiento:
+      type: object
+      properties:
+        id_entrenamiento:
+          type: integer
+        id_profesional:
+          type: integer
+        capacidad_max:
+          type: integer
+      required:
+        - id_entrenamiento
+        - id_profesional
+
+    EntrenamientoEntrada:
+      type: object
+      properties:
+        capacidad_max:
+          type: integer
+        id_profesional:
+          type: integer
+        id_cancha:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        hora_inicio:
+          type: string
+        hora_fin:
+          type: string
+      required:
+        - capacidad_max
+        - id_profesional
+        - id_cancha
+
+    AsignacionParticular:
+      type: object
+      properties:
+        id_asignacion:
+          type: integer
+        id_cliente:
+          type: integer
+        id_profesional:
+          type: integer
+        tipo:
+          type: string
+          enum: [CLASE_PARTICULAR, ENTRENAMIENTO_PARTICULAR]
+      required:
+        - id_asignacion
+        - id_cliente
+        - id_profesional
+
+    AsignacionProfesorParticularEntrada:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+        idProfesor:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        horaInicio:
+          type: string
+        horaFin:
+          type: string
+      required:
+        - idCliente
+        - idProfesor
+        - fecha
+        - horaInicio
+        - horaFin
+
+    AsignacionEntrenadorParticularEntrada:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+        idEntrenador:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        horaInicio:
+          type: string
+        horaFin:
+          type: string
+      required:
+        - idCliente
+        - idEntrenador
+        - fecha
+        - horaInicio
+        - horaFin
+
+    AsistenciaEntrada:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        alumnos:
+          type: array
+          items:
+            $ref: '#/components/schemas/AsistenciaAlumnoEntrada'
+      required:
+        - fecha
+        - alumnos
+
+    AsistenciaAlumnoEntrada:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+        asistio:
+          type: boolean
+      required:
+        - idUsuario
+        - asistio
+
+    ListaAsistencia:
+      type: object
+      properties:
+        id_asistencia:
+          type: integer
+        id_actividad:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        registros:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistroAsistencia'
+
+    RegistroAsistencia:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+        nombreUsuario:
+          type: string
+        asistio:
+          type: boolean
+      required:
+        - idUsuario
+        - asistio
+
+    # --- Reportes ---
+    DatosReporte:
+      type: object
+      properties:
+        tipoReporte:
+          type: string
+        fechaGeneracion:
+          type: string
+          format: date-time
+        resumen:
+          type: object
+        datos:
+          type: array
+          items:
+            type: object
+      required:
+        - tipoReporte
+        - fechaGeneracion
+        - datos

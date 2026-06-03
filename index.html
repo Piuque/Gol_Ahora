@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gol Ahora - API de Gestión de Canchas</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Swagger UI CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  
+  <style>
+    :root {
+      --primary-color: #10b981; /* Esmeralda deportivo */
+      --primary-hover: #059669;
+      --bg-dark: #0f172a; /* Slate 900 */
+      --bg-darker: #020617; /* Slate 950 */
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8; /* Celeste moderno */
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Cabecera Premium */
+    header {
+      background: linear-gradient(135deg, var(--bg-darker) 0%, #1e293b 100%);
+      padding: 2.5rem 2rem;
+      border-bottom: 2px solid #334155;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -20%;
+      width: 140%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .logo-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #047857 100%);
+      color: white;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 1.5rem;
+      padding: 0.4rem 1.2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      letter-spacing: 1px;
+      transform: rotate(-2deg);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 2.8rem;
+      margin: 0;
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0.75rem auto 0;
+      font-weight: 300;
+    }
+
+    .badge-container {
+      margin-top: 1.2rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background-color: #1e293b;
+      border: 1px solid #475569;
+      color: var(--text-main);
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.3s ease;
+    }
+
+    .badge-primary {
+      border-color: var(--primary-color);
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+    }
+
+    /* Contenedor Swagger Custom */
+    .swagger-container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Modificaciones estéticas de Swagger UI para adaptarse al modo oscuro */
+    .swagger-ui {
+      filter: invert(0) !important;
+      background: #1e293b !important;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      border: 1px solid #334155;
+    }
+
+    /* Personalizar colores de Swagger */
+    .swagger-ui .info .title {
+      color: var(--text-main) !important;
+      font-family: 'Outfit', sans-serif !important;
+      font-weight: 700 !important;
+    }
+
+    .swagger-ui .info p, 
+    .swagger-ui .info li, 
+    .swagger-ui .info table,
+    .swagger-ui .info td,
+    .swagger-ui .info th {
+      color: var(--text-muted) !important;
+      font-family: 'Inter', sans-serif !important;
+    }
+
+    .swagger-ui .scheme-container {
+      background: #0f172a !important;
+      box-shadow: none !important;
+      border: 1px solid #334155 !important;
+      border-radius: 10px !important;
+      padding: 1rem !important;
+      margin-bottom: 1.5rem !important;
+    }
+
+    .swagger-ui select {
+      background-color: #1e293b !important;
+      color: var(--text-main) !important;
+      border: 1px solid #475569 !important;
+    }
+
+    .swagger-ui .opblock {
+      border-radius: 10px !important;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+      border: none !important;
+      margin-bottom: 0.8rem !important;
+    }
+
+    .swagger-ui .opblock .opblock-summary {
+      border: none !important;
+      padding: 0.75rem 1.5rem !important;
+    }
+
+    .swagger-ui .opblock .opblock-summary-method {
+      border-radius: 6px !important;
+      font-family: 'Outfit', sans-serif !important;
+      font-weight: 700 !important;
+    }
+
+    .swagger-ui .opblock-tag-section {
+      background: #111827 !important;
+      margin-bottom: 1.5rem !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      border: 1px solid #1f2937 !important;
+    }
+
+    .swagger-ui .opblock-tag {
+      background: #1f2937 !important;
+      color: var(--text-main) !important;
+      font-family: 'Outfit', sans-serif !important;
+      padding: 1rem !important;
+      border-bottom: 1px solid #374151 !important;
+    }
+
+    .swagger-ui .opblock-tag:hover {
+      background: #374151 !important;
+    }
+
+    /* Estilo del Footer */
+    footer {
+      text-align: center;
+      padding: 2.5rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid #1e293b;
+      margin-top: 4rem;
+      background-color: var(--bg-darker);
+    }
+
+    footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-badge">GOL</div>
+      <h1>Gol Ahora</h1>
+    </div>
+    <div class="subtitle">
+      Sistema de Gestión y Alquiler de Canchas de Fútbol para el Complejo Deportivo <strong>"El buen deporte"</strong>.
+    </div>
+    <div class="badge-container">
+      <span class="badge badge-primary">OpenAPI 3.0.0</span>
+      <span class="badge">93 Requisitos Funcionales</span>
+      <span class="badge">Swagger UI v5</span>
+      <span class="badge">Complejo: El buen deporte</span>
+    </div>
+  </header>
+
+  <main class="swagger-container">
+    <div id="swagger-ui"></div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Gol Ahora. Desarrollado para <strong>El buen deporte</strong>.</p>
+    <p>API diseñada bajo especificaciones RESTful de alto rendimiento y seguridad.</p>
+  </footer>
+
+  <!-- Swagger UI Scripts -->
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  
+  <script>
+    window.onload = function() {
+      // Configurar Swagger UI cargando el archivo openapi.yaml local
+      const ui = SwaggerUIBundle({
+        url: "./openapi.yaml",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "BaseLayout",
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 1,
+        displayRequestDuration: true,
+        docExpansion: 'list'
+      });
+      window.ui = ui;
+    };
+  </script>
+</body>
+</html>
