@@ -10,8 +10,8 @@ info:
     3. **Administrador (Personal/Staff del club)**: Empleados y coordinadores. Tienen el control total de la gestión de clientes, profesores/entrenadores (certificaciones), canchas físicas (mantenimiento y horarios), políticas de descuentos, cobros globales, organización de ligas y torneos (inscripción de equipos, generación de fixtures, brackets y resultados de partidos) y generación de reportes financieros y de asistencia.
   version: 1.0.0
 servers:
-  - url: http://localhost:3000/api/v1
-    description: Servidor de desarrollo local
+  - url: /
+    description: Servidor principal (Autodetectado)
 tags:
   - name: 1. Acceso Usuario (Público)
     description: Endpoints públicos generales para visitantes no registrados
