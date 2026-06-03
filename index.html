@@ -216,7 +216,7 @@
     window.onload = function() {
       // Configurar Swagger UI cargando el archivo openapi.yaml local
       const ui = SwaggerUIBundle({
-        url: "./openapi.yaml",
+        url: "./openapi.yaml?v=" + Date.now(),
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [
