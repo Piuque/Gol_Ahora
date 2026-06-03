@@ -2,7 +2,7 @@ const db = require('../config/db.js');
 
 const authMiddleware = async (req, res, next) => {
   // Soporte para testing/Swagger: buscamos x-user-id en headers, query o body.
-  const userId = req.headers['x-user-id'] || req.query.userId || req.body.userId;
+  const userId = req.headers['x-user-id'] || req.query.userId || (req.body && req.body.userId);
   
   if (!userId) {
     // Si no se proporciona ID, por defecto lo tratamos como público/visitante
