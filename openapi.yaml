@@ -297,7 +297,7 @@ paths:
     get:
       tags:
         - 2. Acceso Cliente (Registrado)
-      summary: Listar sus clases (2 listados: Oferta disponible y Clases contratadas/particulares) (RF-74)
+      summary: "Listar sus clases (2 listados: Oferta disponible y Clases contratadas/particulares) (RF-74)"
       operationId: listarMisClases
       parameters:
         - name: tipo
@@ -356,7 +356,7 @@ paths:
     get:
       tags:
         - 2. Acceso Cliente (Registrado)
-      summary: Listar sus entrenamientos (2 listados: Oferta disponible y Entrenamientos inscritos/particulares) (RF-81)
+      summary: "Listar sus entrenamientos (2 listados: Oferta disponible y Entrenamientos inscritos/particulares) (RF-81)"
       operationId: listarMisEntrenamientos
       parameters:
         - name: tipo
