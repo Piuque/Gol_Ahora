@@ -32,6 +32,9 @@ app.use(express.static(path.join(__dirname), {
   }
 }));
 
+// Servir archivos estáticos del frontend desde la carpeta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Endpoint de fallback para Swagger UI
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
