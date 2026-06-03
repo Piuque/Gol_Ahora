@@ -32,10 +32,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // --- Endpoints de la API Dinámica en Español (PostgreSQL) ---
+  // --- Endpoints de la API Dinámica por Roles (PostgreSQL) ---
 
-  // GET /api/v1/clientes
-  if (req.url === '/api/v1/clientes' && req.method === 'GET') {
+  // GET /api/v1/admin/clientes (Acceso Administrador / Personal)
+  if (req.url === '/api/v1/admin/clientes' && req.method === 'GET') {
     try {
       const clients = await query.all('SELECT * FROM usuarios ORDER BY id_usuario ASC');
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -47,8 +47,8 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // POST /api/v1/clientes
-  if (req.url === '/api/v1/clientes' && req.method === 'POST') {
+  // POST /api/v1/usuario/registro (Acceso Usuario / Público no registrado)
+  if (req.url === '/api/v1/usuario/registro' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();
@@ -102,6 +102,16 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(201, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(newClient, null, 2));
       } catch (err) {
+        // Interceptamos la violación de restricción única de PostgreSQL (Código 23505)
+        if (err.code === '23505') {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            error: 'Datos duplicados', 
+            details: 'El nombre de usuario (username), correo electrónico (email) o DNI ya se encuentra registrado en el complejo. Por favor, ingresa valores diferentes.' 
+          }));
+          return;
+        }
+
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Error al registrar cliente en PostgreSQL', message: err.message }));
       }
@@ -143,9 +153,9 @@ server.listen(PORT, () => {
   console.log(`==================================================`);
   console.log(`Servidor de Gol Ahora corriendo en http://localhost:${PORT}`);
   console.log(`Abre el navegador en http://localhost:${PORT} para explorar Swagger UI`);
-  console.log(`Endpoints PostgreSQL disponibles de prueba (en español):`);
-  console.log(`  - GET  http://localhost:${PORT}/api/v1/clientes`);
-  console.log(`  - POST http://localhost:${PORT}/api/v1/clientes`);
+  console.log(`Endpoints PostgreSQL disponibles de prueba por roles:`);
+  console.log(`  - POST http://localhost:${PORT}/api/v1/usuario/registro  (Usuario / Público)`);
+  console.log(`  - GET  http://localhost:${PORT}/api/v1/admin/clientes    (Administrador / Personal)`);
   console.log(`Presiona Ctrl+C para detener el servidor`);
   console.log(`==================================================`);
 });

@@ -4,57 +4,32 @@ info:
   description: |
     API de gestión y automatización de procesos de administración, alquiler de canchas y actividades del complejo deportivo **"El buen deporte"**.
     
-    ### Reglas de Negocio Incorporadas:
-    1. **Confirmación de Reserva**: Solo se confirman reservas cuyo pago esté completamente validado. No se permiten reservas pendientes.
-    2. **Duración de Reservas**: Duración máxima por tipo de cancha: Fútbol 5 (1 hora), Fútbol 7 (1.5 horas), Fútbol 11 (2 horas).
-    3. **Políticas de Cancelación**: Plazo mínimo de 6 horas de antelación. Si se realiza fuera de plazo, se aplica cargo/pérdida total del pago.
-    4. **Ventana de Reserva**: Antelación máxima de 30 días calendario.
-    5. **Certificaciones**: Profesores y entrenadores deben poseer certificación deportiva válida verificada en el sistema.
-    6. **Límite de Alumnos**: Capacidad máxima configurable por clase/entrenamiento grupal según tipo de cancha.
-    7. **Bloqueo por Mantenimiento**: Permite inhabilitar canchas para impedir reservas en horarios específicos.
-    8. **Reglas Deportivas**: Liga y torneos se rigen por reglas FIFA y reglamentos internos.
+    ### Niveles de Acceso y Roles:
+    1. **Usuario (Público - Visitante no registrado)**: Puede registrarse, listar canchas/tipos, ver la disponibilidad de horarios y ver la oferta pública de clases y entrenamientos.
+    2. **Cliente (Registrado)**: Deportista con cuenta. Puede gestionar su perfil, realizar, modificar y cancelar reservas (previo pago), e inscribirse o darse de baja en clases y entrenamientos grupales o particulares. Solo consulta su propia facturación (cobros/recibos). No participa directamente en la creación ni inscripción de ligas/torneos.
+    3. **Administrador (Personal/Staff del club)**: Empleados y coordinadores. Tienen el control total de la gestión de clientes, profesores/entrenadores (certificaciones), canchas físicas (mantenimiento y horarios), políticas de descuentos, cobros globales, organización de ligas y torneos (inscripción de equipos, generación de fixtures, brackets y resultados de partidos) y generación de reportes financieros y de asistencia.
   version: 1.0.0
 servers:
   - url: http://localhost:3000/api/v1
     description: Servidor de desarrollo local
 tags:
-  - name: Clientes
-    description: Registro y gestión de clientes del complejo (RF-01 a RF-06)
-  - name: Profesores
-    description: Administración de profesores y sus certificaciones (RF-07 a RF-13)
-  - name: Entrenadores
-    description: Administración de entrenadores y sus certificaciones (RF-14 a RF-20)
-  - name: Tipos de Cancha
-    description: Gestión de tipos de canchas (Fútbol 5, 7, 11, etc.) y características (RF-21 a RF-25)
-  - name: Canchas
-    description: Administración de canchas físicas, disponibilidad y bloqueos por mantenimiento (RF-26 a RF-33)
-  - name: Descuentos
-    description: Gestión y aplicación de descuentos configurables (RF-34 a RF-38)
-  - name: Cobros
-    description: Registro y procesamiento de cobros de servicios y alquileres (RF-45 a RF-51)
-  - name: Recibos
-    description: Gestión de comprobantes y recibos de pago (RF-39 a RF-44)
-  - name: Reservas
-    description: Procesamiento de reservas de canchas y políticas asociadas (RF-52 a RF-56)
-  - name: Ligas
-    description: Organización, fixtures, inscripciones y resultados de ligas (RF-57 a RF-64)
-  - name: Torneos
-    description: Organización, cuadros (brackets), inscripciones y resultados de torneos (RF-65 a RF-72)
-  - name: Clases
-    description: Programación de clases, asignación de profesores particulares y asistencias (RF-73 a RF-79)
-  - name: Entrenamientos
-    description: Programación de entrenamientos, entrenadores particulares, inscripciones y asistencias (RF-80 a RF-88)
-  - name: Reportes
-    description: Generación de reportes estadísticos, ingresos y asistencias (RF-89 a RF-93)
+  - name: 1. Acceso Usuario (Público)
+    description: Endpoints públicos generales para visitantes no registrados
+  - name: 2. Acceso Cliente (Registrado)
+    description: Endpoints privados para deportistas registrados (Reservas, Clases, Finanzas propias)
+  - name: 3. Acceso Administrador (Personal)
+    description: Endpoints operativos y de gestión exclusiva para el personal del club
 
 paths:
-  # === GESTIÓN DE CLIENTES ===
-  /clientes:
+  # ==========================================
+  # === 1. ACCESO USUARIO (PÚBLICO) ===
+  # ==========================================
+  /usuario/registro:
     post:
       tags:
-        - Clientes
-      summary: Registrar datos de un nuevo cliente (RF-01)
-      operationId: registrarCliente
+        - 1. Acceso Usuario (Público)
+      summary: Registrarse como nuevo cliente en el sistema (RF-01)
+      operationId: registrarNuevoUsuario
       requestBody:
         required: true
         content:
@@ -69,537 +44,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/Cliente'
         '400':
-          description: Datos inválidos
+          description: Datos inválidos o duplicados (DNI/Username/Email ya registrados)
+
+  /usuario/canchas:
     get:
       tags:
-        - Clientes
-      summary: Listar a los clientes (RF-02)
-      description: Devuelve una lista de clientes con soporte para búsqueda y paginación.
-      operationId: listarClientes
-      parameters:
-        - name: busqueda
-          in: query
-          description: Filtrar por nombre, email o teléfono
-          required: false
-          schema:
-            type: string
-        - name: limite
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: Lista de clientes
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cliente'
-
-  /clientes/{id}:
-    get:
-      tags:
-        - Clientes
-      summary: Consultar los datos de un cliente (RF-03)
-      operationId: obtenerCliente
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Datos del cliente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cliente'
-        '404':
-          description: Cliente no encontrado
-    put:
-      tags:
-        - Clientes
-      summary: Modificar los datos de un cliente (RF-04)
-      operationId: actualizarCliente
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClienteEntrada'
-      responses:
-        '200':
-          description: Cliente actualizado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cliente'
-        '404':
-          description: Cliente no encontrado
-    delete:
-      tags:
-        - Clientes
-      summary: Eliminar los datos de un cliente (RF-05)
-      operationId: eliminarCliente
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Cliente eliminado exitosamente
-        '404':
-          description: Cliente no encontrado
-
-  /clientes/{id}/imprimir:
-    get:
-      tags:
-        - Clientes
-      summary: Obtener archivo imprimible de los datos del cliente (RF-06)
-      description: Genera y devuelve un PDF con la ficha del cliente.
-      operationId: imprimirCliente
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Ficha en formato PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-
-  # === GESTIÓN DE PROFESORES ===
-  /profesores:
-    post:
-      tags:
-        - Profesores
-      summary: Registrar datos de un profesor y sus certificaciones (RF-07, RF-13)
-      operationId: registrarProfesor
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProfesorEntrada'
-      responses:
-        '201':
-          description: Profesor registrado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profesor'
-        '400':
-          description: Falta la certificación deportiva obligatoria o datos inválidos
-    get:
-      tags:
-        - Profesores
-      summary: Listar a los profesores (RF-08)
-      operationId: listarProfesores
-      responses:
-        '200':
-          description: Lista de profesores
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Profesor'
-
-  /profesores/{id}:
-    get:
-      tags:
-        - Profesores
-      summary: Consultar los datos de un profesor (RF-09)
-      operationId: obtenerProfesor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Datos del profesor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profesor'
-        '404':
-          description: Profesor no encontrado
-    put:
-      tags:
-        - Profesores
-      summary: Modificar los datos de un profesor (RF-10)
-      operationId: actualizarProfesor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProfesorEntrada'
-      responses:
-        '200':
-          description: Profesor actualizado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profesor'
-    delete:
-      tags:
-        - Profesores
-      summary: Eliminar los datos de un profesor (RF-11)
-      operationId: eliminarProfesor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Profesor eliminado exitosamente
-
-  /profesores/{id}/imprimir:
-    get:
-      tags:
-        - Profesores
-      summary: Obtener archivo imprimible de los datos del profesor (RF-12)
-      operationId: imprimirProfesor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Ficha en formato PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-
-  /profesores/{id}/certificaciones:
-    post:
-      tags:
-        - Profesores
-      summary: Registrar nuevas certificaciones del profesor (RF-13)
-      operationId: agregarCertificacionProfesor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CertificacionEntrada'
-      responses:
-        '201':
-          description: Certificación registrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Certificacion'
-
-  # === GESTIÓN DE ENTRENADORES ===
-  /entrenadores:
-    post:
-      tags:
-        - Entrenadores
-      summary: Registrar datos de un entrenador y sus certificaciones (RF-14, RF-20)
-      operationId: registrarEntrenador
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EntrenadorEntrada'
-      responses:
-        '201':
-          description: Entrenador registrado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Entrenador'
-        '400':
-          description: Falta la certificación deportiva obligatoria o datos inválidos
-    get:
-      tags:
-        - Entrenadores
-      summary: Listar a los entrenadores (RF-15)
-      operationId: listarEntrenadores
-      responses:
-        '200':
-          description: Lista de entrenadores
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Entrenador'
-
-  /entrenadores/{id}:
-    get:
-      tags:
-        - Entrenadores
-      summary: Consultar los datos de un entrenador (RF-16)
-      operationId: obtenerEntrenador
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Datos del entrenador
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Entrenador'
-    put:
-      tags:
-        - Entrenadores
-      summary: Modificar los datos de un entrenador (RF-17)
-      operationId: actualizarEntrenador
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EntrenadorEntrada'
-      responses:
-        '200':
-          description: Entrenador modificado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Entrenador'
-    delete:
-      tags:
-        - Entrenadores
-      summary: Eliminar los datos de un entrenador (RF-18)
-      operationId: eliminarEntrenador
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Entrenador eliminado exitosamente
-
-  /entrenadores/{id}/imprimir:
-    get:
-      tags:
-        - Entrenadores
-      summary: Obtener archivo imprimible de los datos del entrenador (RF-19)
-      operationId: imprimirEntrenador
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Ficha en formato PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-
-  /entrenadores/{id}/certificaciones:
-    post:
-      tags:
-        - Entrenadores
-      summary: Registrar nuevas certificaciones del entrenador (RF-20)
-      operationId: agregarCertificacionEntrenador
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CertificacionEntrada'
-      responses:
-        '201':
-          description: Certificación registrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Certificacion'
-
-  # === GESTIÓN DE TIPOS DE CANCHA ===
-  /tipos-cancha:
-    post:
-      tags:
-        - Tipos de Cancha
-      summary: Registrar un tipo de cancha y sus características (RF-21)
-      description: Crea un nuevo tipo de cancha (ej. Fútbol 5, Fútbol 7, Fútbol 11) estableciendo superficie, capacidad y duración máxima permitida.
-      operationId: registrarTipoCancha
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TipoCanchaEntrada'
-      responses:
-        '201':
-          description: Tipo de cancha registrado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TipoCancha'
-    get:
-      tags:
-        - Tipos de Cancha
-      summary: Listar los tipos de canchas y sus características (RF-22)
-      operationId: listarTiposCancha
-      responses:
-        '200':
-          description: Lista de tipos de cancha
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TipoCancha'
-
-  /tipos-cancha/{id}:
-    get:
-      tags:
-        - Tipos de Cancha
-      summary: Consultar un tipo de cancha específico (RF-23)
-      operationId: obtenerTipoCancha
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Características del tipo de cancha
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TipoCancha'
-    put:
-      tags:
-        - Tipos de Cancha
-      summary: Modificar las características de un tipo de cancha (RF-24)
-      operationId: actualizarTipoCancha
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TipoCanchaEntrada'
-      responses:
-        '200':
-          description: Tipo de cancha modificado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TipoCancha'
-    delete:
-      tags:
-        - Tipos de Cancha
-      summary: Eliminar un tipo de cancha (RF-25)
-      operationId: eliminarTipoCancha
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Tipo de cancha eliminado
-
-  # === GESTIÓN DE CANCHAS ===
-  /canchas:
-    post:
-      tags:
-        - Canchas
-      summary: Registrar una cancha física asociada a un tipo (RF-26)
-      operationId: registrarCancha
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CanchaEntrada'
-      responses:
-        '201':
-          description: Cancha física creada exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cancha'
-    get:
-      tags:
-        - Canchas
-      summary: Listar canchas del complejo (RF-27)
-      operationId: listarCanchas
+        - 1. Acceso Usuario (Público)
+      summary: Listar canchas del complejo con características (RF-27)
+      operationId: listarCanchasPublicas
       parameters:
         - name: idTipoCancha
           in: query
-          description: Filtrar por identificador de tipo de cancha
           required: false
           schema:
             type: string
       responses:
         '200':
-          description: Lista de canchas registradas
+          description: Lista de canchas físicas
           content:
             application/json:
               schema:
@@ -607,71 +68,28 @@ paths:
                 items:
                   $ref: '#/components/schemas/Cancha'
 
-  /canchas/{id}:
+  /usuario/tipos-cancha:
     get:
       tags:
-        - Canchas
-      summary: Consultar los datos de una cancha específica (RF-28)
-      operationId: obtenerCancha
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - 1. Acceso Usuario (Público)
+      summary: Listar los tipos de canchas y sus características (RF-22)
+      operationId: listarTiposCanchaPublicos
       responses:
         '200':
-          description: Datos de la cancha
+          description: Lista de tipos de canchas (Fútbol 5, 7, 11)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Cancha'
-    put:
-      tags:
-        - Canchas
-      summary: Modificar una cancha (RF-29)
-      operationId: actualizarCancha
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CanchaEntrada'
-      responses:
-        '200':
-          description: Cancha modificada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cancha'
-    delete:
-      tags:
-        - Canchas
-      summary: Eliminar una cancha (RF-30)
-      operationId: eliminarCancha
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Cancha eliminada
+                type: array
+                items:
+                  $ref: '#/components/schemas/TipoCancha'
 
-  /canchas/disponibilidad:
+  /usuario/canchas/disponibilidad:
     get:
       tags:
-        - Canchas
-      summary: Consultar la disponibilidad de canchas (RF-31)
-      description: Devuelve las franjas horarias disponibles para una fecha específica, permitiendo filtrar por tipo de cancha.
-      operationId: consultarDisponibilidad
+        - 1. Acceso Usuario (Público)
+      summary: Consultar la disponibilidad horaria general de las canchas (RF-31)
+      operationId: consultarDisponibilidadPublica
       parameters:
         - name: fecha
           in: query
@@ -683,12 +101,11 @@ paths:
         - name: idTipoCancha
           in: query
           required: false
-          description: ID de tipo de cancha a buscar
           schema:
             type: string
       responses:
         '200':
-          description: Estado de disponibilidad de las canchas para el día
+          description: Horarios de disponibilidad por cancha
           content:
             application/json:
               schema:
@@ -696,456 +113,106 @@ paths:
                 items:
                   $ref: '#/components/schemas/DisponibilidadCancha'
 
-  /canchas/{id}/disponibilidad:
-    put:
-      tags:
-        - Canchas
-      summary: Modificar la disponibilidad horaria de una cancha (RF-32)
-      description: Permite definir el calendario de apertura, horarios y disponibilidad estándar semanal o por fecha.
-      operationId: actualizarDisponibilidadCancha
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CalendarioDisponibilidadEntrada'
-      responses:
-        '200':
-          description: Horarios de disponibilidad actualizados
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CalendarioDisponibilidad'
-
-  /canchas/{id}/bloqueos:
-    post:
-      tags:
-        - Canchas
-      summary: Bloquear cancha para tareas de mantenimiento u otros motivos (RF-33)
-      description: Impide que los usuarios reserven la cancha en las fechas y horarios indicados.
-      operationId: bloquearCanchaMantenimiento
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BloqueoCanchaEntrada'
-      responses:
-        '201':
-          description: Cancha bloqueada exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BloqueoCancha'
-        '400':
-          description: La cancha ya tiene reservas confirmadas en ese horario
-
-  # === GESTIÓN DE DESCUENTOS ===
-  /descuentos:
-    post:
-      tags:
-        - Descuentos
-      summary: Registrar configuraciones de descuentos (RF-34)
-      description: Creación de políticas de descuentos aplicables por el personal de Gol Ahora (paquetes de horas, escuelas asociadas, ligas).
-      operationId: registrarDescuento
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DescuentoEntrada'
-      responses:
-        '201':
-          description: Descuento configurado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Descuento'
+  /usuario/clases:
     get:
       tags:
-        - Descuentos
-      summary: Listar descuentos (RF-35)
-      operationId: listarDescuentos
+        - 1. Acceso Usuario (Público)
+      summary: Consultar la oferta general de clases programadas (RF-74)
+      operationId: listarClasesPublicas
       responses:
         '200':
-          description: Lista de descuentos activos e inactivos
+          description: Lista de clases ofrecidas
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Descuento'
+                  $ref: '#/components/schemas/Clase'
 
-  /descuentos/{id}:
+  /usuario/entrenamientos:
     get:
       tags:
-        - Descuentos
-      summary: Consultar descuento específico (RF-36)
-      operationId: obtenerDescuento
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - 1. Acceso Usuario (Público)
+      summary: Consultar la oferta general de entrenamientos programados (RF-81)
+      operationId: listarEntrenamientosPublicos
       responses:
         '200':
-          description: Datos del descuento
+          description: Lista de entrenamientos grupales ofrecidos
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Descuento'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entrenamiento'
+
+  # ==========================================
+  # === 2. ACCESO CLIENTE (REGISTRADO) ===
+  # ==========================================
+  /cliente/perfil:
+    get:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Consultar sus datos personales (RF-03)
+      operationId: obtenerPerfilCliente
+      responses:
+        '200':
+          description: Datos del cliente logueado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
     put:
       tags:
-        - Descuentos
-      summary: Modificar descuento (RF-37)
-      operationId: actualizarDescuento
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - 2. Acceso Cliente (Registrado)
+      summary: Modificar sus propios datos de perfil (RF-04)
+      operationId: modificarPerfilCliente
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DescuentoEntrada'
+              $ref: '#/components/schemas/ClienteEntrada'
       responses:
         '200':
-          description: Descuento actualizado
+          description: Perfil actualizado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Descuento'
-    delete:
-      tags:
-        - Descuentos
-      summary: Eliminar descuento (RF-38)
-      operationId: eliminarDescuento
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Descuento eliminado
+                $ref: '#/components/schemas/Cliente'
 
-  # === GESTIÓN DE COBROS ===
-  /cobros:
-    post:
-      tags:
-        - Cobros
-      summary: Registrar un cobro por servicios (RF-45)
-      description: Genera una solicitud de pago por alquiler de canchas, inscripciones a ligas/torneos, clases, etc.
-      operationId: registrarCobro
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CobroEntrada'
-      responses:
-        '201':
-          description: Cobro creado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cobro'
+  /cliente/canchas:
     get:
       tags:
-        - Cobros
-      summary: Listar cobros por servicios (RF-46)
-      operationId: listarCobros
+        - 2. Acceso Cliente (Registrado)
+      summary: Listar e investigar características de canchas físicas para reservar (RF-27)
+      operationId: listarCanchasCliente
       parameters:
-        - name: idCliente
+        - name: idTipoCancha
           in: query
           required: false
           schema:
             type: string
-        - name: estado
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [PENDIENTE, PAGADO, CANCELADO]
       responses:
         '200':
-          description: Lista de cobros
+          description: Lista de canchas
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Cobro'
+                  $ref: '#/components/schemas/Cancha'
 
-  /cobros/{id}:
-    get:
-      tags:
-        - Cobros
-      summary: Consultar un cobro por servicios (RF-47)
-      operationId: obtenerCobro
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Datos del cobro
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cobro'
-    put:
-      tags:
-        - Cobros
-      summary: Modificar datos de un cobro por servicios (RF-49)
-      operationId: actualizarCobro
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CobroEntrada'
-      responses:
-        '200':
-          description: Cobro modificado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cobro'
-
-  /cobros/{id}/aplicar-descuento:
+  /cliente/reservas:
     post:
       tags:
-        - Cobros
-      summary: Aplicar descuentos configurados a un cobro (RF-48)
-      operationId: aplicarDescuentoACobro
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - idDescuento
-              properties:
-                idDescuento:
-                  type: string
-      responses:
-        '200':
-          description: Descuento aplicado y total recalculado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cobro'
-
-  /cobros/{id}/cancelar:
-    post:
-      tags:
-        - Cobros
-      summary: Cancelar un cobro por servicios (RF-50)
-      operationId: cancelarCobro
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                motivo:
-                  type: string
-      responses:
-        '200':
-          description: Cobro cancelado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Cobro'
-
-  /cobros/{id}/imprimir:
-    get:
-      tags:
-        - Cobros
-      summary: Obtener archivo imprimible de la boleta de cobro (RF-51)
-      operationId: imprimirCobro
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Boleta de cobro en formato PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-
-  # === GESTIÓN DE RECIBOS ===
-  /recibos:
-    post:
-      tags:
-        - Recibos
-      summary: Registrar los recibos de pago (RF-39)
-      description: Genera el comprobante oficial de pago que valida la liquidación total o parcial de un cobro.
-      operationId: registrarRecibo
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReciboEntrada'
-      responses:
-        '201':
-          description: Recibo de pago creado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Recibo'
-    get:
-      tags:
-        - Recibos
-      summary: Listar los recibos de pago (RF-40)
-      operationId: listarRecibos
-      responses:
-        '200':
-          description: Lista de recibos emitidos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Recibo'
-
-  /recibos/{id}:
-    get:
-      tags:
-        - Recibos
-      summary: Consultar un recibo de pago (RF-41)
-      operationId: obtenerRecibo
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Detalle del recibo de pago
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Recibo'
-    put:
-      tags:
-        - Recibos
-      summary: Modificar datos de un recibo de pago (RF-42)
-      operationId: actualizarRecibo
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReciboEntrada'
-      responses:
-        '200':
-          description: Recibo modificado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Recibo'
-    delete:
-      tags:
-        - Recibos
-      summary: Eliminar un recibo de pago (RF-43)
-      operationId: eliminarRecibo
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Recibo eliminado
-
-  /recibos/{id}/imprimir:
-    get:
-      tags:
-        - Recibos
-      summary: Obtener archivo imprimible de un recibo de pago (RF-44)
-      operationId: imprimirRecibo
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Recibo de pago en formato PDF
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-
-  # === GESTIÓN DE RESERVAS ===
-  /reservas:
-    post:
-      tags:
-        - Reservas
-      summary: Registrar reservas de canchas (RF-52)
+        - 2. Acceso Cliente (Registrado)
+      summary: Realizar la reserva de una cancha (RF-52)
       description: |
-        Intenta reservar una cancha. Aplica validaciones estrictas:
-        - La fecha no debe ser mayor a 30 días en el futuro (Ventana máxima).
-        - La duración de la reserva no debe superar la permitida por tipo de cancha (Fútbol 5: 1h, Fútbol 7: 1.5h, Fútbol 11: 2h).
-        - **IMPORTANTE**: La reserva quedará en estado `PENDIENTE` y requiere validación del pago completo asociado para pasar a `CONFIRMADA`.
-      operationId: registrarReserva
+        Registra una reserva. Reglas de negocio:
+        - Ventana máxima de 30 días de antelación.
+        - Duración máxima según el tipo (Fútbol 5: 1h, Fútbol 7: 1.5h, Fútbol 11: 2h).
+        - La reserva requiere validación del pago completo asociado para confirmarse.
+      operationId: crearReservaCliente
       requestBody:
         required: true
         content:
@@ -1154,34 +221,21 @@ paths:
               $ref: '#/components/schemas/ReservaEntrada'
       responses:
         '201':
-          description: Reserva creada (Estado PENDIENTE hasta confirmación del pago)
+          description: Reserva guardada (Estado PENDIENTE hasta confirmar pago)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Reserva'
         '400':
-          description: Error en validación (Duración excedida, fecha mayor a 30 días o cancha no disponible).
+          description: Error en las validaciones de políticas del club
     get:
       tags:
-        - Reservas
-      summary: Listar las reservas de canchas (RF-53)
-      operationId: listarReservas
-      parameters:
-        - name: fecha
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date
-        - name: estado
-          in: query
-          required: false
-          schema:
-            type: string
-            enum: [PENDIENTE, CONFIRMADA, CANCELADA]
+        - 2. Acceso Cliente (Registrado)
+      summary: Listar sus propias reservas (RF-53)
+      operationId: listarMisReservas
       responses:
         '200':
-          description: Lista de reservas encontradas
+          description: Lista de reservas del cliente
           content:
             application/json:
               schema:
@@ -1189,30 +243,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Reserva'
 
-  /reservas/{id}:
-    get:
-      tags:
-        - Reservas
-      summary: Consultar una reserva de cancha específica (RF-54)
-      operationId: obtenerReserva
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Detalles de la reserva
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Reserva'
+  /cliente/reservas/{id}:
     put:
       tags:
-        - Reservas
-      summary: Modificar reserva de cancha (RF-55)
-      operationId: actualizarReserva
+        - 2. Acceso Cliente (Registrado)
+      summary: Modificar reserva (cambiar horario o cancha) (RF-55)
+      operationId: modificarReservaCliente
       parameters:
         - name: id
           in: path
@@ -1233,16 +269,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Reserva'
 
-  /reservas/{id}/cancelar:
+  /cliente/reservas/{id}/cancelar:
     post:
       tags:
-        - Reservas
-      summary: Cancelar una reserva de cancha (RF-56)
+        - 2. Acceso Cliente (Registrado)
+      summary: Cancelar una reserva activa (RF-56)
       description: |
-        Cancela una reserva.
-        - Si es antes de las 6 horas previas al inicio, se procesa un reembolso.
-        - Si es fuera de ese plazo, se aplica una penalización o pérdida del monto pagado.
-      operationId: cancelarReserva
+        Cancela la reserva propia.
+        - Más de 6 horas antes: Reembolso procesado.
+        - Menos de 6 horas antes: Aplica penalización o pérdida del pago.
+      operationId: cancelarReservaCliente
       parameters:
         - name: id
           in: path
@@ -1251,19 +287,1043 @@ paths:
             type: string
       responses:
         '200':
-          description: Reserva cancelada exitosamente y cálculos de reembolso aplicados
+          description: Reserva cancelada
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResultadoCancelacionReserva'
 
-  # === GESTIÓN DE LIGAS ===
-  /ligas:
+  /cliente/clases:
+    get:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Listar sus clases (2 listados: Oferta disponible y Clases contratadas/particulares) (RF-74)
+      operationId: listarMisClases
+      parameters:
+        - name: tipo
+          in: query
+          required: false
+          description: Filtrar por 'DISPONIBLE' o 'CONTRATADA'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listado de clases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Clase'
+
+  /cliente/clases/inscripcion:
     post:
       tags:
-        - Ligas
-      summary: Registrar una nueva liga (RF-57)
-      operationId: registrarLiga
+        - 2. Acceso Cliente (Registrado)
+      summary: Inscribirse a una clase particular o grupal (RF-78)
+      operationId: inscribirAClaseCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionProfesorParticularEntrada'
+      responses:
+        '201':
+          description: Inscripción registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionParticular'
+
+  /cliente/clases/inscripcion/{id}:
+    delete:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Darse de baja de una clase (cancelar inscripción) (RF-77)
+      operationId: darDeBajaClaseCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Baja procesada exitosamente
+
+  /cliente/entrenamientos:
+    get:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Listar sus entrenamientos (2 listados: Oferta disponible y Entrenamientos inscritos/particulares) (RF-81)
+      operationId: listarMisEntrenamientos
+      parameters:
+        - name: tipo
+          in: query
+          required: false
+          description: Filtrar por 'DISPONIBLE' o 'INSCRITO'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Listado de entrenamientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entrenamiento'
+
+  /cliente/entrenamientos/inscripcion:
+    post:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Inscribirse a un entrenamiento particular o grupal (RF-87)
+      operationId: inscribirAEntrenamientoCliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionEntrenadorParticularEntrada'
+      responses:
+        '201':
+          description: Inscrito al entrenamiento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsignacionParticular'
+
+  /cliente/entrenamientos/inscripcion/{id}:
+    delete:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Darse de baja (cancelar inscripción) de un entrenamiento (RF-88)
+      operationId: darDeBajaEntrenamientoCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cancelación de inscripción procesada
+
+  /cliente/clases/pago:
+    post:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Realizar pago por servicio/inscripción de clase (RF-39, RF-45)
+      operationId: realizarPagoClase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReciboEntrada'
+      responses:
+        '201':
+          description: Recibo generado al realizar pago
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recibo'
+
+  /cliente/entrenamientos/pago:
+    post:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Realizar pago por servicio/inscripción de entrenamiento (RF-39, RF-45)
+      operationId: realizarPagoEntrenamiento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReciboEntrada'
+      responses:
+        '201':
+          description: Recibo emitido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recibo'
+
+  /cliente/cobros:
+    get:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Listar sus cobros/pagos registrados (RF-46)
+      operationId: listarMisCobros
+      responses:
+        '200':
+          description: Lista de cobros personales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cobro'
+
+  /cliente/cobros/{id}:
+    get:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Consultar datos de un cobro propio específico (RF-47)
+      operationId: obtenerMiCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del cobro personal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cobro'
+
+  /cliente/recibos:
+    get:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Listar sus recibos de pago (RF-40)
+      operationId: listarMisRecibos
+      responses:
+        '200':
+          description: Lista de recibos personales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recibo'
+
+  /cliente/recibos/{id}:
+    get:
+      tags:
+        - 2. Acceso Cliente (Registrado)
+      summary: Consultar un recibo propio específico (RF-41)
+      operationId: obtenerMiRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalle del recibo de pago personal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recibo'
+
+  # ==========================================
+  # === 3. ACCESO ADMINISTRADOR (PERSONAL) ===
+  # ==========================================
+  /admin/clientes:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar los clientes del complejo (RF-02)
+      operationId: adminListarClientes
+      responses:
+        '200':
+          description: Lista de clientes registrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
+
+  /admin/clientes/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar los datos de un cliente (RF-03)
+      operationId: adminObtenerCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ficha del cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar los datos de un cliente (RF-04)
+      operationId: adminActualizarCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteEntrada'
+      responses:
+        '200':
+          description: Ficha modificada
+    delete:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Eliminar los datos de un cliente (RF-05)
+      operationId: adminEliminarCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cliente dado de baja del sistema
+
+  /admin/clientes/{id}/imprimir:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Generar ficha de cliente para imprimir (RF-06)
+      operationId: adminImprimirCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF de ficha de cliente
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # --- PROFESORES Y ENTRENADORES ---
+  /admin/profesores:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar datos de un profesor y sus certificaciones (RF-07, RF-13)
+      operationId: adminRegistrarProfesor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfesorEntrada'
+      responses:
+        '201':
+          description: Profesor registrado
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar a los profesores (RF-08)
+      operationId: adminListarProfesores
+      responses:
+        '200':
+          description: Lista de profesores
+
+  /admin/profesores/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar datos de un profesor (RF-09)
+      operationId: adminObtenerProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del profesor
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar datos de un profesor (RF-10)
+      operationId: adminActualizarProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfesorEntrada'
+      responses:
+        '200':
+          description: Profesor modificado
+    delete:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Eliminar profesor (RF-11)
+      operationId: adminEliminarProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Profesor eliminado
+
+  /admin/profesores/{id}/imprimir:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Imprimir datos de profesor (RF-12)
+      operationId: adminImprimirProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF de ficha de profesor
+
+  /admin/profesores/{id}/certificaciones:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar certificaciones de un profesor (RF-13)
+      operationId: adminRegistrarCertificacionProfesor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificacionEntrada'
+      responses:
+        '201':
+          description: Certificación deportiva registrada
+
+  /admin/entrenadores:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar datos de un entrenador y sus certificaciones (RF-14, RF-20)
+      operationId: adminRegistrarEntrenador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrenadorEntrada'
+      responses:
+        '201':
+          description: Entrenador registrado
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar a los entrenadores (RF-15)
+      operationId: adminListarEntrenadores
+      responses:
+        '200':
+          description: Lista de entrenadores
+
+  /admin/entrenadores/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar datos de un entrenador (RF-16)
+      operationId: adminObtenerEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del entrenador
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar datos de un entrenador (RF-17)
+      operationId: adminActualizarEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrenadorEntrada'
+      responses:
+        '200':
+          description: Entrenador modificado
+    delete:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Eliminar entrenador (RF-18)
+      operationId: adminEliminarEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Entrenador dado de baja
+
+  /admin/entrenadores/{id}/imprimir:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Imprimir datos de entrenador (RF-19)
+      operationId: adminImprimirEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF de ficha del entrenador
+
+  /admin/entrenadores/{id}/certificaciones:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar certificaciones de un entrenador (RF-20)
+      operationId: adminRegistrarCertificacionEntrenador
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificacionEntrada'
+      responses:
+        '201':
+          description: Certificación registrada
+
+  # --- CANCHAS E INFRAESTRUCTURA ---
+  /admin/tipos-cancha:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar tipos de canchas y sus características (RF-21)
+      operationId: adminRegistrarTipoCancha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TipoCanchaEntrada'
+      responses:
+        '201':
+          description: Tipo de cancha registrado
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar los tipos de canchas y sus características (RF-22)
+      operationId: adminListarTiposCancha
+      responses:
+        '200':
+          description: Lista de tipos de canchas
+
+  /admin/tipos-cancha/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar un tipo de cancha (RF-23)
+      operationId: adminObtenerTipoCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Características del tipo
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar las características de un tipo de cancha (RF-24)
+      operationId: adminActualizarTipoCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TipoCanchaEntrada'
+      responses:
+        '200':
+          description: Tipo modificado
+    delete:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Eliminar tipo de cancha (RF-25)
+      operationId: adminEliminarTipoCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Tipo de cancha eliminado
+
+  /admin/canchas:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar cancha de un tipo asignado (RF-26)
+      operationId: adminRegistrarCancha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CanchaEntrada'
+      responses:
+        '201':
+          description: Cancha creada
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar canchas (RF-27)
+      operationId: adminListarCanchas
+      responses:
+        '200':
+          description: Lista de canchas físicas
+
+  /admin/canchas/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar una cancha asignada (RF-28)
+      operationId: adminObtenerCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos de la cancha
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar cancha (RF-29)
+      operationId: adminActualizarCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CanchaEntrada'
+      responses:
+        '200':
+          description: Cancha modificada
+    delete:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Eliminar cancha (RF-30)
+      operationId: adminEliminarCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cancha eliminada
+
+  /admin/canchas/{id}/disponibilidad:
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar la disponibilidad horaria de una cancha (RF-32)
+      operationId: adminActualizarDisponibilidadCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalendarioDisponibilidadEntrada'
+      responses:
+        '200':
+          description: Horario modificado
+
+  /admin/canchas/{id}/bloqueos:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Bloquear canchas para mantenimiento (RF-33)
+      operationId: adminBloquearCancha
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BloqueoCanchaEntrada'
+      responses:
+        '201':
+          description: Bloqueo de mantenimiento registrado
+
+  # --- DESCUENTOS Y FACTURACIÓN GLOBAL ---
+  /admin/descuentos:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar descuentos (RF-34)
+      operationId: adminRegistrarDescuento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DescuentoEntrada'
+      responses:
+        '201':
+          description: Descuento registrado
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar descuentos (RF-35)
+      operationId: adminListarDescuentos
+      responses:
+        '200':
+          description: Lista de descuentos del club
+
+  /admin/descuentos/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar descuentos (RF-36)
+      operationId: adminObtenerDescuento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalles de descuento
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar descuentos (RF-37)
+      operationId: adminActualizarDescuento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DescuentoEntrada'
+      responses:
+        '200':
+          description: Descuento actualizado
+    delete:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Eliminar descuentos (RF-38)
+      operationId: adminEliminarDescuento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Descuento eliminado
+
+  /admin/cobros:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar cobros por servicios (RF-45)
+      operationId: adminRegistrarCobro
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CobroEntrada'
+      responses:
+        '201':
+          description: Cobro de servicio registrado
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar cobros por servicios (RF-46)
+      operationId: adminListarCobros
+      responses:
+        '200':
+          description: Lista de todos los cobros del complejo
+
+  /admin/cobros/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar cobros por servicios (RF-47)
+      operationId: adminObtenerCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del cobro
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar cobros por servicios (RF-49)
+      operationId: adminActualizarCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CobroEntrada'
+      responses:
+        '200':
+          description: Cobro modificado
+
+  /admin/cobros/{id}/aplicar-descuento:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Aplicar descuentos a un cobro (RF-48)
+      operationId: adminAplicarDescuentoACobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idDescuento:
+                  type: string
+      responses:
+        '200':
+          description: Descuento aplicado y monto recalculado
+
+  /admin/cobros/{id}/cancelar:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Cancelar cobros por servicios (RF-50)
+      operationId: adminCancelarCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cobro cancelado
+
+  /admin/cobros/{id}/imprimir:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Imprimir cobro por servicios (RF-51)
+      operationId: adminImprimirCobro
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF del cobro
+
+  /admin/recibos:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar los recibos de pago (RF-39)
+      operationId: adminRegistrarRecibo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReciboEntrada'
+      responses:
+        '201':
+          description: Recibo oficial creado
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Listar los recibos de pago (RF-40)
+      operationId: adminListarRecibos
+      responses:
+        '200':
+          description: Lista de recibos del club
+
+  /admin/recibos/{id}:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar los recibos de pago (RF-41)
+      operationId: adminObtenerRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Datos del recibo
+    put:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar los recibos de pago (RF-42)
+      operationId: adminActualizarRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReciboEntrada'
+      responses:
+        '200':
+          description: Recibo modificado
+    delete:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Eliminar los recibos de pago (RF-43)
+      operationId: adminEliminarRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Recibo eliminado
+
+  /admin/recibos/{id}/imprimir:
+    get:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Imprimir recibos de pago (RF-44)
+      operationId: adminImprimirRecibo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: PDF del recibo
+
+  # --- LIGAS Y TORNEOS (ORGANIZACIÓN Y FIXTURES) ---
+  /admin/ligas:
+    post:
+      tags:
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar ligas del club (RF-57)
+      operationId: adminRegistrarLiga
       requestBody:
         required: true
         content:
@@ -1272,32 +1332,22 @@ paths:
               $ref: '#/components/schemas/LigaEntrada'
       responses:
         '201':
-          description: Liga creada exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Liga'
+          description: Liga creada
     get:
       tags:
-        - Ligas
-      summary: Listar las ligas programadas u organizadas (RF-58)
-      operationId: listarLigas
+        - 3. Acceso Administrador (Personal)
+      summary: Listar ligas (RF-58)
+      operationId: adminListarLigas
       responses:
         '200':
           description: Lista de ligas
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Liga'
 
-  /ligas/{id}:
+  /admin/ligas/{id}:
     get:
       tags:
-        - Ligas
-      summary: Consultar datos y estado de una liga (RF-59)
-      operationId: obtenerLiga
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar ligas (RF-59)
+      operationId: adminObtenerLiga
       parameters:
         - name: id
           in: path
@@ -1306,16 +1356,12 @@ paths:
             type: string
       responses:
         '200':
-          description: Detalles de la liga
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Liga'
+          description: Datos de la liga
     put:
       tags:
-        - Ligas
-      summary: Modificar configuración o datos de una liga (RF-60)
-      operationId: actualizarLiga
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar ligas (RF-60)
+      operationId: adminActualizarLiga
       parameters:
         - name: id
           in: path
@@ -1330,16 +1376,12 @@ paths:
               $ref: '#/components/schemas/LigaEntrada'
       responses:
         '200':
-          description: Liga modificada exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Liga'
+          description: Liga modificada
     delete:
       tags:
-        - Ligas
-      summary: Cancelar y dar de baja una liga (RF-61)
-      operationId: cancelarLiga
+        - 3. Acceso Administrador (Personal)
+      summary: Cancelar ligas (RF-61)
+      operationId: adminCancelarLiga
       parameters:
         - name: id
           in: path
@@ -1350,13 +1392,12 @@ paths:
         '204':
           description: Liga cancelada
 
-  /ligas/{id}/fixture:
+  /admin/ligas/{id}/fixture:
     post:
       tags:
-        - Ligas
-      summary: Generar fixture de la liga (RF-62)
-      description: Genera automáticamente el calendario de partidos "todos contra todos".
-      operationId: generarFixtureLiga
+        - 3. Acceso Administrador (Personal)
+      summary: Generar fixtures de ligas (RF-62)
+      operationId: adminGenerarFixtureLiga
       parameters:
         - name: id
           in: path
@@ -1365,20 +1406,14 @@ paths:
             type: string
       responses:
         '200':
-          description: Fixture generado
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Partido'
+          description: Fixture todos contra todos generado
 
-  /ligas/{id}/inscripciones:
+  /admin/ligas/{id}/inscripciones:
     post:
       tags:
-        - Ligas
-      summary: Inscribir un usuario o equipo a una liga (RF-64)
-      operationId: inscribirALiga
+        - 3. Acceso Administrador (Personal)
+      summary: Gestionar la inscripción de los usuarios a ligas (RF-64)
+      operationId: adminInscribirALiga
       parameters:
         - name: id
           in: path
@@ -1391,28 +1426,19 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - idParticipante
               properties:
                 idParticipante:
                   type: string
-                  description: ID del cliente o equipo
-                nombreEquipo:
-                  type: string
       responses:
         '201':
-          description: Inscripción registrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Inscripcion'
+          description: Inscripción registrada por personal
 
-  /ligas/{id}/partidos/{idPartido}/resultado:
+  /admin/ligas/{id}/partidos/{idPartido}/resultado:
     put:
       tags:
-        - Ligas
-      summary: Registrar los resultados de un partido de la liga (RF-63)
-      operationId: registrarResultadoPartidoLiga
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar los resultados de los partidos de la liga (RF-63)
+      operationId: adminRegistrarResultadoPartidoLiga
       parameters:
         - name: id
           in: path
@@ -1432,19 +1458,14 @@ paths:
               $ref: '#/components/schemas/ResultadoPartidoEntrada'
       responses:
         '200':
-          description: Resultado del partido registrado y tabla actualizada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Partido'
+          description: Resultado del partido registrado
 
-  # === GESTIÓN DE TORNEOS ===
-  /torneos:
+  /admin/torneos:
     post:
       tags:
-        - Torneos
-      summary: Registrar un nuevo torneo (RF-65)
-      operationId: registrarTorneo
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar torneos (RF-65)
+      operationId: adminRegistrarTorneo
       requestBody:
         required: true
         content:
@@ -1453,32 +1474,22 @@ paths:
               $ref: '#/components/schemas/TorneoEntrada'
       responses:
         '201':
-          description: Torneo registrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Torneo'
+          description: Torneo creado
     get:
       tags:
-        - Torneos
-      summary: Listar los torneos programados (RF-67)
-      operationId: listarTorneos
+        - 3. Acceso Administrador (Personal)
+      summary: Listar torneos (RF-67)
+      operationId: adminListarTorneos
       responses:
         '200':
           description: Lista de torneos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Torneo'
 
-  /torneos/{id}:
+  /admin/torneos/{id}:
     get:
       tags:
-        - Torneos
-      summary: Consultar los datos de un torneo (RF-66)
-      operationId: obtenerTorneo
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar torneos (RF-66)
+      operationId: adminObtenerTorneo
       parameters:
         - name: id
           in: path
@@ -1487,16 +1498,12 @@ paths:
             type: string
       responses:
         '200':
-          description: Detalles del torneo
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Torneo'
+          description: Detalles de torneo
     put:
       tags:
-        - Torneos
-      summary: Modificar la configuración de un torneo (RF-68)
-      operationId: actualizarTorneo
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar torneos (RF-68)
+      operationId: adminActualizarTorneo
       parameters:
         - name: id
           in: path
@@ -1511,16 +1518,12 @@ paths:
               $ref: '#/components/schemas/TorneoEntrada'
       responses:
         '200':
-          description: Torneo modificado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Torneo'
+          description: Torneo modificado
     delete:
       tags:
-        - Torneos
-      summary: Cancelar o dar de baja un torneo (RF-69)
-      operationId: cancelarTorneo
+        - 3. Acceso Administrador (Personal)
+      summary: Cancelar torneos (RF-69)
+      operationId: adminCancelarTorneo
       parameters:
         - name: id
           in: path
@@ -1531,12 +1534,12 @@ paths:
         '204':
           description: Torneo cancelado
 
-  /torneos/{id}/cuadro:
+  /admin/torneos/{id}/cuadro:
     post:
       tags:
-        - Torneos
-      summary: Generar cuadro del torneo / fixture de eliminatorias (RF-70)
-      operationId: generarCuadroTorneo
+        - 3. Acceso Administrador (Personal)
+      summary: Generar los cuadros de los torneos / fixtures (RF-70)
+      operationId: adminGenerarCuadroTorneo
       parameters:
         - name: id
           in: path
@@ -1545,18 +1548,14 @@ paths:
             type: string
       responses:
         '200':
-          description: Cuadro de torneo generado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CuadroTorneo'
+          description: Cuadro de eliminatorias generado
 
-  /torneos/{id}/inscripciones:
+  /admin/torneos/{id}/inscripciones:
     post:
       tags:
-        - Torneos
-      summary: Inscribir un usuario o equipo a un torneo (RF-72)
-      operationId: inscribirATorneo
+        - 3. Acceso Administrador (Personal)
+      summary: Gestionar la inscripción de los usuarios a torneos (RF-72)
+      operationId: adminInscribirATorneo
       parameters:
         - name: id
           in: path
@@ -1569,25 +1568,19 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - idParticipante
               properties:
                 idParticipante:
                   type: string
       responses:
         '201':
-          description: Inscripción confirmada al torneo
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Inscripcion'
+          description: Inscripción al torneo registrada
 
-  /torneos/{id}/partidos/{idPartido}/resultado:
+  /admin/torneos/{id}/partidos/{idPartido}/resultado:
     put:
       tags:
-        - Torneos
-      summary: Registrar el resultado de un partido del torneo (RF-71)
-      operationId: registrarResultadoPartidoTorneo
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar los resultados de los partidos del torneo (RF-71)
+      operationId: adminRegistrarResultadoPartidoTorneo
       parameters:
         - name: id
           in: path
@@ -1607,20 +1600,16 @@ paths:
               $ref: '#/components/schemas/ResultadoPartidoEntrada'
       responses:
         '200':
-          description: Resultado del partido registrado y cuadro actualizado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Partido'
+          description: Resultado guardado y cuadro de fases actualizado
 
-  # === GESTIÓN DE CLASES ===
-  /clases:
+  # --- CLASES Y ENTRENAMIENTOS GENERALES ---
+  /admin/clases:
     post:
       tags:
-        - Clases
-      summary: Programar una nueva clase grupal (RF-73)
-      description: Programa una clase grupal, validando que el límite de alumnos no exceda el máximo configurado.
-      operationId: programarClase
+        - 3. Acceso Administrador (Personal)
+      summary: Programar las clases (RF-73)
+      description: Crea y publica la oferta de clases grupales.
+      operationId: adminProgramarClase
       requestBody:
         required: true
         content:
@@ -1629,32 +1618,22 @@ paths:
               $ref: '#/components/schemas/ClaseEntrada'
       responses:
         '201':
-          description: Clase programada exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Clase'
+          description: Clase publicada
     get:
       tags:
-        - Clases
-      summary: Listar clases programadas (RF-74)
-      operationId: listarClases
+        - 3. Acceso Administrador (Personal)
+      summary: Listar clases (RF-74)
+      operationId: adminListarClases
       responses:
         '200':
-          description: Lista de clases
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Clase'
+          description: Lista de clases programadas
 
-  /clases/{id}:
+  /admin/clases/{id}:
     get:
       tags:
-        - Clases
-      summary: Consultar detalles de una clase programada (RF-75)
-      operationId: obtenerClase
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar clases (RF-75)
+      operationId: adminObtenerClase
       parameters:
         - name: id
           in: path
@@ -1664,15 +1643,11 @@ paths:
       responses:
         '200':
           description: Detalles de la clase
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Clase'
     put:
       tags:
-        - Clases
-      summary: Modificar la programación o datos de una clase (RF-76)
-      operationId: actualizarClase
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar clases (RF-76)
+      operationId: adminActualizarClase
       parameters:
         - name: id
           in: path
@@ -1688,15 +1663,11 @@ paths:
       responses:
         '200':
           description: Clase modificada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Clase'
     delete:
       tags:
-        - Clases
-      summary: Dar de baja una clase programada (RF-77)
-      operationId: cancelarClase
+        - 3. Acceso Administrador (Personal)
+      summary: Dar de baja una clase (RF-77)
+      operationId: adminDarDeBajaClase
       parameters:
         - name: id
           in: path
@@ -1707,12 +1678,12 @@ paths:
         '204':
           description: Clase dada de baja
 
-  /clases/asignacion-particular:
+  /admin/clases/asignacion-particular:
     post:
       tags:
-        - Clases
-      summary: Asignar un profesor a un usuario para clase particular (RF-78)
-      operationId: asignarProfesorParticular
+        - 3. Acceso Administrador (Personal)
+      summary: Asignar profesores a los usuarios para clases particulares (RF-78)
+      operationId: adminAsignarProfesorParticular
       requestBody:
         required: true
         content:
@@ -1721,18 +1692,14 @@ paths:
               $ref: '#/components/schemas/AsignacionProfesorParticularEntrada'
       responses:
         '201':
-          description: Profesor particular asignado con éxito
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AsignacionParticular'
+          description: Asignación particular registrada por el staff
 
-  /clases/{id}/asistencia:
+  /admin/clases/{id}/asistencia:
     post:
       tags:
-        - Clases
-      summary: Registrar asistencia de los usuarios a una clase (RF-79)
-      operationId: registrarAsistenciaClase
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar la asistencia de los usuarios a las clases (RF-79)
+      operationId: adminRegistrarAsistenciaClase
       parameters:
         - name: id
           in: path
@@ -1747,20 +1714,14 @@ paths:
               $ref: '#/components/schemas/AsistenciaEntrada'
       responses:
         '200':
-          description: Lista de asistencia guardada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListaAsistencia'
+          description: Asistencia guardada
 
-  # === GESTIÓN DE ENTRENAMIENTOS ===
-  /entrenamientos:
+  /admin/entrenamientos:
     post:
       tags:
-        - Entrenamientos
-      summary: Programar un entrenamiento grupal (RF-80)
-      description: Programa un entrenamiento, validando el cupo máximo de alumnos.
-      operationId: programarEntrenamiento
+        - 3. Acceso Administrador (Personal)
+      summary: Programar entrenamientos (RF-80)
+      operationId: adminProgramarEntrenamiento
       requestBody:
         required: true
         content:
@@ -1769,32 +1730,22 @@ paths:
               $ref: '#/components/schemas/EntrenamientoEntrada'
       responses:
         '201':
-          description: Entrenamiento programado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Entrenamiento'
+          description: Entrenamiento publicado
     get:
       tags:
-        - Entrenamientos
+        - 3. Acceso Administrador (Personal)
       summary: Listar entrenamientos (RF-81)
-      operationId: listarEntrenamientos
+      operationId: adminListarEntrenamientos
       responses:
         '200':
           description: Lista de entrenamientos programados
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Entrenamiento'
 
-  /entrenamientos/{id}:
+  /admin/entrenamientos/{id}:
     get:
       tags:
-        - Entrenamientos
-      summary: Consultar datos de un entrenamiento (RF-82)
-      operationId: obtenerEntrenamiento
+        - 3. Acceso Administrador (Personal)
+      summary: Consultar entrenamientos (RF-82)
+      operationId: adminObtenerEntrenamiento
       parameters:
         - name: id
           in: path
@@ -1803,16 +1754,12 @@ paths:
             type: string
       responses:
         '200':
-          description: Detalles de la sesión de entrenamiento
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Entrenamiento'
+          description: Datos del entrenamiento
     put:
       tags:
-        - Entrenamientos
-      summary: Modificar un entrenamiento programado (RF-83)
-      operationId: actualizarEntrenamiento
+        - 3. Acceso Administrador (Personal)
+      summary: Modificar entrenamientos (RF-83)
+      operationId: adminActualizarEntrenamiento
       parameters:
         - name: id
           in: path
@@ -1828,15 +1775,11 @@ paths:
       responses:
         '200':
           description: Entrenamiento modificado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Entrenamiento'
     delete:
       tags:
-        - Entrenamientos
-      summary: Dar de baja un entrenamiento programado (RF-84)
-      operationId: cancelarEntrenamiento
+        - 3. Acceso Administrador (Personal)
+      summary: Dar de baja un entrenamiento (RF-84)
+      operationId: adminDarDeBajaEntrenamiento
       parameters:
         - name: id
           in: path
@@ -1845,14 +1788,14 @@ paths:
             type: string
       responses:
         '204':
-          description: Sesión de entrenamiento eliminada
+          description: Entrenamiento cancelado
 
-  /entrenamientos/asignacion-particular:
+  /admin/entrenamientos/asignacion-particular:
     post:
       tags:
-        - Entrenamientos
-      summary: Asignar un entrenador a un cliente para entrenamiento particular (RF-85)
-      operationId: asignarEntrenadorParticular
+        - 3. Acceso Administrador (Personal)
+      summary: Asignar entrenadores a clientes para entrenamientos particulares (RF-85)
+      operationId: adminAsignarEntrenadorParticular
       requestBody:
         required: true
         content:
@@ -1861,18 +1804,14 @@ paths:
               $ref: '#/components/schemas/AsignacionEntrenadorParticularEntrada'
       responses:
         '201':
-          description: Entrenador particular asignado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AsignacionParticular'
+          description: Asignación particular registrada por el staff
 
-  /entrenamientos/{id}/asistencia:
+  /admin/entrenamientos/{id}/asistencia:
     post:
       tags:
-        - Entrenamientos
-      summary: Registrar asistencia de los usuarios a un entrenamiento (RF-86)
-      operationId: registrarAsistenciaEntrenamiento
+        - 3. Acceso Administrador (Personal)
+      summary: Registrar la asistencia de los usuarios a los entrenamientos (RF-86)
+      operationId: adminRegistrarAsistenciaEntrenamiento
       parameters:
         - name: id
           in: path
@@ -1887,85 +1826,25 @@ paths:
               $ref: '#/components/schemas/AsistenciaEntrada'
       responses:
         '200':
-          description: Control de asistencia registrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListaAsistencia'
+          description: Asistencia guardada
 
-  /entrenamientos/{id}/inscripciones:
-    post:
-      tags:
-        - Entrenamientos
-      summary: Inscribir un usuario a un entrenamiento programado (RF-87)
-      operationId: inscribirAEntrenamiento
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - idUsuario
-              properties:
-                idUsuario:
-                  type: string
-      responses:
-        '201':
-          description: Inscripción exitosa
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Inscripcion'
-
-  /entrenamientos/{id}/inscripciones/{idUsuario}:
-    delete:
-      tags:
-        - Entrenamientos
-      summary: Cancelar inscripción de un usuario a un entrenamiento (RF-88)
-      operationId: cancelarInscripcionEntrenamiento
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: idUsuario
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Inscripción cancelada con éxito
-
-  # === GENERACIÓN DE REPORTES ===
-  /reportes/tipos-cancha:
+  # --- GENERACIÓN DE REPORTES ---
+  /admin/reportes/tipos-cancha:
     get:
       tags:
-        - Reportes
-      summary: Generar reporte de tipos de canchas y sus características (RF-89)
-      operationId: generarReporteTiposCancha
+        - 3. Acceso Administrador (Personal)
+      summary: Generar reporte de los tipos de canchas y sus características (RF-89)
+      operationId: adminReporteTiposCancha
       responses:
         '200':
           description: Reporte generado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DatosReporte'
 
-  /reportes/ingresos:
+  /admin/reportes/ingresos:
     get:
       tags:
-        - Reportes
-      summary: Generar reporte de ingresos del complejo (RF-90)
-      operationId: generarReporteIngresos
+        - 3. Acceso Administrador (Personal)
+      summary: Generar reportes de ingresos (RF-90)
+      operationId: adminReporteIngresos
       parameters:
         - name: fechaInicio
           in: query
@@ -1981,64 +1860,46 @@ paths:
             format: date
       responses:
         '200':
-          description: Reporte de ingresos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DatosReporte'
+          description: Reporte financiero generado
 
-  /reportes/reservas:
+  /admin/reportes/reservas:
     get:
       tags:
-        - Reportes
-      summary: Generar reporte de reservas de canchas (RF-91)
-      operationId: generarReporteReservas
+        - 3. Acceso Administrador (Personal)
+      summary: Generar reportes de reservas (RF-91)
+      operationId: adminReporteReservas
       parameters:
         - name: mes
           in: query
-          description: Formato YYYY-MM
           required: false
           schema:
             type: string
       responses:
         '200':
           description: Reporte de reservas generado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DatosReporte'
 
-  /reportes/asistencia-clases:
+  /admin/reportes/asistencia-clases:
     get:
       tags:
-        - Reportes
-      summary: Generar reporte de asistencias a clases (RF-92)
-      operationId: generarReporteAsistenciaClases
+        - 3. Acceso Administrador (Personal)
+      summary: Generar reportes de asistencia a clases (RF-92)
+      operationId: adminReporteAsistenciaClases
       responses:
         '200':
           description: Reporte de asistencia generado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DatosReporte'
 
-  /reportes/asistencia-entrenamientos:
+  /admin/reportes/asistencia-entrenamientos:
     get:
       tags:
-        - Reportes
-      summary: Generar reporte de asistencias a entrenamientos (RF-93)
-      operationId: generarReporteAsistenciaEntrenamientos
+        - 3. Acceso Administrador (Personal)
+      summary: Generar reportes de asistencia a entrenamientos (RF-93)
+      operationId: adminReporteAsistenciaEntrenamientos
       responses:
         '200':
-          description: Reporte de asistencias a entrenamientos generado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DatosReporte'
+          description: Reporte de asistencia generado
 
 components:
   schemas:
-    # --- Clientes ---
     Cliente:
       type: object
       properties:
@@ -2086,7 +1947,6 @@ components:
         - apellido
         - email
 
-    # --- Profesor / Entrenador ---
     Profesor:
       type: object
       properties:
@@ -2198,7 +2058,6 @@ components:
         - matricula
         - link_archivo
 
-    # --- Canchas ---
     TipoCancha:
       type: object
       properties:
@@ -2384,7 +2243,6 @@ components:
         - hora_fin
         - motivo
 
-    # --- Descuentos ---
     Descuento:
       type: object
       properties:
@@ -2414,7 +2272,6 @@ components:
         - descripcion
         - porcentaje_descuento
 
-    # --- Cobros y Recibos ---
     Cobro:
       type: object
       properties:
@@ -2482,7 +2339,6 @@ components:
         - id_cobro
         - nro_transaccion
 
-    # --- Reservas ---
     Reserva:
       type: object
       properties:
@@ -2536,13 +2392,12 @@ components:
           type: number
         cargoPenalizacion:
           type: number
-        mensaje:
-          type: string
+          mensaje:
+            type: string
       required:
         - id_reserva
         - estado
 
-    # --- Ligas y Torneos ---
     Liga:
       type: object
       properties:
@@ -2687,7 +2542,6 @@ components:
           items:
             $ref: '#/components/schemas/Partido'
 
-    # --- Clases y Entrenamientos ---
     Clase:
       type: object
       properties:
@@ -2874,7 +2728,6 @@ components:
         - idUsuario
         - asistio
 
-    # --- Reportes ---
     DatosReporte:
       type: object
       properties:
