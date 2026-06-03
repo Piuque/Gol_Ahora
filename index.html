@@ -12,6 +12,8 @@
   
   <!-- Swagger UI CSS -->
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <!-- Swagger UI Dark Theme -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-themes@1.4.3/themes/dark.min.css" />
   
   <style>
     :root {
@@ -128,83 +130,33 @@
       padding: 0 1.5rem;
     }
 
-    /* Modificaciones estéticas de Swagger UI para adaptarse al modo oscuro */
+    /* Ajustes generales del contenedor Swagger UI */
     .swagger-ui {
-      filter: invert(0) !important;
-      background: #1e293b !important;
+      background-color: #1e293b !important;
       border-radius: 16px;
-      padding: 1.5rem;
+      padding: 2rem;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
       border: 1px solid #334155;
-    }
-
-    /* Personalizar colores de Swagger */
-    .swagger-ui .info .title {
-      color: var(--text-main) !important;
-      font-family: 'Outfit', sans-serif !important;
-      font-weight: 700 !important;
-    }
-
-    .swagger-ui .info p, 
-    .swagger-ui .info li, 
-    .swagger-ui .info table,
-    .swagger-ui .info td,
-    .swagger-ui .info th {
-      color: var(--text-muted) !important;
       font-family: 'Inter', sans-serif !important;
     }
 
-    .swagger-ui .scheme-container {
-      background: #0f172a !important;
-      box-shadow: none !important;
-      border: 1px solid #334155 !important;
-      border-radius: 10px !important;
-      padding: 1rem !important;
-      margin-bottom: 1.5rem !important;
-    }
-
-    .swagger-ui select {
-      background-color: #1e293b !important;
-      color: var(--text-main) !important;
-      border: 1px solid #475569 !important;
-    }
-
-    .swagger-ui .opblock {
-      border-radius: 10px !important;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-      border: none !important;
-      margin-bottom: 0.8rem !important;
-    }
-
-    .swagger-ui .opblock .opblock-summary {
-      border: none !important;
-      padding: 0.75rem 1.5rem !important;
-    }
-
+    /* Tipografías premium en elementos clave */
+    .swagger-ui .info .title,
+    .swagger-ui .opblock-tag,
     .swagger-ui .opblock .opblock-summary-method {
-      border-radius: 6px !important;
       font-family: 'Outfit', sans-serif !important;
-      font-weight: 700 !important;
+    }
+
+    /* Estructuras redondeadas modernas */
+    .swagger-ui .scheme-container {
+      border-radius: 10px !important;
+      padding: 1.5rem !important;
+      box-shadow: none !important;
     }
 
     .swagger-ui .opblock-tag-section {
-      background: #111827 !important;
-      margin-bottom: 1.5rem !important;
       border-radius: 12px !important;
       overflow: hidden;
-      border: 1px solid #1f2937 !important;
-    }
-
-    .swagger-ui .opblock-tag {
-      background: #1f2937 !important;
-      color: var(--text-main) !important;
-      font-family: 'Outfit', sans-serif !important;
-      padding: 1rem !important;
-      border-bottom: 1px solid #374151 !important;
-    }
-
-    .swagger-ui .opblock-tag:hover {
-      background: #374151 !important;
     }
 
     /* Estilo del Footer */
