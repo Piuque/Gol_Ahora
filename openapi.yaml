@@ -1907,6 +1907,8 @@ components:
           type: integer
         username:
           type: string
+        user_level:
+          type: integer
         nombre:
           type: string
         apellido:
@@ -1914,14 +1916,46 @@ components:
         email:
           type: string
           format: email
+        dni:
+          type: string
+        telefono:
+          type: string
+        fecha_nacimiento:
+          type: string
+          format: date
         fecha_registro:
           type: string
           format: date-time
+        genero:
+          type: string
+        nacionalidad:
+          type: string
+        calle:
+          type: string
+        numero:
+          type: string
+        codigo_postal:
+          type: string
+        localidad:
+          type: string
+        provincia:
+          type: string
       required:
         - id_usuario
         - username
+        - user_level
         - nombre
+        - apellido
         - email
+        - dni
+        - fecha_nacimiento
+        - fecha_registro
+        - genero
+        - nacionalidad
+        - calle
+        - numero
+        - codigo_postal
+        - localidad
 
     ClienteEntrada:
       type: object
@@ -1944,6 +1978,10 @@ components:
         fecha_nacimiento:
           type: string
           format: date
+        genero:
+          type: string
+        nacionalidad:
+          type: string
         calle:
           type: string
         numero:
@@ -1951,10 +1989,6 @@ components:
         codigo_postal:
           type: string
         localidad:
-          type: string
-        genero:
-          type: string
-        nacionalidad:
           type: string
       required:
         - username
@@ -1964,12 +1998,12 @@ components:
         - password
         - dni
         - fecha_nacimiento
+        - genero
+        - nacionalidad
         - calle
         - numero
         - codigo_postal
         - localidad
-        - genero
-        - nacionalidad
 
     Profesor:
       type: object

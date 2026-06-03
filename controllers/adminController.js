@@ -4,10 +4,18 @@ const db = require('../config/db.js');
 const listarClientes = async (req, res) => {
   try {
     const sql = `
-      SELECT id_usuario AS id, username, nombre, apellido, email, dni, telefono, user_level, fecha_registro
-      FROM usuarios
-      WHERE user_level = 1
-      ORDER BY id_usuario ASC
+      SELECT u.id_usuario, u.id_usuario AS id, u.username, u.user_level, u.nombre, u.apellido, u.email, u.dni, u.telefono, u.fecha_nacimiento, u.fecha_registro,
+             g.genero AS genero, pa.nombre AS nacionalidad,
+             d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia
+      FROM usuarios u
+      LEFT JOIN generos g ON u.id_genero = g.id_genero
+      LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais
+      LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion
+      LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad
+      LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad
+      LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia
+      WHERE u.user_level = 1
+      ORDER BY u.id_usuario ASC
     `;
     const clients = await db.query.all(sql);
     res.json(clients);
@@ -21,11 +29,16 @@ const obtenerCliente = async (req, res) => {
   const { id } = req.params;
   try {
     const sql = `
-      SELECT u.id_usuario AS id, u.username, u.nombre, u.apellido, u.email, u.fecha_nacimiento, 
-             u.dni, u.telefono, g.genero, pa.nombre AS nacionalidad, u.user_level, u.fecha_registro
+      SELECT u.id_usuario, u.id_usuario AS id, u.user_level, u.username, u.nombre, u.apellido, u.email, u.fecha_nacimiento, 
+             u.dni, u.telefono, u.fecha_registro, g.genero AS genero, pa.nombre AS nacionalidad,
+             d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia
       FROM usuarios u
       LEFT JOIN generos g ON u.id_genero = g.id_genero
       LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais
+      LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion
+      LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad
+      LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad
+      LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia
       WHERE u.id_usuario = $1
     `;
     const client = await db.query.get(sql, [id]);

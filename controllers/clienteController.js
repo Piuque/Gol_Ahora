@@ -5,7 +5,7 @@ const obtenerPerfil = async (req, res) => {
   const idUsuario = req.user.id_usuario;
   try {
     const sql = `
-      SELECT u.username, u.nombre, u.apellido, u.email, u.fecha_nacimiento, 
+      SELECT u.id_usuario, u.id_usuario AS id, u.user_level, u.username, u.nombre, u.apellido, u.email, u.fecha_nacimiento, 
              u.dni, u.telefono, u.fecha_registro, g.genero AS genero, pa.nombre AS nacionalidad, 
              d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia 
       FROM usuarios u 

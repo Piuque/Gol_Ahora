@@ -3,12 +3,12 @@ const db = require('../config/db.js');
 // POST /usuario/registro
 const registrarUsuario = async (req, res) => {
   const { 
-    calle, numero, codigo_postal, localidad,
-    username, nombre, apellido, email, password, fecha_nacimiento, dni, telefono, genero, nacionalidad
+    username, nombre, apellido, email, password, dni, telefono, fecha_nacimiento, genero, nacionalidad,
+    calle, numero, codigo_postal, localidad
   } = req.body;
 
-  if (!calle || !numero || !codigo_postal || !localidad || !nombre || !apellido || !email || !dni || !password || !fecha_nacimiento || !genero || !nacionalidad) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios para registrar el usuario (se requieren: calle, numero, codigo_postal, localidad, username, nombre, apellido, email, password, fecha_nacimiento, dni, genero, nacionalidad)' });
+  if (!username || !nombre || !apellido || !email || !password || !dni || !fecha_nacimiento || !genero || !nacionalidad || !calle || !numero || !codigo_postal || !localidad) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios para registrar el usuario (se requieren: username, nombre, apellido, email, password, dni, fecha_nacimiento, genero, nacionalidad, calle, numero, codigo_postal, localidad)' });
   }
 
   try {
@@ -86,7 +86,7 @@ const registrarUsuario = async (req, res) => {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id_usuario, username, nombre, apellido, email, id_direccion, user_level
     `;
-    const userResult = await db.query.get(userSql, [
+    const insertResult = await db.query.get(userSql, [
       username || `user_${Date.now()}`,
       1, // user_level = 1 para Clientes
       nombre,
@@ -101,6 +101,20 @@ const registrarUsuario = async (req, res) => {
       idNacionalidad,
       1 // id_club = 1 (El buen deporte)
     ]);
+
+    const userResult = await db.query.get(`
+      SELECT u.id_usuario, u.id_usuario AS id, u.user_level, u.username, u.nombre, u.apellido, u.email, u.fecha_nacimiento, 
+             u.dni, u.telefono, u.fecha_registro, g.genero AS genero, pa.nombre AS nacionalidad, 
+             d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia 
+      FROM usuarios u 
+      LEFT JOIN generos g ON u.id_genero = g.id_genero 
+      LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais 
+      LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion 
+      LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad 
+      LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad 
+      LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia 
+      WHERE u.id_usuario = $1
+    `, [insertResult.id_usuario]);
 
     await db.pool.query('COMMIT');
 
