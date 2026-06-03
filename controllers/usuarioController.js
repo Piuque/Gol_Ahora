@@ -3,31 +3,88 @@ const db = require('../config/db.js');
 // POST /usuario/registro
 const registrarUsuario = async (req, res) => {
   const { 
-    calle, numero, codigo_postal, id_localidad,
-    username, nombre, apellido, email, password, fecha_nacimiento, dni, telefono, id_genero, id_nacionalidad, id_club
+    calle, numero, codigo_postal, localidad,
+    username, nombre, apellido, email, password, fecha_nacimiento, dni, telefono, genero, nacionalidad
   } = req.body;
 
-  if (!calle || !numero || !codigo_postal || !id_localidad || !nombre || !apellido || !email || !dni) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios para registrar la dirección y el usuario' });
+  if (!calle || !numero || !codigo_postal || !localidad || !nombre || !apellido || !email || !dni || !password || !fecha_nacimiento || !genero || !nacionalidad) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios para registrar el usuario (se requieren: calle, numero, codigo_postal, localidad, username, nombre, apellido, email, password, fecha_nacimiento, dni, genero, nacionalidad)' });
   }
 
   try {
-    // 1. Insertar la dirección primero
+    await db.pool.query('BEGIN');
+
+    // 1. Resolver el id_localidad de la tabla localidades mediante el string 'localidad'
+    let idLocalidad;
+    const locName = localidad.trim();
+    const existingLoc = await db.query.get(
+      'SELECT id_localidad FROM localidades WHERE LOWER(nombre) = LOWER($1)',
+      [locName]
+    );
+
+    if (existingLoc) {
+      idLocalidad = existingLoc.id_localidad;
+    } else {
+      // Si la localidad no existe en la base de datos, la insertamos asociada a la ciudad de Florencio Varela (id_ciudad = 1)
+      const insertLoc = await db.pool.query(
+        'INSERT INTO localidades (nombre, id_ciudad) VALUES ($1, 1) RETURNING id_localidad',
+        [locName]
+      );
+      idLocalidad = insertLoc.rows[0].id_localidad;
+    }
+
+    // 2. Resolver el id_genero de la tabla generos mediante el string 'genero'
+    let idGenero = 1;
+    const genName = genero.trim();
+    const existingGen = await db.query.get(
+      'SELECT id_genero FROM generos WHERE LOWER(genero) = LOWER($1)',
+      [genName]
+    );
+
+    if (existingGen) {
+      idGenero = existingGen.id_genero;
+    } else {
+      const insertGen = await db.pool.query(
+        'INSERT INTO generos (genero) VALUES ($1) RETURNING id_genero',
+        [genName]
+      );
+      idGenero = insertGen.rows[0].id_genero;
+    }
+
+    // 3. Resolver el id_nacionalidad de la tabla paises mediante el string 'nacionalidad'
+    let idNacionalidad = 1;
+    const nacName = nacionalidad.trim();
+    const existingPais = await db.query.get(
+      'SELECT id_pais FROM paises WHERE LOWER(nombre) = LOWER($1)',
+      [nacName]
+    );
+
+    if (existingPais) {
+      idNacionalidad = existingPais.id_pais;
+    } else {
+      const insertPais = await db.pool.query(
+        'INSERT INTO paises (nombre) VALUES ($1) RETURNING id_pais',
+        [nacName]
+      );
+      idNacionalidad = insertPais.rows[0].id_pais;
+    }
+
+    // 4. Insertar la dirección con el id_localidad obtenido
     const dirSql = `
       INSERT INTO direcciones (calle, numero, codigo_postal, id_localidad) 
       VALUES ($1, $2, $3, $4) 
       RETURNING id_direccion
     `;
-    const dirResult = await db.query.run(dirSql, [calle, numero, codigo_postal, id_localidad]);
-    const idDireccion = dirResult.id;
+    const dirResult = await db.pool.query(dirSql, [calle, numero, codigo_postal, idLocalidad]);
+    const idDireccion = dirResult.rows[0].id_direccion;
 
-    // 2. Insertar/registrar al cliente (user_level = 1)
+    // 5. Insertar/registrar al cliente (user_level = 1 para Clientes registrados)
     const userSql = `
       INSERT INTO usuarios (
         username, user_level, nombre, apellido, email, password, 
         fecha_nacimiento, dni, telefono, id_direccion, id_genero, id_nacionalidad, id_club
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING id_usuario, username, nombre, apellido, email, id_direccion
+      RETURNING id_usuario, username, nombre, apellido, email, id_direccion, user_level
     `;
     const userResult = await db.query.get(userSql, [
       username || `user_${Date.now()}`,
@@ -35,21 +92,24 @@ const registrarUsuario = async (req, res) => {
       nombre,
       apellido,
       email,
-      password || 'default_hashed_pass',
-      fecha_nacimiento || '1990-01-01',
+      password,
+      fecha_nacimiento,
       dni,
       telefono || '-',
       idDireccion,
-      id_genero || 1,
-      id_nacionalidad || 1,
-      id_club || 1
+      idGenero,
+      idNacionalidad,
+      1 // id_club = 1 (El buen deporte)
     ]);
+
+    await db.pool.query('COMMIT');
 
     res.status(201).json({
       message: 'Cliente registrado exitosamente',
       usuario: userResult
     });
   } catch (err) {
+    await db.pool.query('ROLLBACK');
     if (err.code === '23505') {
       return res.status(400).json({ 
         error: 'Datos duplicados', 

@@ -1935,6 +1935,8 @@ components:
         email:
           type: string
           format: email
+        password:
+          type: string
         dni:
           type: string
         telefono:
@@ -1948,17 +1950,26 @@ components:
           type: string
         codigo_postal:
           type: string
-        id_localidad:
-          type: integer
+        localidad:
+          type: string
+        genero:
+          type: string
+        nacionalidad:
+          type: string
       required:
+        - username
         - nombre
         - apellido
         - email
+        - password
         - dni
+        - fecha_nacimiento
         - calle
         - numero
         - codigo_postal
-        - id_localidad
+        - localidad
+        - genero
+        - nacionalidad
 
     Profesor:
       type: object
