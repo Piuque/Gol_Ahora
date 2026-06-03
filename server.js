@@ -16,12 +16,21 @@ app.use(cors());
 app.use(express.json());
 
 // Montar Rutas de la API por prefijos de roles
-app.use('/api/v1/usuario', usuarioRoutes);
-app.use('/api/v1/cliente', clienteRoutes);
-app.use('/api/v1/admin', adminRoutes);
+app.use('/usuario', usuarioRoutes);
+app.use('/cliente', clienteRoutes);
+app.use('/admin', adminRoutes);
 
 // Servir la especificación OpenAPI y la interfaz Swagger UI como archivos estáticos
-app.use(express.static(path.join(__dirname)));
+// Se configura control de caché estricto para openapi.yaml para evitar errores de renderizado por archivos cacheados
+app.use(express.static(path.join(__dirname), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('openapi.yaml') || filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // Endpoint de fallback para Swagger UI
 app.get('/', (req, res) => {
