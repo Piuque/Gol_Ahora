@@ -1942,10 +1942,23 @@ components:
         fecha_nacimiento:
           type: string
           format: date
+        calle:
+          type: string
+        numero:
+          type: string
+        codigo_postal:
+          type: string
+        id_localidad:
+          type: integer
       required:
         - nombre
         - apellido
         - email
+        - dni
+        - calle
+        - numero
+        - codigo_postal
+        - id_localidad
 
     Profesor:
       type: object
