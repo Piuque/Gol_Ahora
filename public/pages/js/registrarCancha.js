@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // CARGAR TIPOS DE CANCHAS DESDE LA API
     // ==========================================
     try {
-        const response = await fetch("/admin/canchas");
+        const response = await fetch("/api/usuario/tipos-cancha");
         tiposCanchas = await response.json();
     } catch (error) {
         console.error("Error al cargar tipos de canchas:", error);
@@ -42,17 +42,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const matches = tiposCanchas.filter(t =>
-            t.tipo_cancha.toLowerCase().includes(query)
+            t.categoria.toLowerCase().includes(query)
         );
 
         if (matches.length > 0) {
             matches.forEach(t => {
                 const div = document.createElement("div");
-                div.textContent = t.tipo_cancha;
+                div.textContent = t.categoria;
                 div.classList.add("sugerencia-item");
                 
                 div.addEventListener("click", () => {
-                    tipoCanchaInput.value = t.tipo_cancha; 
+                    tipoCanchaInput.value = t.categoria; 
                     tipoCanchaHidden.value = t.id;        
                     suggestionsBox.style.display = "none";
                 });
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Si el hidden quedó vacío, validamos si lo escrito coincide textualmente con un Tipo de Cancha válido
         if (!tipoCanchaHidden.value) {
             const textoEscrito = tipoCanchaInput.value.trim().toLowerCase();
-            const coincidenciaExacta = tiposCanchas.find(t => t.tipo_cancha.toLowerCase() === textoEscrito);
+            const coincidenciaExacta = tiposCanchas.find(t => t.categoria.toLowerCase() === textoEscrito);
             
             if (coincidenciaExacta) {
                 tipoCanchaHidden.value = coincidenciaExacta.id;
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 cabeceras["X-Auth-Token"] = token;
             }
 
-            const res = await fetch("/api/canchas/agregar", {
+            const res = await fetch("/api/admin/canchas", {
                 method: "POST",
                 headers: cabeceras,
                 credentials: "include", // Envía automáticamente las cookies de sesión persistentes
