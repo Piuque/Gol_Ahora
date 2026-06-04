@@ -13,8 +13,12 @@ servers:
   - url: /
     description: Servidor principal (Autodetectado)
 tags:
-  - name: Gestión de Clientes
-    description: Registro, perfiles y administración de los clientes del complejo
+  - name: Gestión de Clientes (Público)
+    description: Acceso inicial y registro para visitantes no registrados del complejo
+  - name: Gestión de Clientes (Cliente)
+    description: Gestión de datos personales y perfil propio para el deportista registrado
+  - name: Gestión de Clientes (Administrador)
+    description: Administración, búsqueda, actualización, eliminación e impresión de fichas de clientes
   - name: Profesores y Entrenadores
     description: Gestión del personal docente, sus certificaciones y asignaciones
   - name: Gestión de Canchas
@@ -37,7 +41,7 @@ paths:
   /usuario/registro:
     post:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Público)
       summary: Registrarse como nuevo cliente en el sistema (RF-01)
       operationId: registrarNuevoUsuario
       requestBody:
@@ -161,7 +165,7 @@ paths:
   /cliente/perfil:
     get:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Cliente)
       summary: Consultar sus datos personales (RF-03)
       operationId: obtenerPerfilCliente
       responses:
@@ -173,7 +177,7 @@ paths:
                 $ref: '#/components/schemas/Cliente'
     put:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Cliente)
       summary: Modificar sus propios datos de perfil (RF-04)
       operationId: modificarPerfilCliente
       requestBody:
@@ -539,7 +543,7 @@ paths:
   /admin/clientes:
     get:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Administrador)
       summary: Listar los clientes del complejo (RF-02)
       operationId: adminListarClientes
       responses:
@@ -555,7 +559,7 @@ paths:
   /admin/clientes/{id}:
     get:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Administrador)
       summary: Consultar los datos de un cliente (RF-03)
       operationId: adminObtenerCliente
       parameters:
@@ -573,7 +577,7 @@ paths:
                 $ref: '#/components/schemas/Cliente'
     put:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Administrador)
       summary: Modificar los datos de un cliente (RF-04)
       operationId: adminActualizarCliente
       parameters:
@@ -593,7 +597,7 @@ paths:
           description: Ficha modificada
     delete:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Administrador)
       summary: Eliminar los datos de un cliente (RF-05)
       operationId: adminEliminarCliente
       parameters:
@@ -609,7 +613,7 @@ paths:
   /admin/clientes/{id}/imprimir:
     get:
       tags:
-        - Gestión de Clientes
+        - Gestión de Clientes (Administrador)
       summary: Generar ficha de cliente para imprimir (RF-06)
       operationId: adminImprimirCliente
       parameters:
