@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 document.getElementById("register-form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const res = await fetch("/api/register", {
+  const res = await fetch("/api/usuario/registro", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
