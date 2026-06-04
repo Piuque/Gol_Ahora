@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // CARGAR TIPOS DE CANCHAS DESDE LA API
     // ==========================================
     try {
-        const response = await fetch("/api/tipos_canchas");
+        const response = await fetch("/admin/canchas");
         tiposCanchas = await response.json();
     } catch (error) {
         console.error("Error al cargar tipos de canchas:", error);
