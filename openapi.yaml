@@ -13,12 +13,22 @@ servers:
   - url: /
     description: Servidor principal (Autodetectado)
 tags:
-  - name: 1. Acceso Usuario (Público)
-    description: Endpoints públicos generales para visitantes no registrados
-  - name: 2. Acceso Cliente (Registrado)
-    description: Endpoints privados para deportistas registrados (Reservas, Clases, Finanzas propias)
-  - name: 3. Acceso Administrador (Personal)
-    description: Endpoints operativos y de gestión exclusiva para el personal del club
+  - name: Gestión de Clientes
+    description: Registro, perfiles y administración de los clientes del complejo
+  - name: Profesores y Entrenadores
+    description: Gestión del personal docente, sus certificaciones y asignaciones
+  - name: Gestión de Canchas
+    description: Control de canchas físicas, categorías de canchas y disponibilidad horaria
+  - name: Reservas
+    description: Operaciones de alquiler, cancelación y modificación de turnos de canchas
+  - name: Clases y Entrenamientos
+    description: Inscripciones, asistencia y planificación de clases grupales y entrenamientos particulares
+  - name: Ligas y Torneos
+    description: Creación de ligas y torneos, fixtures, brackets y resultados de partidos
+  - name: Finanzas y Cobros
+    description: Cobros, facturación, emisión de recibos y configuración de descuentos
+  - name: Reportes
+    description: Generación de reportes de ingresos y estadísticas de asistencia
 
 paths:
   # ==========================================
@@ -27,7 +37,7 @@ paths:
   /usuario/registro:
     post:
       tags:
-        - 1. Acceso Usuario (Público)
+        - Gestión de Clientes
       summary: Registrarse como nuevo cliente en el sistema (RF-01)
       operationId: registrarNuevoUsuario
       requestBody:
@@ -49,7 +59,7 @@ paths:
   /usuario/canchas:
     get:
       tags:
-        - 1. Acceso Usuario (Público)
+        - Gestión de Canchas
       summary: Listar canchas del complejo con características (RF-27)
       operationId: listarCanchasPublicas
       parameters:
@@ -71,7 +81,7 @@ paths:
   /usuario/tipos-cancha:
     get:
       tags:
-        - 1. Acceso Usuario (Público)
+        - Gestión de Canchas
       summary: Listar los tipos de canchas y sus características (RF-22)
       operationId: listarTiposCanchaPublicos
       responses:
@@ -87,7 +97,7 @@ paths:
   /usuario/canchas/disponibilidad:
     get:
       tags:
-        - 1. Acceso Usuario (Público)
+        - Gestión de Canchas
       summary: Consultar la disponibilidad horaria general de las canchas (RF-31)
       operationId: consultarDisponibilidadPublica
       parameters:
@@ -116,7 +126,7 @@ paths:
   /usuario/clases:
     get:
       tags:
-        - 1. Acceso Usuario (Público)
+        - Clases y Entrenamientos
       summary: Consultar la oferta general de clases programadas (RF-74)
       operationId: listarClasesPublicas
       responses:
@@ -132,7 +142,7 @@ paths:
   /usuario/entrenamientos:
     get:
       tags:
-        - 1. Acceso Usuario (Público)
+        - Clases y Entrenamientos
       summary: Consultar la oferta general de entrenamientos programados (RF-81)
       operationId: listarEntrenamientosPublicos
       responses:
@@ -151,7 +161,7 @@ paths:
   /cliente/perfil:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Gestión de Clientes
       summary: Consultar sus datos personales (RF-03)
       operationId: obtenerPerfilCliente
       responses:
@@ -163,7 +173,7 @@ paths:
                 $ref: '#/components/schemas/Cliente'
     put:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Gestión de Clientes
       summary: Modificar sus propios datos de perfil (RF-04)
       operationId: modificarPerfilCliente
       requestBody:
@@ -183,7 +193,7 @@ paths:
   /cliente/canchas:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Gestión de Canchas
       summary: Listar e investigar características de canchas físicas para reservar (RF-27)
       operationId: listarCanchasCliente
       parameters:
@@ -205,7 +215,7 @@ paths:
   /cliente/reservas:
     post:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Reservas
       summary: Realizar la reserva de una cancha (RF-52)
       description: |
         Registra una reserva. Reglas de negocio:
@@ -230,7 +240,7 @@ paths:
           description: Error en las validaciones de políticas del club
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Reservas
       summary: Listar sus propias reservas (RF-53)
       operationId: listarMisReservas
       responses:
@@ -246,7 +256,7 @@ paths:
   /cliente/reservas/{id}:
     put:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Reservas
       summary: Modificar reserva (cambiar horario o cancha) (RF-55)
       operationId: modificarReservaCliente
       parameters:
@@ -272,7 +282,7 @@ paths:
   /cliente/reservas/{id}/cancelar:
     post:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Reservas
       summary: Cancelar una reserva activa (RF-56)
       description: |
         Cancela la reserva propia.
@@ -296,7 +306,7 @@ paths:
   /cliente/clases:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Clases y Entrenamientos
       summary: "Listar sus clases (2 listados: Oferta disponible y Clases contratadas/particulares) (RF-74)"
       operationId: listarMisClases
       parameters:
@@ -319,7 +329,7 @@ paths:
   /cliente/clases/inscripcion:
     post:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Clases y Entrenamientos
       summary: Inscribirse a una clase particular o grupal (RF-78)
       operationId: inscribirAClaseCliente
       requestBody:
@@ -339,7 +349,7 @@ paths:
   /cliente/clases/inscripcion/{id}:
     delete:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Clases y Entrenamientos
       summary: Darse de baja de una clase (cancelar inscripción) (RF-77)
       operationId: darDeBajaClaseCliente
       parameters:
@@ -355,7 +365,7 @@ paths:
   /cliente/entrenamientos:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Clases y Entrenamientos
       summary: "Listar sus entrenamientos (2 listados: Oferta disponible y Entrenamientos inscritos/particulares) (RF-81)"
       operationId: listarMisEntrenamientos
       parameters:
@@ -378,7 +388,7 @@ paths:
   /cliente/entrenamientos/inscripcion:
     post:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Clases y Entrenamientos
       summary: Inscribirse a un entrenamiento particular o grupal (RF-87)
       operationId: inscribirAEntrenamientoCliente
       requestBody:
@@ -398,7 +408,7 @@ paths:
   /cliente/entrenamientos/inscripcion/{id}:
     delete:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Clases y Entrenamientos
       summary: Darse de baja (cancelar inscripción) de un entrenamiento (RF-88)
       operationId: darDeBajaEntrenamientoCliente
       parameters:
@@ -414,7 +424,7 @@ paths:
   /cliente/clases/pago:
     post:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Finanzas y Cobros
       summary: Realizar pago por servicio/inscripción de clase (RF-39, RF-45)
       operationId: realizarPagoClase
       requestBody:
@@ -434,7 +444,7 @@ paths:
   /cliente/entrenamientos/pago:
     post:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Finanzas y Cobros
       summary: Realizar pago por servicio/inscripción de entrenamiento (RF-39, RF-45)
       operationId: realizarPagoEntrenamiento
       requestBody:
@@ -454,7 +464,7 @@ paths:
   /cliente/cobros:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Finanzas y Cobros
       summary: Listar sus cobros/pagos registrados (RF-46)
       operationId: listarMisCobros
       responses:
@@ -470,7 +480,7 @@ paths:
   /cliente/cobros/{id}:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Finanzas y Cobros
       summary: Consultar datos de un cobro propio específico (RF-47)
       operationId: obtenerMiCobro
       parameters:
@@ -490,7 +500,7 @@ paths:
   /cliente/recibos:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Finanzas y Cobros
       summary: Listar sus recibos de pago (RF-40)
       operationId: listarMisRecibos
       responses:
@@ -506,7 +516,7 @@ paths:
   /cliente/recibos/{id}:
     get:
       tags:
-        - 2. Acceso Cliente (Registrado)
+        - Finanzas y Cobros
       summary: Consultar un recibo propio específico (RF-41)
       operationId: obtenerMiRecibo
       parameters:
@@ -529,7 +539,7 @@ paths:
   /admin/clientes:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Clientes
       summary: Listar los clientes del complejo (RF-02)
       operationId: adminListarClientes
       responses:
@@ -545,7 +555,7 @@ paths:
   /admin/clientes/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Clientes
       summary: Consultar los datos de un cliente (RF-03)
       operationId: adminObtenerCliente
       parameters:
@@ -563,7 +573,7 @@ paths:
                 $ref: '#/components/schemas/Cliente'
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Clientes
       summary: Modificar los datos de un cliente (RF-04)
       operationId: adminActualizarCliente
       parameters:
@@ -583,7 +593,7 @@ paths:
           description: Ficha modificada
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Clientes
       summary: Eliminar los datos de un cliente (RF-05)
       operationId: adminEliminarCliente
       parameters:
@@ -599,7 +609,7 @@ paths:
   /admin/clientes/{id}/imprimir:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Clientes
       summary: Generar ficha de cliente para imprimir (RF-06)
       operationId: adminImprimirCliente
       parameters:
@@ -621,7 +631,7 @@ paths:
   /admin/profesores:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Registrar datos de un profesor y sus certificaciones (RF-07, RF-13)
       operationId: adminRegistrarProfesor
       requestBody:
@@ -635,7 +645,7 @@ paths:
           description: Profesor registrado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Listar a los profesores (RF-08)
       operationId: adminListarProfesores
       responses:
@@ -645,7 +655,7 @@ paths:
   /admin/profesores/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Consultar datos de un profesor (RF-09)
       operationId: adminObtenerProfesor
       parameters:
@@ -659,7 +669,7 @@ paths:
           description: Datos del profesor
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Modificar datos de un profesor (RF-10)
       operationId: adminActualizarProfesor
       parameters:
@@ -679,7 +689,7 @@ paths:
           description: Profesor modificado
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Eliminar profesor (RF-11)
       operationId: adminEliminarProfesor
       parameters:
@@ -695,7 +705,7 @@ paths:
   /admin/profesores/{id}/imprimir:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Imprimir datos de profesor (RF-12)
       operationId: adminImprimirProfesor
       parameters:
@@ -711,7 +721,7 @@ paths:
   /admin/profesores/{id}/certificaciones:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Registrar certificaciones de un profesor (RF-13)
       operationId: adminRegistrarCertificacionProfesor
       parameters:
@@ -733,7 +743,7 @@ paths:
   /admin/entrenadores:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Registrar datos de un entrenador y sus certificaciones (RF-14, RF-20)
       operationId: adminRegistrarEntrenador
       requestBody:
@@ -747,7 +757,7 @@ paths:
           description: Entrenador registrado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Listar a los entrenadores (RF-15)
       operationId: adminListarEntrenadores
       responses:
@@ -757,7 +767,7 @@ paths:
   /admin/entrenadores/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Consultar datos de un entrenador (RF-16)
       operationId: adminObtenerEntrenador
       parameters:
@@ -771,7 +781,7 @@ paths:
           description: Datos del entrenador
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Modificar datos de un entrenador (RF-17)
       operationId: adminActualizarEntrenador
       parameters:
@@ -791,7 +801,7 @@ paths:
           description: Entrenador modificado
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Eliminar entrenador (RF-18)
       operationId: adminEliminarEntrenador
       parameters:
@@ -807,7 +817,7 @@ paths:
   /admin/entrenadores/{id}/imprimir:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Imprimir datos de entrenador (RF-19)
       operationId: adminImprimirEntrenador
       parameters:
@@ -823,7 +833,7 @@ paths:
   /admin/entrenadores/{id}/certificaciones:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Profesores y Entrenadores
       summary: Registrar certificaciones de un entrenador (RF-20)
       operationId: adminRegistrarCertificacionEntrenador
       parameters:
@@ -846,7 +856,7 @@ paths:
   /admin/tipos-cancha:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Registrar tipos de canchas y sus características (RF-21)
       operationId: adminRegistrarTipoCancha
       requestBody:
@@ -860,7 +870,7 @@ paths:
           description: Tipo de cancha registrado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Listar los tipos de canchas y sus características (RF-22)
       operationId: adminListarTiposCancha
       responses:
@@ -870,7 +880,7 @@ paths:
   /admin/tipos-cancha/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Consultar un tipo de cancha (RF-23)
       operationId: adminObtenerTipoCancha
       parameters:
@@ -884,7 +894,7 @@ paths:
           description: Características del tipo
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Modificar las características de un tipo de cancha (RF-24)
       operationId: adminActualizarTipoCancha
       parameters:
@@ -904,7 +914,7 @@ paths:
           description: Tipo modificado
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Eliminar tipo de cancha (RF-25)
       operationId: adminEliminarTipoCancha
       parameters:
@@ -920,7 +930,7 @@ paths:
   /admin/canchas:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Registrar cancha de un tipo asignado (RF-26)
       operationId: adminRegistrarCancha
       requestBody:
@@ -934,7 +944,7 @@ paths:
           description: Cancha creada
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Listar canchas (RF-27)
       operationId: adminListarCanchas
       responses:
@@ -944,7 +954,7 @@ paths:
   /admin/canchas/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Consultar una cancha asignada (RF-28)
       operationId: adminObtenerCancha
       parameters:
@@ -958,7 +968,7 @@ paths:
           description: Datos de la cancha
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Modificar cancha (RF-29)
       operationId: adminActualizarCancha
       parameters:
@@ -978,7 +988,7 @@ paths:
           description: Cancha modificada
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Eliminar cancha (RF-30)
       operationId: adminEliminarCancha
       parameters:
@@ -994,7 +1004,7 @@ paths:
   /admin/canchas/{id}/disponibilidad:
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Modificar la disponibilidad horaria de una cancha (RF-32)
       operationId: adminActualizarDisponibilidadCancha
       parameters:
@@ -1016,7 +1026,7 @@ paths:
   /admin/canchas/{id}/bloqueos:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Gestión de Canchas
       summary: Bloquear canchas para mantenimiento (RF-33)
       operationId: adminBloquearCancha
       parameters:
@@ -1039,7 +1049,7 @@ paths:
   /admin/descuentos:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Registrar descuentos (RF-34)
       operationId: adminRegistrarDescuento
       requestBody:
@@ -1053,7 +1063,7 @@ paths:
           description: Descuento registrado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Listar descuentos (RF-35)
       operationId: adminListarDescuentos
       responses:
@@ -1063,7 +1073,7 @@ paths:
   /admin/descuentos/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Consultar descuentos (RF-36)
       operationId: adminObtenerDescuento
       parameters:
@@ -1077,7 +1087,7 @@ paths:
           description: Detalles de descuento
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Modificar descuentos (RF-37)
       operationId: adminActualizarDescuento
       parameters:
@@ -1097,7 +1107,7 @@ paths:
           description: Descuento actualizado
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Eliminar descuentos (RF-38)
       operationId: adminEliminarDescuento
       parameters:
@@ -1113,7 +1123,7 @@ paths:
   /admin/cobros:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Registrar cobros por servicios (RF-45)
       operationId: adminRegistrarCobro
       requestBody:
@@ -1127,7 +1137,7 @@ paths:
           description: Cobro de servicio registrado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Listar cobros por servicios (RF-46)
       operationId: adminListarCobros
       responses:
@@ -1137,7 +1147,7 @@ paths:
   /admin/cobros/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Consultar cobros por servicios (RF-47)
       operationId: adminObtenerCobro
       parameters:
@@ -1151,7 +1161,7 @@ paths:
           description: Datos del cobro
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Modificar cobros por servicios (RF-49)
       operationId: adminActualizarCobro
       parameters:
@@ -1173,7 +1183,7 @@ paths:
   /admin/cobros/{id}/aplicar-descuento:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Aplicar descuentos a un cobro (RF-48)
       operationId: adminAplicarDescuentoACobro
       parameters:
@@ -1198,7 +1208,7 @@ paths:
   /admin/cobros/{id}/cancelar:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Cancelar cobros por servicios (RF-50)
       operationId: adminCancelarCobro
       parameters:
@@ -1214,7 +1224,7 @@ paths:
   /admin/cobros/{id}/imprimir:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Imprimir cobro por servicios (RF-51)
       operationId: adminImprimirCobro
       parameters:
@@ -1230,7 +1240,7 @@ paths:
   /admin/recibos:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Registrar los recibos de pago (RF-39)
       operationId: adminRegistrarRecibo
       requestBody:
@@ -1244,7 +1254,7 @@ paths:
           description: Recibo oficial creado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Listar los recibos de pago (RF-40)
       operationId: adminListarRecibos
       responses:
@@ -1254,7 +1264,7 @@ paths:
   /admin/recibos/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Consultar los recibos de pago (RF-41)
       operationId: adminObtenerRecibo
       parameters:
@@ -1268,7 +1278,7 @@ paths:
           description: Datos del recibo
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Modificar los recibos de pago (RF-42)
       operationId: adminActualizarRecibo
       parameters:
@@ -1288,7 +1298,7 @@ paths:
           description: Recibo modificado
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Eliminar los recibos de pago (RF-43)
       operationId: adminEliminarRecibo
       parameters:
@@ -1304,7 +1314,7 @@ paths:
   /admin/recibos/{id}/imprimir:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Finanzas y Cobros
       summary: Imprimir recibos de pago (RF-44)
       operationId: adminImprimirRecibo
       parameters:
@@ -1321,7 +1331,7 @@ paths:
   /admin/ligas:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Registrar ligas del club (RF-57)
       operationId: adminRegistrarLiga
       requestBody:
@@ -1335,7 +1345,7 @@ paths:
           description: Liga creada
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Listar ligas (RF-58)
       operationId: adminListarLigas
       responses:
@@ -1345,7 +1355,7 @@ paths:
   /admin/ligas/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Consultar ligas (RF-59)
       operationId: adminObtenerLiga
       parameters:
@@ -1359,7 +1369,7 @@ paths:
           description: Datos de la liga
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Modificar ligas (RF-60)
       operationId: adminActualizarLiga
       parameters:
@@ -1379,7 +1389,7 @@ paths:
           description: Liga modificada
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Cancelar ligas (RF-61)
       operationId: adminCancelarLiga
       parameters:
@@ -1395,7 +1405,7 @@ paths:
   /admin/ligas/{id}/fixture:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Generar fixtures de ligas (RF-62)
       operationId: adminGenerarFixtureLiga
       parameters:
@@ -1411,7 +1421,7 @@ paths:
   /admin/ligas/{id}/inscripciones:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Gestionar la inscripción de los usuarios a ligas (RF-64)
       operationId: adminInscribirALiga
       parameters:
@@ -1436,7 +1446,7 @@ paths:
   /admin/ligas/{id}/partidos/{idPartido}/resultado:
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Registrar los resultados de los partidos de la liga (RF-63)
       operationId: adminRegistrarResultadoPartidoLiga
       parameters:
@@ -1463,7 +1473,7 @@ paths:
   /admin/torneos:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Registrar torneos (RF-65)
       operationId: adminRegistrarTorneo
       requestBody:
@@ -1477,7 +1487,7 @@ paths:
           description: Torneo creado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Listar torneos (RF-67)
       operationId: adminListarTorneos
       responses:
@@ -1487,7 +1497,7 @@ paths:
   /admin/torneos/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Consultar torneos (RF-66)
       operationId: adminObtenerTorneo
       parameters:
@@ -1501,7 +1511,7 @@ paths:
           description: Detalles de torneo
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Modificar torneos (RF-68)
       operationId: adminActualizarTorneo
       parameters:
@@ -1521,7 +1531,7 @@ paths:
           description: Torneo modificado
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Cancelar torneos (RF-69)
       operationId: adminCancelarTorneo
       parameters:
@@ -1537,7 +1547,7 @@ paths:
   /admin/torneos/{id}/cuadro:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Generar los cuadros de los torneos / fixtures (RF-70)
       operationId: adminGenerarCuadroTorneo
       parameters:
@@ -1553,7 +1563,7 @@ paths:
   /admin/torneos/{id}/inscripciones:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Gestionar la inscripción de los usuarios a torneos (RF-72)
       operationId: adminInscribirATorneo
       parameters:
@@ -1578,7 +1588,7 @@ paths:
   /admin/torneos/{id}/partidos/{idPartido}/resultado:
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Ligas y Torneos
       summary: Registrar los resultados de los partidos del torneo (RF-71)
       operationId: adminRegistrarResultadoPartidoTorneo
       parameters:
@@ -1606,7 +1616,7 @@ paths:
   /admin/clases:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Programar las clases (RF-73)
       description: Crea y publica la oferta de clases grupales.
       operationId: adminProgramarClase
@@ -1621,7 +1631,7 @@ paths:
           description: Clase publicada
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Listar clases (RF-74)
       operationId: adminListarClases
       responses:
@@ -1631,7 +1641,7 @@ paths:
   /admin/clases/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Consultar clases (RF-75)
       operationId: adminObtenerClase
       parameters:
@@ -1645,7 +1655,7 @@ paths:
           description: Detalles de la clase
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Modificar clases (RF-76)
       operationId: adminActualizarClase
       parameters:
@@ -1665,7 +1675,7 @@ paths:
           description: Clase modificada
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Dar de baja una clase (RF-77)
       operationId: adminDarDeBajaClase
       parameters:
@@ -1681,7 +1691,7 @@ paths:
   /admin/clases/asignacion-particular:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Asignar profesores a los usuarios para clases particulares (RF-78)
       operationId: adminAsignarProfesorParticular
       requestBody:
@@ -1697,7 +1707,7 @@ paths:
   /admin/clases/{id}/asistencia:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Registrar la asistencia de los usuarios a las clases (RF-79)
       operationId: adminRegistrarAsistenciaClase
       parameters:
@@ -1719,7 +1729,7 @@ paths:
   /admin/entrenamientos:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Programar entrenamientos (RF-80)
       operationId: adminProgramarEntrenamiento
       requestBody:
@@ -1733,7 +1743,7 @@ paths:
           description: Entrenamiento publicado
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Listar entrenamientos (RF-81)
       operationId: adminListarEntrenamientos
       responses:
@@ -1743,7 +1753,7 @@ paths:
   /admin/entrenamientos/{id}:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Consultar entrenamientos (RF-82)
       operationId: adminObtenerEntrenamiento
       parameters:
@@ -1757,7 +1767,7 @@ paths:
           description: Datos del entrenamiento
     put:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Modificar entrenamientos (RF-83)
       operationId: adminActualizarEntrenamiento
       parameters:
@@ -1777,7 +1787,7 @@ paths:
           description: Entrenamiento modificado
     delete:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Dar de baja un entrenamiento (RF-84)
       operationId: adminDarDeBajaEntrenamiento
       parameters:
@@ -1793,7 +1803,7 @@ paths:
   /admin/entrenamientos/asignacion-particular:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Asignar entrenadores a clientes para entrenamientos particulares (RF-85)
       operationId: adminAsignarEntrenadorParticular
       requestBody:
@@ -1809,7 +1819,7 @@ paths:
   /admin/entrenamientos/{id}/asistencia:
     post:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Clases y Entrenamientos
       summary: Registrar la asistencia de los usuarios a los entrenamientos (RF-86)
       operationId: adminRegistrarAsistenciaEntrenamiento
       parameters:
@@ -1832,7 +1842,7 @@ paths:
   /admin/reportes/tipos-cancha:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Reportes
       summary: Generar reporte de los tipos de canchas y sus características (RF-89)
       operationId: adminReporteTiposCancha
       responses:
@@ -1842,7 +1852,7 @@ paths:
   /admin/reportes/ingresos:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Reportes
       summary: Generar reportes de ingresos (RF-90)
       operationId: adminReporteIngresos
       parameters:
@@ -1865,7 +1875,7 @@ paths:
   /admin/reportes/reservas:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Reportes
       summary: Generar reportes de reservas (RF-91)
       operationId: adminReporteReservas
       parameters:
@@ -1881,7 +1891,7 @@ paths:
   /admin/reportes/asistencia-clases:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Reportes
       summary: Generar reportes de asistencia a clases (RF-92)
       operationId: adminReporteAsistenciaClases
       responses:
@@ -1891,7 +1901,7 @@ paths:
   /admin/reportes/asistencia-entrenamientos:
     get:
       tags:
-        - 3. Acceso Administrador (Personal)
+        - Reportes
       summary: Generar reportes de asistencia a entrenamientos (RF-93)
       operationId: adminReporteAsistenciaEntrenamientos
       responses:
