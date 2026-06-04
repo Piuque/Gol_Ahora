@@ -105,10 +105,18 @@ function executeLogout() {
         cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, salir',
         cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
+            localStorage.clear();
+            document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "x-user-id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            
+            // Si el backend tiene un endpoint de logout, lo llamamos también
+            await fetch('/logout', { method: 'POST' }).catch(() => {});
+            
+            window.location.href = '/acceder';
         }
     });
 }
