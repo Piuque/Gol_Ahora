@@ -7,6 +7,10 @@ const { authMiddleware, requireRole } = require('../middlewares/auth.js');
 router.use(authMiddleware);
 router.use(requireRole(['admin']));
 
+// Info de administrador
+const usuarioController = require('../controllers/usuarioController.js');
+router.get('/info', usuarioController.obtenerInfoUsuarioLogueado);
+
 // Gestión de Clientes
 router.get('/clientes', adminController.listarClientes);
 router.get('/clientes/:id', adminController.obtenerCliente);

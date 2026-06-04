@@ -1,4 +1,13 @@
-const API = "http://localhost:3000/user_Info";
+const userRole = localStorage.getItem("role") || "profesor";
+let relativePath = "/profesor/info";
+if (userRole === "admin" || userRole === "administrador") {
+    relativePath = "/admin/info";
+} else if (userRole === "entrenador") {
+    relativePath = "/entrenador/info";
+} else if (userRole === "cliente") {
+    relativePath = "/cliente/info";
+}
+const API = relativePath;
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inicializar botones de colapso y cerrar sesión

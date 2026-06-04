@@ -7,7 +7,8 @@ const { initDatabase } = require('./config/db.js');
 const usuarioRoutes = require('./routes/usuarioRoutes.js');
 const clienteRoutes = require('./routes/clienteRoutes.js');
 const adminRoutes = require('./routes/adminRoutes.js');
-const { authMiddleware } = require('./middlewares/auth.js');
+const { authMiddleware, requireRole } = require('./middlewares/auth.js');
+const usuarioController = require('./controllers/usuarioController.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -47,58 +48,9 @@ app.get('/api/generos', async (req, res) => {
   }
 });
 
-// Endpoint para obtener la información de perfil del usuario logueado (esperado por datosPersonales.js)
-app.get(['/user_info', '/user_Info'], authMiddleware, async (req, res) => {
-  const idUsuario = req.user.id_usuario;
-  if (!idUsuario) {
-    return res.status(401).json({ error: 'No autorizado', details: 'Falta iniciar sesión' });
-  }
-
-  try {
-    const db = require('./config/db.js');
-    const sql = `
-      SELECT u.id_usuario, u.username, u.nombre, u.apellido, u.email, 
-             to_char(u.fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento, 
-             u.dni, u.telefono, g.genero AS genero, pa.nombre AS nacionalidad, 
-             d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia 
-      FROM usuarios u 
-      LEFT JOIN generos g ON u.id_genero = g.id_genero 
-      LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais 
-      LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion 
-      LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad 
-      LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad 
-      LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia 
-      WHERE u.id_usuario = $1
-    `;
-    const user = await db.query.get(sql, [idUsuario]);
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-
-    res.json({
-      id_usuario: user.id_usuario,
-      username: user.username,
-      nombre: user.nombre,
-      apellido: user.apellido,
-      email: user.email,
-      fecha_nacimiento: user.fecha_nacimiento,
-      dni: user.dni,
-      telefono: user.telefono,
-      genero: user.genero || '',
-      nacionalidad: user.nacionalidad || '',
-      direccion: {
-        calle: user.calle || '',
-        numero: user.numero || '',
-        codigo_postal: user.codigo_postal || '',
-        localidad: user.localidad || '',
-        provincia: user.provincia || '',
-        pais: user.nacionalidad || ''
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al obtener información de perfil', message: err.message });
-  }
-});
+// Endpoints específicos para obtener la información de perfil por roles
+app.get(['/profesor/info', '/profesor/Info'], authMiddleware, requireRole(['profesor', 'admin']), usuarioController.obtenerInfoUsuarioLogueado);
+app.get(['/entrenador/info', '/entrenador/Info'], authMiddleware, requireRole(['entrenador', 'admin']), usuarioController.obtenerInfoUsuarioLogueado);
 
 // Servir la especificación OpenAPI y la interfaz Swagger UI como archivos estáticos
 // Se configura control de caché estricto para openapi.yaml para evitar errores de renderizado por archivos cacheados

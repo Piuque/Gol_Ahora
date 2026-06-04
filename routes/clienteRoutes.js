@@ -8,6 +8,8 @@ router.use(authMiddleware);
 router.use(requireRole(['cliente', 'admin']));
 
 // Perfil
+const usuarioController = require('../controllers/usuarioController.js');
+router.get('/info', usuarioController.obtenerInfoUsuarioLogueado);
 router.get('/perfil', clienteController.obtenerPerfil);
 router.put('/perfil', clienteController.modificarPerfil);
 

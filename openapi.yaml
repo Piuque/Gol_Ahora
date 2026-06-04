@@ -189,79 +189,81 @@ paths:
                 items:
                   $ref: '#/components/schemas/Entrenamiento'
 
-  /user_info:
+  /cliente/info:
     get:
       tags:
-        - Gestión de Perfil de Usuario (Común)
-      summary: Consultar los datos personales del usuario logueado (Clientes, Profesores, Entrenadores, Admin)
-      description: Retorna la información de perfil del usuario autenticado (identificado mediante cookies o x-user-id) con la dirección estructurada de forma anidada.
-      operationId: obtenerInfoUsuarioLogueado
+        - Gestión de Clientes (Cliente)
+      summary: Consultar datos personales del cliente logueado
+      description: Retorna la información de perfil del cliente autenticado con la dirección estructurada de forma anidada.
+      operationId: obtenerInfoCliente
       responses:
         '200':
-          description: Datos personales del usuario logueado
+          description: Datos del cliente logueado
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id_usuario:
-                    type:
-                      - integer
-                      - "null"
-                    example: 8
-                  username:
-                    type: string
-                    example: profe_carlos
-                  nombre:
-                    type: string
-                    example: Carlos
-                  apellido:
-                    type: string
-                    example: Gómez
-                  email:
-                    type: string
-                    example: carlos.gomez@golahora.com
-                  fecha_nacimiento:
-                    type: string
-                    format: date
-                    example: 1985-05-15
-                  dni:
-                    type: string
-                    example: '30222111'
-                  telefono:
-                    type: string
-                    example: '1122334455'
-                  genero:
-                    type: string
-                    example: Masculino
-                  nacionalidad:
-                    type: string
-                    example: Argentina
-                  direccion:
-                    type: object
-                    properties:
-                      calle:
-                        type: string
-                        example: Avenida Calchaquí
-                      numero:
-                        type: string
-                        example: '6200'
-                      codigo_postal:
-                        type: string
-                        example: '1888'
-                      localidad:
-                        type: string
-                        example: Florencio Varela
-                      provincia:
-                        type: string
-                        example: Buenos Aires
-                      pais:
-                        type: string
-                        example: Argentina
+                $ref: '#/components/schemas/InfoUsuario'
         '401':
-          description: No autorizado (no se ha provisto el ID del usuario)
+          description: No autorizado
         '404':
-          description: Usuario no encontrado
+          description: Cliente no encontrado
+
+  /admin/info:
+    get:
+      tags:
+        - Gestión de Personal y Clientes (Admin)
+      summary: Consultar datos personales del administrador logueado
+      description: Retorna la información de perfil del administrador autenticado con la dirección estructurada de forma anidada.
+      operationId: obtenerInfoAdmin
+      responses:
+        '200':
+          description: Datos del administrador logueado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoUsuario'
+        '401':
+          description: No autorizado
+        '404':
+          description: Administrador no encontrado
+
+  /profesor/info:
+    get:
+      tags:
+        - Gestión de Profesores
+      summary: Consultar datos personales del profesor logueado
+      description: Retorna la información de perfil del profesor autenticado con la dirección estructurada de forma anidada.
+      operationId: obtenerInfoProfesor
+      responses:
+        '200':
+          description: Datos del profesor logueado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoUsuario'
+        '401':
+          description: No autorizado
+        '404':
+          description: Profesor no encontrado
+
+  /entrenador/info:
+    get:
+      tags:
+        - Gestión de Entrenadores
+      summary: Consultar datos personales del entrenador logueado
+      description: Retorna la información de perfil del entrenador autenticado con la dirección estructurada de forma anidada.
+      operationId: obtenerInfoEntrenador
+      responses:
+        '200':
+          description: Datos del entrenador logueado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoUsuario'
+        '401':
+          description: No autorizado
+        '404':
+          description: Entrenador no encontrado
 
   # ==========================================
   # === 2. ACCESO CLIENTE (REGISTRADO) ===
@@ -2090,6 +2092,61 @@ paths:
 
 components:
   schemas:
+    InfoUsuario:
+      type: object
+      properties:
+        id_usuario:
+          type: integer
+          example: 8
+        username:
+          type: string
+          example: profe_carlos
+        nombre:
+          type: string
+          example: Carlos
+        apellido:
+          type: string
+          example: Gómez
+        email:
+          type: string
+          example: carlos.gomez@golahora.com
+        fecha_nacimiento:
+          type: string
+          format: date
+          example: '1985-05-15'
+        dni:
+          type: string
+          example: '30222111'
+        telefono:
+          type: string
+          example: '1122334455'
+        genero:
+          type: string
+          example: Masculino
+        nacionalidad:
+          type: string
+          example: Argentina
+        direccion:
+          type: object
+          properties:
+            calle:
+              type: string
+              example: Avenida Calchaquí
+            numero:
+              type: string
+              example: '6200'
+            codigo_postal:
+              type: string
+              example: '1888'
+            localidad:
+              type: string
+              example: Florencio Varela
+            provincia:
+              type: string
+              example: Buenos Aires
+            pais:
+              type: string
+              example: Argentina
     Cliente:
       type: object
       properties:

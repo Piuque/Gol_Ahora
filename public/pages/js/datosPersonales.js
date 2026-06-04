@@ -1,4 +1,13 @@
-const API = "http://localhost:3000/user_info";
+const userRole = localStorage.getItem("role") || "cliente";
+let relativePath = "/cliente/info";
+if (userRole === "admin" || userRole === "administrador") {
+    relativePath = "/admin/info";
+} else if (userRole === "profesor") {
+    relativePath = "/profesor/info";
+} else if (userRole === "entrenador") {
+    relativePath = "/entrenador/info";
+}
+const API = relativePath;
 
 async function ObtenerDatosPersonales(){
     try{
