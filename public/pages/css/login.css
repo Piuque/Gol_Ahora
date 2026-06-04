@@ -1,0 +1,143 @@
+/* ==========================================================================
+   Gol Ahora - Estilos Personalizados del Formulario de Registro
+   ========================================================================== */
+
+:root {
+  --football-green: #0ea5e9; /* Celeste deportivo fallback */
+  --primary-color: #10b981; /* Verde esmeralda principal */
+  --primary-hover: #059669;
+  --bg-dark: #0b0f19; /* Fondo ultra oscuro */
+  --card-bg: #151f32; /* Fondo de la tarjeta */
+  --border-color: #24354f; /* Color de bordes */
+  --text-muted-color: #64748b;
+}
+
+body.bg-football-dark {
+  background: linear-gradient(135deg, #091313 0%, #030712 100%) !important;
+  color: #f8fafc !important;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Efecto de luces/cancha de fútbol abstracto de fondo */
+body.bg-football-dark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle at 50% 15%, rgba(16, 185, 129, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-card {
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Campos de entrada del formulario */
+.form-control.bg-football-dark {
+  background-color: #0d1527 !important;
+  border: 1px solid var(--border-color) !important;
+  color: #f1f5f9 !important;
+  border-radius: 8px !important;
+  padding: 0.65rem 0.8rem;
+  transition: all 0.25s ease-in-out;
+}
+
+.form-control.bg-football-dark:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: #475569 !important;
+  font-size: 0.85rem;
+}
+
+/* Botón Deportivo Premium */
+.btn- sports,
+.btn-sports {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-sports:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5) !important;
+}
+
+.btn-sports:active {
+  transform: translateY(0);
+}
+
+/* Sugerencias de Autocompletado */
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #111a2e;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  z-index: 1000;
+  max-height: 180px;
+  overflow-y: auto;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4);
+  display: none;
+}
+
+.suggestions div {
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  transition: background-color 0.2s;
+}
+
+.suggestions div:hover {
+  background-color: #1d2c47;
+  color: #ffffff;
+}
+
+/* Ocultador de errores y alertas */
+.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.escondido {
+  display: none !important;
+}
+
+/* Estilos de textos secundarios */
+.text-light-50 {
+  color: #94a3b8 !important;
+}
+
+.text-white {
+  color: #ffffff !important;
+}
