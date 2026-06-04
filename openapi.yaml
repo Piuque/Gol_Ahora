@@ -959,7 +959,7 @@ paths:
         '204':
           description: Tipo de cancha eliminado
 
-  /admin/canchas:
+  /admin/canchas/registrar:
     post:
       tags:
         - Gestión de Canchas
@@ -974,6 +974,8 @@ paths:
       responses:
         '201':
           description: Cancha creada
+
+  /admin/canchas/listar:
     get:
       tags:
         - Gestión de Canchas

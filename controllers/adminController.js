@@ -149,6 +149,24 @@ const crearCancha = async (req, res) => {
   }
 };
 
+// GET /admin/canchas/listar
+const listarCanchas = async (req, res) => {
+  try {
+    const sql = `
+      SELECT can.id_cancha AS id, can.nombre, 
+             can.tiempo_cancelacion, can.precio_hora_reserva AS precio, 
+             tc.tipo_cancha AS categoria, tc.id_tipo_de_cancha
+      FROM canchas can 
+      LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      ORDER BY can.id_cancha ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar canchas para el administrador', message: err.message });
+  }
+};
+
 // POST /admin/canchas/bloqueo (Mantenimiento de canchas)
 const bloquearCanchaMantenimiento = async (req, res) => {
   const { id_cancha, fecha, hora_inicio, hora_fin, motivo } = req.body;
@@ -292,5 +310,6 @@ module.exports = {
   crearLiga,
   reporteFinanciero,
   listarReservasPendientes,
-  confirmarPagoEfectivo
+  confirmarPagoEfectivo,
+  listarCanchas
 };

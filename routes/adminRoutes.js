@@ -19,7 +19,8 @@ router.get('/profesores', adminController.listarProfesores);
 router.post('/profesores/:id/certificaciones', adminController.registrarCertificacion);
 
 // Canchas y Mantenimiento
-router.post('/canchas', adminController.crearCancha);
+router.post('/canchas/registrar', adminController.crearCancha);
+router.get('/canchas/listar', adminController.listarCanchas);
 router.post('/canchas/bloqueo', adminController.bloquearCanchaMantenimiento);
 
 // Gestión de Cobros y Reservas Pendientes

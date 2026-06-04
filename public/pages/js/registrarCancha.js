@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 cabeceras["X-Auth-Token"] = token;
             }
 
-            const res = await fetch("/api/admin/canchas", {
+            const res = await fetch("/api/admin/canchas/registrar", {
                 method: "POST",
                 headers: cabeceras,
                 credentials: "include", // Envía automáticamente las cookies de sesión persistentes
