@@ -55,6 +55,15 @@ const obtenerCliente = async (req, res) => {
 const actualizarCliente = async (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, email, telefono, user_level } = req.body;
+
+  const rolesValidos = ['administrador', 'profesor', 'entrenador', 'cliente'];
+  if (user_level && !rolesValidos.includes(user_level)) {
+    return res.status(400).json({ 
+      error: 'Rol inválido', 
+      details: 'El user_level debe ser uno de: administrador, profesor, entrenador, cliente' 
+    });
+  }
+
   try {
     const sql = `
       UPDATE usuarios
@@ -82,6 +91,92 @@ const eliminarCliente = async (req, res) => {
   } catch (err) {
     await db.pool.query('ROLLBACK');
     res.status(500).json({ error: 'Error al eliminar cliente', message: err.message });
+  }
+};
+
+// POST /admin/usuarios/registrar
+const registrarUsuarioPorAdmin = async (req, res) => {
+  const { 
+    username, user_level, nombre, apellido, email, password, fecha_nacimiento, dni, telefono,
+    calle, numero, codigo_postal, localidad
+  } = req.body;
+
+  const rolesValidos = ['administrador', 'profesor', 'entrenador', 'cliente'];
+  if (!user_level || !rolesValidos.includes(user_level)) {
+    return res.status(400).json({ 
+      error: 'Rol inválido', 
+      details: 'El user_level debe ser uno de: administrador, profesor, entrenador, cliente' 
+    });
+  }
+
+  const finalUsername = username || (email ? email.split('@')[0] : `user_${Date.now()}`);
+
+  try {
+    await db.pool.query('BEGIN');
+
+    // 1. Resolver el id_localidad de la tabla localidades
+    let idLocalidad = 1;
+    if (localidad) {
+      const locName = localidad.trim();
+      const existingLoc = await db.query.get(
+        'SELECT id_localidad FROM localidades WHERE LOWER(nombre) = LOWER($1)',
+        [locName]
+      );
+      if (existingLoc) {
+        idLocalidad = existingLoc.id_localidad;
+      } else {
+        const insertLoc = await db.pool.query(
+          'INSERT INTO localidades (nombre, id_ciudad) VALUES ($1, 1) RETURNING id_localidad',
+          [locName]
+        );
+        idLocalidad = insertLoc.rows[0].id_localidad;
+      }
+    }
+
+    // 2. Insertar la dirección
+    const dirSql = `
+      INSERT INTO direcciones (calle, numero, codigo_postal, id_localidad) 
+      VALUES ($1, $2, $3, $4) 
+      RETURNING id_direccion
+    `;
+    const dirResult = await db.pool.query(dirSql, [
+      calle || 'Calle Ficticia', 
+      numero || '123', 
+      codigo_postal || '1888', 
+      idLocalidad
+    ]);
+    const idDireccion = dirResult.rows[0].id_direccion;
+
+    // 3. Insertar/registrar al usuario con el rol elegido
+    const userSql = `
+      INSERT INTO usuarios (
+        username, user_level, nombre, apellido, email, password, 
+        fecha_nacimiento, dni, telefono, id_direccion, id_genero, id_nacionalidad, id_club
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1, 1, 1)
+      RETURNING id_usuario, username, nombre, apellido, email, user_level
+    `;
+    const insertResult = await db.query.get(userSql, [
+      finalUsername,
+      user_level,
+      nombre,
+      apellido,
+      email,
+      password || 'temp_pass',
+      fecha_nacimiento || '1985-01-01',
+      dni || `DNI_${Date.now()}`,
+      telefono || '-',
+      idDireccion
+    ]);
+
+    await db.pool.query('COMMIT');
+
+    res.status(201).json({
+      message: `Usuario registrado exitosamente con rol: ${user_level}`,
+      usuario: insertResult
+    });
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al registrar el usuario', message: err.message });
   }
 };
 
@@ -344,6 +439,7 @@ module.exports = {
   registrarEntrenador,
   listarEntrenadores,
   registrarCertificacion,
+  registrarUsuarioPorAdmin,
   crearCancha,
   bloquearCanchaMantenimiento,
   crearLiga,

@@ -12,6 +12,7 @@ router.get('/clientes', adminController.listarClientes);
 router.get('/clientes/:id', adminController.obtenerCliente);
 router.put('/clientes/:id', adminController.actualizarCliente);
 router.delete('/clientes/:id', adminController.eliminarCliente);
+router.post('/usuarios/registrar', adminController.registrarUsuarioPorAdmin);
 
 // Personal y Certificaciones (Profesores y Entrenadores)
 router.post('/profesores', adminController.registrarProfesor);
