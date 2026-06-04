@@ -185,19 +185,26 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
     localidad: document.getElementById('localidad').value
 }) });
 
-  if (!res.ok) {
-    mensajeError.innerHTML = (await res.json()).message;
-    return mensajeError.classList.toggle("escondido", false);
-  }
+  const data = await res.json().catch(() => ({}));
 
-  const resJson = await res.json();
-  if (resJson.redirect) {
+  if (!res.ok) {
+    mensajeError.innerHTML = data.details || data.error || "Error al registrar el usuario";
+    mensajeError.classList.remove("escondido");
+    
     await Swal.fire({
-        icon: 'success',
-        title: '¡Bienvenido!',
-        text: 'Tu cuenta fue creada exitosamente.',
+        icon: 'error',
+        title: 'Error de Registro',
+        text: data.details || data.error || 'Por favor verificá los datos e intentalo de nuevo.',
         confirmButtonColor: '#00C16E'
     });
-    window.location.href = resJson.redirect;
-}
+    return;
+  }
+
+  await Swal.fire({
+      icon: 'success',
+      title: '¡Bienvenido!',
+      text: 'Tu cuenta fue creada exitosamente. Iniciá sesión para continuar.',
+      confirmButtonColor: '#00C16E'
+  });
+  window.location.href = "/acceder";
 });
