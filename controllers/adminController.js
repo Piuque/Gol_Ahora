@@ -14,7 +14,7 @@ const listarClientes = async (req, res) => {
       LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad
       LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad
       LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia
-      WHERE u.user_level = 1
+      WHERE u.user_level = 'cliente'
       ORDER BY u.id_usuario ASC
     `;
     const clients = await db.query.all(sql);
@@ -93,11 +93,11 @@ const registrarProfesor = async (req, res) => {
       INSERT INTO usuarios (
         username, user_level, nombre, apellido, email, password, 
         fecha_nacimiento, dni, telefono, id_direccion, id_genero, id_nacionalidad, id_club
-      ) VALUES ($1, 10, $2, $3, $4, $5, $6, $7, $8, 1, 1, 1, 1) -- user_level = 10 (Profesor)
+      ) VALUES ($1, 'profesor', $2, $3, $4, $5, $6, $7, $8, 1, 1, 1, 1) -- user_level = 'profesor'
       RETURNING id_usuario
     `;
     const result = await db.query.run(sql, [
-      username, nombre, apellido, email, password || 'temp_pass',
+      username || `prof_${Date.now()}`, nombre, apellido, email, password || 'temp_pass',
       fecha_nacimiento || '1985-01-01', dni, telefono || '-'
     ]);
     res.status(201).json({ message: 'Profesor registrado', id: result.id });
@@ -109,24 +109,61 @@ const registrarProfesor = async (req, res) => {
 // GET /admin/profesores
 const listarProfesores = async (req, res) => {
   try {
-    const rows = await db.query.all(`SELECT id_usuario AS id, nombre, apellido, email, dni FROM usuarios WHERE user_level = 10`);
+    const rows = await db.query.all(`SELECT id_usuario AS id, nombre, apellido, email, dni FROM usuarios WHERE user_level = 'profesor'`);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Error al listar profesores', message: err.message });
   }
 };
 
-// POST /admin/profesores/:id/certificaciones
+// POST /admin/entrenadores
+const registrarEntrenador = async (req, res) => {
+  const { username, nombre, apellido, email, password, fecha_nacimiento, dni, telefono } = req.body;
+  try {
+    const sql = `
+      INSERT INTO usuarios (
+        username, user_level, nombre, apellido, email, password, 
+        fecha_nacimiento, dni, telefono, id_direccion, id_genero, id_nacionalidad, id_club
+      ) VALUES ($1, 'entrenador', $2, $3, $4, $5, $6, $7, $8, 1, 1, 1, 1) -- user_level = 'entrenador'
+      RETURNING id_usuario
+    `;
+    const result = await db.query.run(sql, [
+      username || `trainer_${Date.now()}`, nombre, apellido, email, password || 'temp_pass',
+      fecha_nacimiento || '1985-01-01', dni, telefono || '-'
+    ]);
+    res.status(201).json({ message: 'Entrenador registrado', id: result.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar entrenador', message: err.message });
+  }
+};
+
+// GET /admin/entrenadores
+const listarEntrenadores = async (req, res) => {
+  try {
+    const rows = await db.query.all(`SELECT id_usuario AS id, nombre, apellido, email, dni FROM usuarios WHERE user_level = 'entrenador'`);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar entrenadores', message: err.message });
+  }
+};
+
+// POST /admin/profesores/:id/certificaciones y /admin/entrenadores/:id/certificaciones
 const registrarCertificacion = async (req, res) => {
   const { id } = req.params;
   const { tipo_certificacion, matricula, fecha_caducidad, link_archivo } = req.body;
+  
+  // Si tipo_certificacion es indefinido, deducimos true para profesor (si URL contiene profesores) y false para entrenador
+  const tipoFinal = tipo_certificacion !== undefined 
+    ? (tipo_certificacion === 'true' || tipo_certificacion === true)
+    : (req.originalUrl.includes('profesores') ? true : false);
+
   try {
     const sql = `
       INSERT INTO certificaciones (tipo_certificacion, matricula, fecha_caducidad, link_archivo, id_usuario)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id_certificacion
     `;
-    const result = await db.query.run(sql, [tipo_certificacion, matricula, fecha_caducidad, link_archivo, id]);
+    const result = await db.query.run(sql, [tipoFinal, matricula, fecha_caducidad, link_archivo, id]);
     res.status(201).json({ message: 'Certificación registrada con éxito', id: result.id });
   } catch (err) {
     res.status(500).json({ error: 'Error al registrar certificación', message: err.message });
@@ -304,6 +341,8 @@ module.exports = {
   eliminarCliente,
   registrarProfesor,
   listarProfesores,
+  registrarEntrenador,
+  listarEntrenadores,
   registrarCertificacion,
   crearCancha,
   bloquearCanchaMantenimiento,

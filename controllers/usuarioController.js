@@ -90,7 +90,7 @@ const registrarUsuario = async (req, res) => {
     `;
     const insertResult = await db.query.get(userSql, [
       finalUsername,
-      1, // user_level = 1 para Clientes
+      'cliente', // user_level = 'cliente' para Clientes
       nombre,
       apellido,
       email,
@@ -363,10 +363,12 @@ const loginUsuario = async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas', details: 'La contraseña es incorrecta' });
     }
 
-    // Mapeo de roles basado en user_level (0: Público, >=1: Cliente, >=152: Admin)
+    // Mapeo de roles basado en user_level (administrador, profesor, entrenador, cliente)
     let role = 'usuario';
-    if (user.user_level >= 1) role = 'cliente';
-    if (user.user_level >= 152) role = 'admin';
+    if (user.user_level === 'cliente' || user.user_level === '1' || user.user_level === 1) role = 'cliente';
+    if (user.user_level === 'profesor' || user.user_level === '10' || user.user_level === 10) role = 'profesor';
+    if (user.user_level === 'entrenador') role = 'entrenador';
+    if (user.user_level === 'administrador' || user.user_level === '152' || user.user_level === 152) role = 'admin';
 
     // Eliminar la contraseña de la respuesta por seguridad
     delete user.password;

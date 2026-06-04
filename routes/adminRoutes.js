@@ -13,10 +13,14 @@ router.get('/clientes/:id', adminController.obtenerCliente);
 router.put('/clientes/:id', adminController.actualizarCliente);
 router.delete('/clientes/:id', adminController.eliminarCliente);
 
-// Personal y Certificaciones
+// Personal y Certificaciones (Profesores y Entrenadores)
 router.post('/profesores', adminController.registrarProfesor);
 router.get('/profesores', adminController.listarProfesores);
 router.post('/profesores/:id/certificaciones', adminController.registrarCertificacion);
+
+router.post('/entrenadores', adminController.registrarEntrenador);
+router.get('/entrenadores', adminController.listarEntrenadores);
+router.post('/entrenadores/:id/certificaciones', adminController.registrarCertificacion);
 
 // Canchas y Mantenimiento
 router.post('/canchas/registrar', adminController.crearCancha);

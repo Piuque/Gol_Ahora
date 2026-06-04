@@ -27,10 +27,12 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'Usuario no encontrado en la base de datos' });
     }
     
-    // Mapeo de roles basado en user_level (0: Público, >=1: Cliente, >=152: Admin)
+    // Mapeo de roles basado en user_level (administrador, profesor, entrenador, cliente)
     let role = 'usuario';
-    if (user.user_level >= 1) role = 'cliente';
-    if (user.user_level >= 152) role = 'admin';
+    if (user.user_level === 'cliente' || user.user_level === '1' || user.user_level === 1) role = 'cliente';
+    if (user.user_level === 'profesor' || user.user_level === '10' || user.user_level === 10) role = 'profesor';
+    if (user.user_level === 'entrenador') role = 'entrenador';
+    if (user.user_level === 'administrador' || user.user_level === '152' || user.user_level === 152) role = 'admin';
 
     req.user = {
       id_usuario: user.id_usuario,
