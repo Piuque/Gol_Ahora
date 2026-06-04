@@ -15,7 +15,7 @@ router.put('/perfil', clienteController.modificarPerfil);
 router.get('/canchas', clienteController.listarCanchasCliente);
 router.post('/reservas', clienteController.realizarReserva);
 router.put('/reservas/:id', clienteController.modificarReserva);
-router.post('/reservas/:id/cancelar', clienteController.cancelarReserva);
+router.delete('/reservas/:id', clienteController.cancelarReserva);
 
 // Clases
 router.post('/clases/inscripcion', clienteController.inscribirClase);

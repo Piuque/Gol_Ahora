@@ -182,7 +182,7 @@ const modificarReserva = async (req, res) => {
   }
 };
 
-// POST /cliente/reservas/:id/cancelar
+// DELETE /cliente/reservas/:id
 const cancelarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
   const { id } = req.params;

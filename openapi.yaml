@@ -312,9 +312,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Reserva'
-
-  /cliente/reservas/{id}/cancelar:
-    post:
+    delete:
       tags:
         - Reservas
       summary: Cancelar una reserva activa (RF-56)
