@@ -20,6 +20,32 @@ app.use('/usuario', usuarioRoutes);
 app.use('/cliente', clienteRoutes);
 app.use('/admin', adminRoutes);
 
+// Soportar prefijo /api que utiliza el frontend de forma transparente
+app.use('/api/usuario', usuarioRoutes);
+app.use('/api/cliente', clienteRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Endpoints auxiliares para autocompletado del registro
+app.get('/api/paises', async (req, res) => {
+  try {
+    const db = require('./config/db.js');
+    const rows = await db.query.all('SELECT nombre FROM paises ORDER BY nombre ASC');
+    res.json(rows.map(r => r.nombre));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar países', message: err.message });
+  }
+});
+
+app.get('/api/generos', async (req, res) => {
+  try {
+    const db = require('./config/db.js');
+    const rows = await db.query.all('SELECT genero FROM generos ORDER BY genero ASC');
+    res.json(rows.map(r => r.genero));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar géneros', message: err.message });
+  }
+});
+
 // Servir la especificación OpenAPI y la interfaz Swagger UI como archivos estáticos
 // Se configura control de caché estricto para openapi.yaml para evitar errores de renderizado por archivos cacheados
 app.use(express.static(path.join(__dirname), {

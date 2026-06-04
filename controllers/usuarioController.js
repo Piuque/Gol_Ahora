@@ -7,8 +7,10 @@ const registrarUsuario = async (req, res) => {
     calle, numero, codigo_postal, localidad
   } = req.body;
 
-  if (!username || !nombre || !apellido || !email || !password || !dni || !fecha_nacimiento || !genero || !nacionalidad || !calle || !numero || !codigo_postal || !localidad) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios para registrar el usuario (se requieren: username, nombre, apellido, email, password, dni, fecha_nacimiento, genero, nacionalidad, calle, numero, codigo_postal, localidad)' });
+  const finalUsername = username || (email ? email.split('@')[0] : `user_${Date.now()}`);
+
+  if (!nombre || !apellido || !email || !password || !dni || !fecha_nacimiento || !genero || !nacionalidad || !calle || !numero || !codigo_postal || !localidad) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios para registrar el usuario (se requieren: nombre, apellido, email, password, dni, fecha_nacimiento, genero, nacionalidad, calle, numero, codigo_postal, localidad)' });
   }
 
   try {
@@ -87,7 +89,7 @@ const registrarUsuario = async (req, res) => {
       RETURNING id_usuario, username, nombre, apellido, email, id_direccion, user_level
     `;
     const insertResult = await db.query.get(userSql, [
-      username || `user_${Date.now()}`,
+      finalUsername,
       1, // user_level = 1 para Clientes
       nombre,
       apellido,
