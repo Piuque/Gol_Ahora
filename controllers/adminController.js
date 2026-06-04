@@ -210,6 +210,75 @@ const reporteFinanciero = async (req, res) => {
   }
 };
 
+// GET /admin/reservas/pendientes
+const listarReservasPendientes = async (req, res) => {
+  try {
+    const sql = `
+      SELECT r.id_reserva AS id, r.id_reserva, r.id_cancha, r.id_usuario, r.id_cobro,
+             u.nombre AS cliente_nombre, u.apellido AS cliente_apellido, u.email AS cliente_email,
+             can.nombre AS cancha_nombre,
+             to_char(oc.fecha, 'DD/MM/YYYY') AS fecha_turno,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             c.monto, mp.nombre AS metodo_pago,
+             to_char(c.fecha, 'DD/MM/YYYY HH24:MI:SS') AS fecha_creacion
+      FROM reservas r
+      INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
+      INNER JOIN canchas can ON r.id_cancha = can.id_cancha
+      INNER JOIN ocupaciones_cancha oc ON r.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      INNER JOIN cobros c ON r.id_cobro = c.id_cobro
+      INNER JOIN metodos_de_pago mp ON c.id_metodo_de_pago = mp.id_metodo_de_pago
+      WHERE c.id_estado_cobro = 1 -- 1 = Pendiente
+      ORDER BY c.fecha DESC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar reservas pendientes de pago', message: err.message });
+  }
+};
+
+// POST /admin/cobros/:id/confirmar
+const confirmarPagoEfectivo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cobro = await db.query.get('SELECT * FROM cobros WHERE id_cobro = $1', [id]);
+    if (!cobro) {
+      return res.status(404).json({ error: 'Cobro no encontrado' });
+    }
+    if (parseInt(cobro.id_estado_cobro) !== 1) {
+      return res.status(400).json({ error: 'El cobro no está en estado Pendiente' });
+    }
+
+    await db.pool.query('BEGIN');
+
+    // 1. Cambiar estado del cobro a "Pagado" (2)
+    await db.pool.query('UPDATE cobros SET id_estado_cobro = 2 WHERE id_cobro = $1', [id]);
+
+    // 2. Generar el recibo oficial
+    const reciboSql = `
+      INSERT INTO recibos (nro_transaccion, detalles, id_cobro)
+      VALUES ($1, $2, $3)
+      RETURNING id_recibos
+    `;
+    const reciboRes = await db.pool.query(reciboSql, [
+      `EFEC_${Date.now()}`,
+      'Pago registrado en efectivo en recepción por el Administrador',
+      id
+    ]);
+
+    await db.pool.query('COMMIT');
+
+    res.json({
+      message: 'Pago en efectivo confirmado y recibo emitido con éxito',
+      id_recibo: reciboRes.rows[0].id_recibos
+    });
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al confirmar el pago en efectivo', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -221,5 +290,7 @@ module.exports = {
   crearCancha,
   bloquearCanchaMantenimiento,
   crearLiga,
-  reporteFinanciero
+  reporteFinanciero,
+  listarReservasPendientes,
+  confirmarPagoEfectivo
 };

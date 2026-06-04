@@ -22,6 +22,10 @@ router.post('/profesores/:id/certificaciones', adminController.registrarCertific
 router.post('/canchas', adminController.crearCancha);
 router.post('/canchas/bloqueo', adminController.bloquearCanchaMantenimiento);
 
+// Gestión de Cobros y Reservas Pendientes
+router.get('/reservas/pendientes', adminController.listarReservasPendientes);
+router.post('/cobros/:id/confirmar', adminController.confirmarPagoEfectivo);
+
 // Ligas
 router.post('/ligas', adminController.crearLiga);
 

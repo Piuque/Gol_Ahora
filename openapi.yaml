@@ -1253,6 +1253,78 @@ paths:
         '200':
           description: Cobro cancelado
 
+  /admin/cobros/{id}/confirmar:
+    post:
+      tags:
+        - Finanzas y Cobros
+      summary: Confirmar pago en efectivo/presencial de una reserva (RF-45.2)
+      operationId: adminConfirmarPagoEfectivo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pago confirmado y recibo emitido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id_recibo:
+                    type: integer
+
+  /admin/reservas/pendientes:
+    get:
+      tags:
+        - Finanzas y Cobros
+      summary: Listar reservas pendientes de pago (Efectivo/Transferencia)
+      operationId: adminListarReservasPendientes
+      responses:
+        '200':
+          description: Lista de reservas pendientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    id_reserva:
+                      type: integer
+                    id_cancha:
+                      type: integer
+                    id_usuario:
+                      type: integer
+                    id_cobro:
+                      type: integer
+                    cliente_nombre:
+                      type: string
+                    cliente_apellido:
+                      type: string
+                    cliente_email:
+                      type: string
+                    cancha_nombre:
+                      type: string
+                    fecha_turno:
+                      type: string
+                    hora_inicio:
+                      type: string
+                    hora_fin:
+                      type: string
+                    monto:
+                      type: number
+                    metodo_pago:
+                      type: string
+                    fecha_creacion:
+                      type: string
+
   /admin/cobros/{id}/imprimir:
     get:
       tags:

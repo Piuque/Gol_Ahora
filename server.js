@@ -73,9 +73,60 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor', message: err.message });
 });
 
+// Función para limpiar reservas pendientes de pago en efectivo expiradas (más de 5 minutos)
+const cleanupExpiredReservations = async () => {
+  try {
+    const db = require('./config/db.js');
+    
+    // Buscar reservas en efectivo (id_metodo_de_pago = 1) pendientes (id_estado_cobro = 1) expiradas
+    const sqlGetExpired = `
+      SELECT r.id_reserva, r.id_ocupacion_cancha, r.id_cobro
+      FROM reservas r
+      INNER JOIN cobros c ON r.id_cobro = c.id_cobro
+      WHERE c.id_estado_cobro = 1
+        AND c.id_metodo_de_pago = 1
+        AND c.fecha < NOW() - INTERVAL '5 minutes'
+    `;
+    const expired = await db.query.all(sqlGetExpired);
+    
+    if (expired.length > 0) {
+      console.log(`[Limpieza] Se encontraron ${expired.length} reservas en efectivo vencidas. Cancelando...`);
+      
+      for (const res of expired) {
+        await db.pool.query('BEGIN');
+        
+        // Eliminar reserva
+        await db.pool.query('DELETE FROM reservas WHERE id_reserva = $1', [res.id_reserva]);
+        
+        // Eliminar ocupación de la cancha para liberar el turno
+        await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = $1', [res.id_ocupacion_cancha]);
+        
+        // Cambiar cobro a Cancelado (estado 3)
+        await db.pool.query(`
+          UPDATE cobros 
+          SET id_estado_cobro = 3, 
+              detalles = detalles || ' (Cancelado automáticamente por falta de pago tras 5 minutos)' 
+          WHERE id_cobro = $1
+        `, [res.id_cobro]);
+        
+        await db.pool.query('COMMIT');
+      }
+      console.log(`[Limpieza] ${expired.length} reservas vencidas canceladas y turnos liberados.`);
+    }
+  } catch (err) {
+    console.error('[Limpieza] Error al limpiar reservas vencidas:', err.message);
+  }
+};
+
 // Inicializar base de datos y levantar el servidor
 const startServer = async () => {
   await initDatabase();
+  
+  // Ejecutar limpieza cada 60 segundos
+  setInterval(cleanupExpiredReservations, 60000);
+  // Ejecutar limpieza inicial
+  cleanupExpiredReservations();
+
   app.listen(PORT, () => {
     console.log(`=============================================================`);
     console.log(`🚀 Servidor de Gol Ahora corriendo en http://localhost:${PORT}`);
