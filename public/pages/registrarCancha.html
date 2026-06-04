@@ -38,11 +38,11 @@
                 </div>
             </div>
 
-            <div class="mb-4" style="position: relative;">
+            <div class="mb-4">
                 <label class="form-label small fw-bold text-white">Tipo de Cancha</label>
-                <input type="text" id="id_tipo_cancha" class="form-control bg-football-dark border-secondary text-white" placeholder="Escribí para buscar..." autocomplete="off" required>
-                <input type="hidden" name="id_tipo_de_cancha" id="id_tipo_cancha_hidden">
-                <div id="tipo_cancha-suggestions" class="suggestions"></div>
+                <select id="id_tipo_de_cancha" name="id_tipo_de_cancha" class="form-select bg-football-dark border-secondary text-white" required>
+                    <option value="" disabled selected>Seleccioná un tipo de cancha...</option>
+                </select>
             </div>
 
             <button type="submit" class="btn w-100 py-2 fw-bold text-white" style="background-color: #00C16E !important;">
