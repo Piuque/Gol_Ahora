@@ -1,8 +1,19 @@
 const db = require('../config/db.js');
 
 const authMiddleware = async (req, res, next) => {
-  // Soporte para testing/Swagger: buscamos x-user-id en headers, query o body.
-  const userId = req.headers['x-user-id'] || req.query.userId || (req.body && req.body.userId);
+  // Soporte para testing/Swagger/Web: buscamos x-user-id en headers, query, body o cookies.
+  let userId = req.headers['x-user-id'] || req.query.userId || (req.body && req.body.userId);
+  
+  if (!userId && req.headers.cookie) {
+    const cookies = req.headers.cookie.split(';').reduce((acc, c) => {
+      const parts = c.split('=');
+      if (parts.length === 2) {
+        acc[parts[0].trim()] = parts[1].trim();
+      }
+      return acc;
+    }, {});
+    userId = cookies['x-user-id'] || cookies['userId'];
+  }
   
   if (!userId) {
     // Si no se proporciona ID, por defecto lo tratamos como público/visitante

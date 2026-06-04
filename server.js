@@ -62,6 +62,11 @@ app.use(express.static(path.join(__dirname), {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/app', express.static(path.join(__dirname, 'public')));
 
+// Rutas amigables para el login / acceder del frontend
+app.get(['/acceder', '/Acceder', '/login'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/acceder.html'));
+});
+
 // Endpoint de fallback para Swagger UI
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

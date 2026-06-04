@@ -371,6 +371,10 @@ const loginUsuario = async (req, res) => {
     // Eliminar la contraseña de la respuesta por seguridad
     delete user.password;
 
+    res.cookie('x-user-id', user.id_usuario.toString(), { path: '/', maxAge: 86400 * 1000 });
+    res.cookie('userId', user.id_usuario.toString(), { path: '/', maxAge: 86400 * 1000 });
+    res.cookie('role', role, { path: '/', maxAge: 86400 * 1000 });
+
     res.json({
       message: 'Inicio de sesión exitoso',
       usuario: {
