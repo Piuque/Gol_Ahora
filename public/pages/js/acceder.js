@@ -40,8 +40,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 // Redirección inteligente basada en el rol
-                if (data.usuario.role === 'admin') {
+                if (data.usuario.role === 'admin' || data.usuario.role === 'administrador') {
                     window.location.href = "/pages/interfazAdministrador.html";
+                } else if (data.usuario.role === 'profesor') {
+                    window.location.href = "/pages/interfazProfesor.html";
+                } else if (data.usuario.role === 'entrenador') {
+                    window.location.href = "/pages/interfazEntrenador.html";
                 } else {
                     window.location.href = "/pages/interfazCliente.html";
                 }
