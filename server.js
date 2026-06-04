@@ -67,6 +67,15 @@ app.get(['/acceder', '/Acceder', '/login'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/acceder.html'));
 });
 
+// Rutas amigables para la navegación del panel administrativo
+app.get('/admin/RegistrarCancha', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/registrarCancha.html'));
+});
+
+app.get('/admin/RegistrarCliente', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/registro.html'));
+});
+
 // Endpoint de fallback para Swagger UI
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

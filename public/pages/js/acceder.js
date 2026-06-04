@@ -41,10 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Redirección inteligente basada en el rol
                 if (data.usuario.role === 'admin') {
-                    window.location.href = "/pages/registrarCancha.html";
+                    window.location.href = "/pages/interfazAdministrador.html";
                 } else {
-                    // Si es un cliente común, podemos enviarlo al inicio de Swagger o al registro
-                    window.location.href = "/pages/registro.html";
+                    window.location.href = "/pages/interfazCliente.html";
                 }
             } else {
                 errorEl.textContent = data.details || data.error || "Credenciales incorrectas";
