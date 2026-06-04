@@ -236,8 +236,62 @@ const listarEntrenamientosPublicos = async (req, res) => {
   }
 };
 
+// POST /usuario/login
+const loginUsuario = async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios', details: 'Se requieren username (o email) y password' });
+  }
+
+  try {
+    // Buscar usuario por username o email
+    const querySql = `
+      SELECT u.id_usuario, u.id_usuario AS id, u.username, u.user_level, u.nombre, u.apellido, u.email, u.password, u.fecha_nacimiento, u.fecha_registro,
+             g.genero AS genero, pa.nombre AS nacionalidad, 
+             d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia 
+      FROM usuarios u 
+      LEFT JOIN generos g ON u.id_genero = g.id_genero 
+      LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais 
+      LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion 
+      LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad 
+      LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad 
+      LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia 
+      WHERE LOWER(u.username) = LOWER($1) OR LOWER(u.email) = LOWER($1)
+    `;
+    const user = await db.query.get(querySql, [username.trim()]);
+
+    if (!user) {
+      return res.status(401).json({ error: 'Credenciales inválidas', details: 'El usuario o correo electrónico no está registrado' });
+    }
+
+    // Verificar contraseña plana (en ambiente demo/desarrollo)
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Credenciales inválidas', details: 'La contraseña es incorrecta' });
+    }
+
+    // Mapeo de roles basado en user_level (0: Público, >=1: Cliente, >=152: Admin)
+    let role = 'usuario';
+    if (user.user_level >= 1) role = 'cliente';
+    if (user.user_level >= 152) role = 'admin';
+
+    // Eliminar la contraseña de la respuesta por seguridad
+    delete user.password;
+
+    res.json({
+      message: 'Inicio de sesión exitoso',
+      usuario: {
+        ...user,
+        role
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al iniciar sesión', message: err.message });
+  }
+};
+
 module.exports = {
   registrarUsuario,
+  loginUsuario,
   listarCanchas,
   listarTiposCancha,
   consultarDisponibilidad,
