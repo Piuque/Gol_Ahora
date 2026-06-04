@@ -9345,3 +9345,66 @@ body.bg-football-dark::before {
   color: #ffffff !important; /* Letras blancas */
 }
 
+/* ==========================================================================
+   AJUSTES EXCLUSIVOS PARA EL PANEL TÉCNICO OSCURÓ (GOL AHORA)
+   ========================================================================== */
+
+/* Corrección para eliminar el fondo blanco o gris claro del espacio de trabajo */
+#main-workspace-card {
+    background-color: #0A2540 !important; /* Fuerza el fondo azul oscuro idéntico a tus métricas */
+    border: 1px solid rgba(255, 255, 255, 0.05) !important; /* Borde sutil para dar relieve */
+    color: #ffffff !important;
+}
+
+/* Forzar que los textos secundarios dentro del panel queden legibles sobre oscuro */
+#main-workspace-card .text-muted, 
+#main-workspace-card p,
+#main-workspace-card label {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Estilo para los encabezados de las tablas (Thead) */
+#main-workspace-card .table th {
+    background-color: #061729 !important; /* Tono más oscuro para el encabezado de la columna */
+    color: #00C16E !important; /* Texto verde deportivo oficial */
+    border-bottom: 2px solid rgba(0, 193, 110, 0.3) !important;
+}
+
+/* Estilo para el cuerpo de las tablas dentro del contenedor */
+#main-workspace-card .table td {
+    background-color: #0A2540 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Ajuste plano para las pestañas (Tabs) de Bootstrap */
+#tecnicoTabs {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+#tecnicoTabs .nav-link {
+    border: none !important;
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-weight: 600;
+}
+
+#tecnicoTabs .nav-link:hover {
+    color: #00C16E !important;
+}
+
+#tecnicoTabs .nav-link.active {
+    background-color: transparent !important;
+    color: #00C16E !important;
+    border-bottom: 3px solid #00C16E !important; /* Línea verde inferior de selección */
+}
+
+/* Inputs oscuros para la Ficha del Profesional */
+.bg-dark-navy {
+    background-color: #0d1b2a !important;
+}
+
+.bg-football-dark {
+    background-color: #07111e !important;
+}
+
