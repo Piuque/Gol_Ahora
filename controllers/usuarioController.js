@@ -167,6 +167,21 @@ const listarTiposCancha = async (req, res) => {
 };
 
 // GET /usuario/canchas/disponibilidad
+// Helper: Convert "HH:MM:SS" or "HH:MM" to minutes
+const timeToMinutes = (t) => {
+  if (!t) return 0;
+  const parts = t.split(':');
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+};
+
+// Helper: Convert minutes to "HH:MM"
+const minutesToTime = (min) => {
+  const h = Math.floor(min / 60).toString().padStart(2, '0');
+  const m = (min % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
+};
+
+// GET /usuario/canchas/disponibilidad
 const consultarDisponibilidad = async (req, res) => {
   const { fecha, idTipoCancha } = req.query;
   if (!fecha) {
@@ -174,25 +189,104 @@ const consultarDisponibilidad = async (req, res) => {
   }
 
   try {
-    let sql = `
-      SELECT oc.id_cancha, oc.hora_inicio, oc.hora_fin, c.nombre AS cancha_nombre, tc.tipo_cancha, oc.id_tipo_ocupacion
-      FROM ocupaciones_cancha oc
-      INNER JOIN canchas c ON oc.id_cancha = c.id_cancha
+    // 1. Obtener día de la semana de la fecha (en español)
+    const dateObj = new Date(`${fecha}T00:00:00`);
+    const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const diaSemana = daysOfWeek[dateObj.getDay()];
+
+    // 2. Obtener todas las canchas físicas activas
+    let queryCanchas = `
+      SELECT c.id_cancha, c.nombre, c.id_tipo_de_cancha, 
+             COALESCE(tc.duracion_max, 60) AS duracion_turno,
+             tc.tipo_cancha AS categoria
+      FROM canchas c
       INNER JOIN tipos_de_cancha tc ON c.id_tipo_de_cancha = tc.id_tipo_de_cancha
-      WHERE oc.fecha = $1
     `;
-    const params = [fecha];
-    
+    const paramsCanchas = [];
     if (idTipoCancha) {
-      sql += ` AND c.id_tipo_de_cancha = $2`;
-      params.push(idTipoCancha);
+      queryCanchas += ` WHERE c.id_tipo_de_cancha = $1`;
+      paramsCanchas.push(idTipoCancha);
+    }
+    const canchas = await db.query.all(queryCanchas, paramsCanchas);
+
+    if (canchas.length === 0) {
+      return res.json([]);
     }
 
-    const ocupaciones = await db.query.all(sql, params);
-    res.json({
-      fecha,
-      ocupaciones
+    // 3. Obtener todas las ocupaciones para la fecha
+    const queryOcupaciones = `
+      SELECT id_cancha, 
+             to_char(hora_inicio, 'HH24:MI') AS hora_inicio, 
+             to_char(hora_fin, 'HH24:MI') AS hora_fin, 
+             id_tipo_ocupacion
+      FROM ocupaciones_cancha
+      WHERE fecha = $1
+    `;
+    const ocupaciones = await db.query.all(queryOcupaciones, [fecha]);
+
+    // 4. Obtener la disponibilidad de atención cargada para el día de la semana
+    const queryDisp = `
+      SELECT id_cancha, 
+             to_char(hora_inicio, 'HH24:MI') AS hora_inicio, 
+             to_char(hora_fin, 'HH24:MI') AS hora_fin
+      FROM disponibilidad
+      WHERE dia_semana = $1
+    `;
+    const disponibilidades = await db.query.all(queryDisp, [diaSemana]);
+
+    // 5. Procesar disponibilidad por cada cancha
+    const resultado = canchas.map(cancha => {
+      // Buscar horario de atención para este día. Si no existe, default 08:00 a 22:00
+      const dispCancha = disponibilidades.find(d => parseInt(d.id_cancha) === parseInt(cancha.id_cancha));
+      const horaApertura = dispCancha ? dispCancha.hora_inicio : "08:00";
+      const horaCierre = dispCancha ? dispCancha.hora_fin : "22:00";
+
+      const startMin = timeToMinutes(horaApertura);
+      const endMin = timeToMinutes(horaCierre);
+      const step = cancha.duracion_turno;
+
+      // Filtrar ocupaciones de esta cancha
+      const ocCancha = ocupaciones.filter(oc => parseInt(oc.id_cancha) === parseInt(cancha.id_cancha));
+
+      const franjas = [];
+      for (let time = startMin; time + step <= endMin; time += step) {
+        const slotStart = time;
+        const slotEnd = time + step;
+
+        const strInicio = minutesToTime(slotStart);
+        const strFin = minutesToTime(slotEnd);
+
+        let estado = 'DISPONIBLE';
+        const overlap = ocCancha.find(oc => {
+          const ocStart = timeToMinutes(oc.hora_inicio);
+          const ocEnd = timeToMinutes(oc.hora_fin);
+          return ocStart < slotEnd && ocEnd > slotStart;
+        });
+
+        if (overlap) {
+          if (parseInt(overlap.id_tipo_ocupacion) === 6) {
+            estado = 'MANTENIMIENTO';
+          } else {
+            estado = 'RESERVADO';
+          }
+        }
+
+        franjas.push({
+          horaInicio: strInicio,
+          horaFin: strFin,
+          estado
+        });
+      }
+
+      return {
+        id_cancha: cancha.id_cancha,
+        nombreCancha: cancha.nombre,
+        fecha,
+        franjasHorarias: franjas
+      };
     });
+
+    res.json(resultado);
   } catch (err) {
     res.status(500).json({ error: 'Error al consultar la disponibilidad', message: err.message });
   }
