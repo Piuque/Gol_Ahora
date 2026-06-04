@@ -60,12 +60,17 @@
                 </div>
             </div>
 
-            <!-- Género y Nacionalidad -->
             <div class="row g-2 mb-3">
-                <div class="col-6" style="position: relative;">
-                    <label class="form-label small fw-bold text-white ">Género</label>
-                    <input type="text" class="form-control bg-football-dark border-secondary text-white" id="genero" required placeholder="Escribí tu género">
-                    <div id="genero-suggestions" class="suggestions"></div>
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-white">Género</label>
+                    <select class="form-select bg-football-dark border-secondary text-white" id="genero" required>
+                        <option value="" disabled selected>Elegí tu género</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="No binario">No binario</option>
+                        <option value="Otro">Otro</option>
+                        <option value="Prefiero no especificar">Prefiero no especificar</option>
+                    </select>
                 </div>
                 <div class="col-6" style="position: relative;">
                     <label class="form-label small fw-bold text-white">Nacionalidad</label>

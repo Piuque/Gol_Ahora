@@ -9,8 +9,49 @@ const registrarUsuario = async (req, res) => {
 
   const finalUsername = username || (email ? email.split('@')[0] : `user_${Date.now()}`);
 
+  // 1. Campos obligatorios
   if (!nombre || !apellido || !email || !password || !dni || !fecha_nacimiento || !genero || !nacionalidad || !calle || !numero || !codigo_postal || !localidad) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios para registrar el usuario (se requieren: nombre, apellido, email, password, dni, fecha_nacimiento, genero, nacionalidad, calle, numero, codigo_postal, localidad)' });
+    return res.status(400).json({ error: 'Campos obligatorios incompletos', details: 'Faltan campos obligatorios para registrar el usuario.' });
+  }
+
+  // 2. Validación de formato de Email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    return res.status(400).json({ error: 'Validación fallida', details: 'El formato de correo electrónico es inválido.' });
+  }
+
+  // 3. Validación de DNI (7 a 9 dígitos numéricos)
+  if (!/^\d{7,9}$/.test(dni.toString().trim())) {
+    return res.status(400).json({ error: 'Validación fallida', details: 'El DNI debe tener entre 7 y 9 dígitos numéricos.' });
+  }
+
+  // 4. Validación de Teléfono (8 a 15 dígitos numéricos)
+  if (!/^\+?\d{8,15}$/.test(telefono.toString().trim())) {
+    return res.status(400).json({ error: 'Validación fallida', details: 'El teléfono debe tener entre 8 y 15 dígitos numéricos.' });
+  }
+
+  // 5. Validación de Contraseña (mínimo 6 caracteres)
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Validación fallida', details: 'La contraseña debe tener al menos 6 caracteres.' });
+  }
+
+  // 6. Validación de Fecha de Nacimiento (entre 1900 y hoy)
+  const birthDate = new Date(fecha_nacimiento);
+  const minDate = new Date('1900-01-01');
+  const today = new Date();
+  if (isNaN(birthDate.getTime()) || birthDate < minDate || birthDate > today) {
+    return res.status(400).json({ error: 'Validación fallida', details: 'La fecha de nacimiento es inválida o está fuera de rango (debe ser desde 1900 hasta hoy).' });
+  }
+
+  // 7. Validación de Número de dirección (solo dígitos)
+  if (!/^\d+$/.test(numero.toString().trim())) {
+    return res.status(400).json({ error: 'Validación fallida', details: 'El número de la dirección debe ser un valor numérico.' });
+  }
+
+  // 8. Validación de Género
+  const standardGenders = ['masculino', 'femenino', 'no binario', 'otro', 'prefiero no especificar'];
+  if (!standardGenders.includes(genero.toString().trim().toLowerCase())) {
+    return res.status(400).json({ error: 'Validación fallida', details: 'El género seleccionado no es válido.' });
   }
 
   try {
