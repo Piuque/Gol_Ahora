@@ -88,4 +88,96 @@ const cancelarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
   const { id } = req.params;
   try {
-    const reserva = await db.query.get
+    const reserva = await db.query.get('SELECT r.id_ocupacion_cancha, r.id_cobro, oc.fecha, oc.hora_inicio FROM reservas r INNER JOIN ocupaciones_cancha oc ON r.id_ocupacion_cancha = oc.id_ocupacion_cancha WHERE r.id_reserva = $1 AND r.id_usuario = $2', [id, idUsuario]);
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM reservas WHERE id_reserva = $1', [id]);
+    await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = $1', [reserva.id_ocupacion_cancha]);
+    await db.pool.query('UPDATE cobros SET id_estado_cobro = 3 WHERE id_cobro = $1', [reserva.id_cobro]);
+    await db.pool.query('COMMIT');
+    res.json({ message: 'Cancelado' });
+  } catch (err) { await db.pool.query('ROLLBACK'); res.status(500).json({ error: err.message }); }
+};
+
+const listarReservasCliente = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const rows = await db.query.all('SELECT r.id_reserva, r.fecha_reserva, r.hora_inicio, r.hora_fin, c.nombre AS nombre_cancha, tc.tipo_cancha, r.estado FROM reservas r JOIN canchas c ON r.id_cancha = c.id_cancha JOIN tipos_de_cancha tc ON c.id_tipo_de_cancha = tc.id_tipo_de_cancha WHERE r.id_cliente = $1 ORDER BY r.fecha_reserva DESC', [idUsuario]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+// --- PAGOS Y RECIBOS ---
+const listarMisPagos = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const rows = await db.query.all('SELECT cob.id_cobro AS id, cob.monto, to_char(cob.fecha, \'DD/MM/YYYY HH24:MI\') AS fecha_pago, ec.estado AS estado, mp.nombre AS metodo FROM cobros cob LEFT JOIN estados_cobro ec ON cob.id_estado_cobro = ec.id_estado_cobro LEFT JOIN metodos_de_pago mp ON cob.id_metodo_de_pago = mp.id_metodo_de_pago WHERE cob.id_usuario = $1 ORDER BY cob.fecha DESC', [idUsuario]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const consultarMiPago = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { id } = req.params;
+  try {
+    const details = await db.query.get('SELECT cob.id_cobro AS id, cob.monto, cob.detalles AS comprobante_info, ec.estado AS estado, mp.nombre AS metodo, can.nombre AS cancha_reservada, to_char(oc.fecha, \'DD/MM/YYYY\') AS fecha_turno, to_char(oc.hora_inicio, \'HH24:MI\') AS hora_inicio FROM cobros cob LEFT JOIN estados_cobro ec ON cob.id_estado_cobro = ec.id_estado_cobro LEFT JOIN metodos_de_pago mp ON cob.id_metodo_de_pago = mp.id_metodo_de_pago LEFT JOIN reservas res ON cob.id_cobro = res.id_cobro LEFT JOIN canchas can ON res.id_cancha = can.id_cancha LEFT JOIN ocupaciones_cancha oc ON res.id_ocupacion_cancha = oc.id_ocupacion_cancha WHERE cob.id_cobro = $1 AND cob.id_usuario = $2', [id, idUsuario]);
+    res.json(details);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const listarMisRecibos = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const rows = await db.query.all('SELECT r.id_recibos AS id, r.nro_transaccion, to_char(r.fecha, \'DD/MM/YYYY HH24:MI\') AS fecha, c.monto FROM recibos r INNER JOIN cobros c ON r.id_cobro = c.id_cobro WHERE c.id_usuario = $1 ORDER BY r.fecha DESC', [idUsuario]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const consultarMiRecibo = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { id } = req.params;
+  try {
+    const details = await db.query.get('SELECT r.id_recibos AS id, r.nro_transaccion, to_char(r.fecha, \'DD/MM/YYYY HH24:MI\') AS fecha_emision, r.detalles AS detalles_recibo, c.monto, c.detalles AS detalles_cobro FROM recibos r INNER JOIN cobros c ON r.id_cobro = c.id_cobro WHERE r.id_recibos = $1 AND c.id_usuario = $2', [id, idUsuario]);
+    res.json(details);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const realizarPago = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    await db.pool.query('UPDATE cobros SET id_estado_cobro = 2 WHERE id_cobro = $1 AND id_usuario = $2', [id, idUsuario]);
+    await db.pool.query('INSERT INTO recibos (nro_transaccion, detalles, id_cobro) VALUES ($1, $2, $3)', [`TRANS_${Date.now()}`, 'Pago realizado', id]);
+    await db.pool.query('COMMIT');
+    res.status(201).json({ message: 'Pagado' });
+  } catch (err) { await db.pool.query('ROLLBACK'); res.status(500).json({ error: err.message }); }
+};
+
+// --- INSCRIPCIONES ---
+const inscribirClase = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { id_clase } = req.body;
+  try { await db.query.run('INSERT INTO clientes_clases (id_cliente, id_clase, id_asistencia) VALUES ($1, $2, 2)', [idUsuario, id_clase]); res.status(201).json({ message: 'Inscrito' }); } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const darBajaClase = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { id } = req.params;
+  try { await db.pool.query('DELETE FROM clientes_clases WHERE id_clase = $1 AND id_cliente = $2', [id, idUsuario]); res.json({ message: 'Baja exitosa' }); } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const inscribirEntrenamiento = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { id_entrenamiento } = req.body;
+  try { await db.query.run('INSERT INTO clientes_entrenamientos (id_cliente, id_entrenamiento, id_asistencia) VALUES ($1, $2, 2)', [idUsuario, id_entrenamiento]); res.status(201).json({ message: 'Inscrito' }); } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+const darBajaEntrenamiento = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { id } = req.params;
+  try { await db.pool.query('DELETE FROM clientes_entrenamientos WHERE id_entrenamiento = $1 AND id_cliente = $2', [id, idUsuario]); res.json({ message: 'Baja exitosa' }); } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+module.exports = {
+  obtenerPerfil, modificarPerfil, listarCanchasCliente, realizarReserva, modificarReserva, cancelarReserva, listarMisPagos, consultarMiPago, listarMisRecibos, consultarMiRecibo, inscribirClase, darBajaClase, inscribirEntrenamiento, darBajaEntrenamiento, realizarPago
+};
