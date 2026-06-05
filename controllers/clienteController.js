@@ -154,8 +154,7 @@ const realizarReserva = async (req, res) => {
     res.status(500).json({ error: 'Error al procesar la reserva', message: err.message });
   }
 };
-// 1. Importa la base de datos (asegúrate de que la ruta sea correcta)
-const db = require('../config/db.js');
+
 
 // 2. Define tus funciones como constantes (ordenadas)
 
