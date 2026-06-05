@@ -207,12 +207,20 @@ app.get(['/acceder', '/Acceder', '/login'], (req, res) => {
 });
 
 // Rutas amigables para la navegación del panel administrativo
-app.get('/admin/RegistrarCancha', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/registrarCancha.html'));
+app.get(['/admin/RegistrarCancha', '/admin/RegistrarCancha.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarCancha.html'));
 });
 
-app.get('/admin/RegistrarCliente', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/registro.html'));
+app.get(['/admin/RegistrarCliente', '/admin/RegistrarCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarCliente.html'));
+});
+
+app.get(['/admin/ConsultaClientes', '/admin/ConsultaClientes.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ConsultaClientes.html'));
+});
+
+app.get(['/admin/RegistrarTipoDeCancha', '/admin/RegistrarTipoDeCancha.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarTipoDeCancha.html'));
 });
 
 // Rutas amigables para los paneles de profesores y entrenadores
