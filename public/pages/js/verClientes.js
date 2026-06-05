@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>`;
 
         try {
-            const res = await fetch(`/api/${rol}`, { credentials: "include" });
+            const res = await fetch(`/admin/clientes`, { credentials: "include" });
             clientesData = await res.json();
 
             if (!clientesData || clientesData.length === 0) {
