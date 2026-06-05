@@ -52,6 +52,130 @@ app.get('/api/generos', async (req, res) => {
 app.get(['/profesor/info', '/profesor/Info'], authMiddleware, requireRole(['profesor', 'admin']), usuarioController.obtenerInfoUsuarioLogueado);
 app.get(['/entrenador/info', '/entrenador/Info'], authMiddleware, requireRole(['entrenador', 'admin']), usuarioController.obtenerInfoUsuarioLogueado);
 
+// Endpoints específicos para obtener las clases y alumnos asignados a un profesor
+app.get('/profesor/clases', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  const idProfesor = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT c.id_clase, c.nombre, c.capacidad_max,
+             can.nombre AS cancha_nombre, tc.tipo_cancha AS nivel,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha_turno,
+             (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos
+      FROM clases c
+      LEFT JOIN canchas can ON c.id_cancha = can.id_cancha
+      LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE c.id_profesional = $1
+    `;
+    const rows = await db.query.all(sql, [idProfesor]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener las clases del profesor', message: err.message });
+  }
+});
+
+app.get('/profesor/clases/:id/alumnos', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  const idClase = req.params.id;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT u.id_usuario, u.nombre, u.apellido, u.dni, u.telefono,
+             COALESCE(a.estado, 'Activo') AS asistencia
+      FROM clientes_clases cc
+      INNER JOIN usuarios u ON cc.id_cliente = u.id_usuario
+      LEFT JOIN asistencias a ON cc.id_asistencia = a.id_asistencia
+      WHERE cc.id_clase = $1
+    `;
+    const rows = await db.query.all(sql, [idClase]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener alumnos de la clase', message: err.message });
+  }
+});
+
+app.delete('/profesor/clases/:id_clase/alumnos/:id_alumno', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  const { id_clase, id_alumno } = req.params;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      DELETE FROM clientes_clases
+      WHERE id_clase = $1 AND id_cliente = $2
+    `;
+    const result = await db.pool.query(sql, [id_clase, id_alumno]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Inscripción no encontrada' });
+    }
+    res.json({ message: 'Alumno desvinculado de la clase exitosamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al dar de baja al alumno', message: err.message });
+  }
+});
+
+// Endpoints específicos para obtener los entrenamientos y alumnos asignados a un entrenador
+app.get('/entrenador/entrenamientos', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  const idEntrenador = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT e.id_entrenamiento, 'Entrenamiento' || ' ' || COALESCE(can.nombre, '') AS nombre, e.capacidad_max,
+             can.nombre AS cancha_nombre, tc.tipo_cancha AS nivel,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha_turno,
+             (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos
+      FROM entrenamientos e
+      LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+      LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE e.id_profesional = $1
+    `;
+    const rows = await db.query.all(sql, [idEntrenador]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener los entrenamientos', message: err.message });
+  }
+});
+
+app.get('/entrenador/entrenamientos/:id/alumnos', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  const idEntrenamiento = req.params.id;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT u.id_usuario, u.nombre, u.apellido, u.dni, u.telefono,
+             COALESCE(a.estado, 'Activo') AS asistencia
+      FROM clientes_entrenamientos ce
+      INNER JOIN usuarios u ON ce.id_cliente = u.id_usuario
+      LEFT JOIN asistencias a ON ce.id_asistencia = a.id_asistencia
+      WHERE ce.id_entrenamiento = $1
+    `;
+    const rows = await db.query.all(sql, [idEntrenamiento]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener alumnos del entrenamiento', message: err.message });
+  }
+});
+
+app.delete('/entrenador/entrenamientos/:id_entrenamiento/alumnos/:id_alumno', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  const { id_entrenamiento, id_alumno } = req.params;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      DELETE FROM clientes_entrenamientos
+      WHERE id_entrenamiento = $1 AND id_cliente = $2
+    `;
+    const result = await db.pool.query(sql, [id_entrenamiento, id_alumno]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Inscripción no encontrada' });
+    }
+    res.json({ message: 'Alumno desvinculado del entrenamiento exitosamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al dar de baja al alumno', message: err.message });
+  }
+});
+
 // Servir la especificación OpenAPI y la interfaz Swagger UI como archivos estáticos
 // Se configura control de caché estricto para openapi.yaml para evitar errores de renderizado por archivos cacheados
 app.use(express.static(path.join(__dirname), {

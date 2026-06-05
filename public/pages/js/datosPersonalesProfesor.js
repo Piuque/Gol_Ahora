@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 2. Obtener datos específicos del profesor
     ObtenerDatosPersonales();
+    
+    // 3. Obtener clases del profesor
+    ObtenerClasesProfesor();
 });
 
 function initInterfaceControls() {
@@ -101,6 +104,124 @@ async function ObtenerDatosPersonales() {
 }
 
 // --- CONTROLES Y SWEETALERT2 ---
+let claseSeleccionadaId = null;
+
+async function ObtenerClasesProfesor() {
+    const bodyTabla = document.getElementById('tabla-clases-body');
+    if (!bodyTabla) return;
+
+    try {
+        const userId = localStorage.getItem("userId");
+        const Respuesta = await fetch('/profesor/clases', {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "plataform": "web",
+                "x-user-id": userId
+            },
+            credentials: "include"
+        });
+
+        const Clases = await Respuesta.json();
+
+        if (!Respuesta.ok) {
+            bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${Clases.error || 'No se pudieron cargar las clases'}</td></tr>`;
+            return;
+        }
+
+        if (!Clases || Clases.length === 0) {
+            bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">No tienes clases asignadas.</td></tr>`;
+            return;
+        }
+
+        bodyTabla.innerHTML = '';
+        Clases.forEach(clase => {
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.dataset.idClase = clase.id_clase;
+            
+            // Si es la clase seleccionada actualmente, mantenerla destacada
+            if (claseSeleccionadaId && String(clase.id_clase) === String(claseSeleccionadaId)) {
+                tr.classList.add('table-active', 'bg-dark-navy');
+            }
+
+            tr.innerHTML = `
+                <td class="fw-bold text-white">${clase.nombre}</td>
+                <td>${clase.fecha_turno} ${clase.hora_inicio} - ${clase.hora_fin}</td>
+                <td>${clase.cancha_nombre || 'N/A'}</td>
+                <td><span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50">${clase.nivel || 'Estándar'}</span></td>
+                <td>${clase.inscriptos} / ${clase.capacidad_max}</td>
+            `;
+
+            tr.addEventListener('click', () => {
+                document.querySelectorAll('#tabla-clases-body tr').forEach(row => row.classList.remove('table-active', 'bg-dark-navy'));
+                tr.classList.add('table-active', 'bg-dark-navy');
+
+                claseSeleccionadaId = clase.id_clase;
+                ObtenerAlumnosClase(clase.id_clase);
+            });
+
+            bodyTabla.appendChild(tr);
+        });
+
+    } catch (error) {
+        console.error("Error al obtener clases:", error);
+        bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error de conexión al servidor</td></tr>`;
+    }
+}
+
+async function ObtenerAlumnosClase(idClase) {
+    const bodyAlumnos = document.getElementById('tabla-alumnos-body');
+    if (!bodyAlumnos) return;
+
+    bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">Cargando alumnos...</td></tr>`;
+
+    try {
+        const userId = localStorage.getItem("userId");
+        const Respuesta = await fetch(`/profesor/clases/${idClase}/alumnos`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "plataform": "web",
+                "x-user-id": userId
+            },
+            credentials: "include"
+        });
+
+        const Alumnos = await Respuesta.json();
+
+        if (!Respuesta.ok) {
+            bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${Alumnos.error || 'No se pudieron cargar los alumnos'}</td></tr>`;
+            return;
+        }
+
+        if (!Alumnos || Alumnos.length === 0) {
+            bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">No hay alumnos inscritos en esta clase.</td></tr>`;
+            return;
+        }
+
+        bodyAlumnos.innerHTML = '';
+        Alumnos.forEach(alumno => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="fw-bold text-white">${alumno.nombre} ${alumno.apellido}</td>
+                <td class="text-light-50">${alumno.dni}</td>
+                <td>${alumno.telefono || 'Sin teléfono'}</td>
+                <td><span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">${alumno.asistencia}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumno(${alumno.id_usuario}, '${alumno.nombre} ${alumno.apellido}')">
+                        <i class="fa-solid fa-user-minus"></i> Dar Baja
+                    </button>
+                </td>
+            `;
+            bodyAlumnos.appendChild(tr);
+        });
+
+    } catch (error) {
+        console.error("Error al obtener alumnos:", error);
+        bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error de conexión al servidor</td></tr>`;
+    }
+}
 
 async function executeLogout() {
     const result = await Swal.fire({
@@ -134,16 +255,49 @@ window.modificarBloqueActividad = () => {
     });
 };
 
-window.darDeBajaAlumno = (nombreAlumno) => {
+window.darDeBajaAlumno = function(idAlumno, nombreAlumno) {
+    if (!claseSeleccionadaId) {
+        Swal.fire('Error', 'No se ha seleccionado ninguna clase.', 'error');
+        return;
+    }
+
     Swal.fire({
         title: '¿Confirmar baja del alumno?',
-        text: `Se desvinculará a ${nombreAlumno}.`,
+        text: `Se desvinculará a ${nombreAlumno} de la asistencia y el cupo quedará libre inmediatamente.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
-        confirmButtonText: 'Sí, dar de baja'
-    }).then((result) => {
-        if (result.isConfirmed) Swal.fire('Procesado', 'Alumno removido.', 'success');
+        cancelButtonColor: '#0A2540',
+        confirmButtonText: 'Sí, dar de baja',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const userId = localStorage.getItem("userId");
+                const Respuesta = await fetch(`/profesor/clases/${claseSeleccionadaId}/alumnos/${idAlumno}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "plataform": "web",
+                        "x-user-id": userId
+                    },
+                    credentials: "include"
+                });
+
+                const Res = await Respuesta.json();
+
+                if (Respuesta.ok) {
+                    Swal.fire('Procesado', 'El alumno fue removido de la planilla de asistencia.', 'success');
+                    ObtenerAlumnosClase(claseSeleccionadaId);
+                    ObtenerClasesProfesor();
+                } else {
+                    Swal.fire('Error', Res.error || 'No se pudo procesar la baja.', 'error');
+                }
+            } catch (err) {
+                console.error("Error al procesar la baja:", err);
+                Swal.fire('Error', 'Error de conexión al servidor.', 'error');
+            }
+        }
     });
 };
 

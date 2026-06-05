@@ -65,25 +65,25 @@
 
                     <ul class="nav nav-pills flex-column mb-auto gap-1">
                         <li class="nav-item">
-                            <a href="#" class="nav-link active gap-3 py-2.5 px-3">
+                            <a href="#" id="btn-mi-perfil" class="nav-link active gap-3 py-2.5 px-3">
                                 <i class="bi bi-person-fill"></i>
                                 Mi Perfil
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/entrenador/MisEntrenamientos" class="nav-link gap-3 py-2.5 px-3">
+                            <a href="#" id="btn-mis-entrenamientos" class="nav-link gap-3 py-2.5 px-3">
                                 <i class="bi bi-people-fill"></i>
                                 Mis Entrenamientos
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="/entrenador/Certificaciones" class="nav-link gap-3 py-2.5 px-3">
+                            <a href="#" id="btn-certificaciones" class="nav-link gap-3 py-2.5 px-3">
                                 <i class="bi bi-award-fill"></i>
                                 Mis Certificaciones
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link gap-3 py-2.5 px-3">
+                            <a href="#" id="btn-configuracion" class="nav-link gap-3 py-2.5 px-3">
                                 <i class="bi bi-gear-fill"></i>
                                 Configuración
                             </a>
@@ -109,75 +109,131 @@
 
             <!-- Main Content -->
             <main class="col-md-9 col-lg-10 px-md-4 py-4 bg-panel-derecho min-vh-100">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2 text-white">Datos Personales</h1>
+                <!-- SECCIÓN PERFIL -->
+                <div id="seccion-perfil">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2 text-white">Datos Personales</h1>
+                    </div>
+
+                    <div class="card p-4 shadow-sm tarjeta-celeste-club">
+                        <form id="form-perfil">
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Nombre</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Nombre" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Apellido</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Apellido" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Dni</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Dni" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Nacionalidad</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Nacionalidad" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Género</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Genero" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Fecha de nacimiento</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Fecha" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Email</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Email" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Teléfono</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Telefono" value="" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label font-weight-bold">Dirección</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control editable-input input-Direccion" value="" readonly>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
-                <div class="card p-4 shadow-sm tarjeta-celeste-club">
-                    <form id="form-perfil">
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Nombre</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Nombre" value="" readonly>
-                            </div>
-                        </div>
+                <!-- SECCIÓN ENTRENAMIENTOS -->
+                <div id="seccion-entrenamientos" class="d-none">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2 text-white">Cronograma de Entrenamientos</h1>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Apellido</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Apellido" value="" readonly>
-                            </div>
+                    <div class="card p-4 shadow-sm tarjeta-celeste-club mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                                <thead>
+                                    <tr>
+                                        <th>Módulo</th>
+                                        <th>Días / Horarios</th>
+                                        <th>Cancha</th>
+                                        <th>Nivel</th>
+                                        <th>Cupo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-entrenamientos-body">
+                                     <tr>
+                                         <td colspan="5" class="text-center text-light-50">Cargando cronograma de entrenamientos...</td>
+                                     </tr>
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Dni</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Dni" value="" readonly>
-                            </div>
-                        </div>
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2 text-white">Nómina Oficial de Alumnos Inscritos</h1>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Nacionalidad</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Nacionalidad" value="" readonly>
-                            </div>
+                    <div class="card p-4 shadow-sm tarjeta-celeste-club">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                                <thead>
+                                    <tr>
+                                        <th>Alumno</th>
+                                        <th>DNI</th>
+                                        <th>Contacto</th>
+                                        <th>Condición</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-alumnos-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-light-50">Selecciona un entrenamiento del cronograma arriba para listar los alumnos inscritos.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Género</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Genero" value="" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Fecha de nacimiento</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Fecha" value="" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Email</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Email" value="" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Teléfono</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Telefono" value="" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Dirección</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Direccion" value="" readonly>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </main>
         </div>
@@ -201,6 +257,9 @@
         }
     </script>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
@@ -211,7 +270,7 @@
     <script src="mail/contact.js"></script>
 
     <script src="js/main.js"></script>
-    <script src="js/datosPersonales.js"></script>
+    <script src="js/datosPersonalesEntrenador.js"></script>
 </body>
 
 </html>
