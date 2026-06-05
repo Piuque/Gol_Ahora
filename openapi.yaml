@@ -265,6 +265,230 @@ paths:
         '404':
           description: Entrenador no encontrado
 
+  /profesor/clases:
+    get:
+      tags:
+        - Gestión de Profesores
+      summary: Listar clases asignadas al profesor logueado
+      description: Retorna la lista de clases grupales o particulares asignadas al profesor autenticado.
+      operationId: obtenerClasesProfesor
+      responses:
+        '200':
+          description: Lista de clases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_clase:
+                      type: integer
+                    nombre:
+                      type: string
+                    capacidad_max:
+                      type: integer
+                    cancha_nombre:
+                      type: string
+                    nivel:
+                      type: string
+                    hora_inicio:
+                      type: string
+                    hora_fin:
+                      type: string
+                    fecha_turno:
+                      type: string
+                    inscriptos:
+                      type: integer
+        '401':
+          description: No autorizado
+
+  /profesor/clases/{id}/alumnos:
+    get:
+      tags:
+        - Gestión de Profesores
+      summary: Listar alumnos inscritos en una clase
+      description: Retorna los alumnos que asisten a la clase dada.
+      operationId: obtenerAlumnosClase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la clase
+      responses:
+        '200':
+          description: Lista de alumnos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_usuario:
+                      type: integer
+                    nombre:
+                      type: string
+                    apellido:
+                      type: string
+                    dni:
+                      type: string
+                    telefono:
+                      type: string
+                    asistencia:
+                      type: string
+        '401':
+          description: No autorizado
+
+  /profesor/clases/{id_clase}/alumnos/{id_alumno}:
+    delete:
+      tags:
+        - Gestión de Profesores
+      summary: Dar de baja a un alumno de una clase
+      description: Desvincula al alumno de la clase especificada.
+      operationId: darDeBajaAlumnoClase
+      parameters:
+        - name: id_clase
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la clase
+        - name: id_alumno
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del alumno (usuario)
+      responses:
+        '200':
+          description: Alumno desvinculado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: No autorizado
+        '404':
+          description: Inscripción no encontrada
+
+  /entrenador/entrenamientos:
+    get:
+      tags:
+        - Gestión de Entrenadores
+      summary: Listar entrenamientos asignados al entrenador logueado
+      description: Retorna la lista de entrenamientos grupales o particulares asignados al entrenador autenticado.
+      operationId: obtenerEntrenamientosEntrenador
+      responses:
+        '200':
+          description: Lista de entrenamientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_entrenamiento:
+                      type: integer
+                    nombre:
+                      type: string
+                    capacidad_max:
+                      type: integer
+                    cancha_nombre:
+                      type: string
+                    nivel:
+                      type: string
+                    hora_inicio:
+                      type: string
+                    hora_fin:
+                      type: string
+                    fecha_turno:
+                      type: string
+                    inscriptos:
+                      type: integer
+        '401':
+          description: No autorizado
+
+  /entrenador/entrenamientos/{id}/alumnos:
+    get:
+      tags:
+        - Gestión de Entrenadores
+      summary: Listar alumnos inscritos en un entrenamiento
+      description: Retorna los alumnos que asisten al entrenamiento dado.
+      operationId: obtenerAlumnosEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del entrenamiento
+      responses:
+        '200':
+          description: Lista de alumnos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_usuario:
+                      type: integer
+                    nombre:
+                      type: string
+                    apellido:
+                      type: string
+                    dni:
+                      type: string
+                    telefono:
+                      type: string
+                    asistencia:
+                      type: string
+        '401':
+          description: No autorizado
+
+  /entrenador/entrenamientos/{id_entrenamiento}/alumnos/{id_alumno}:
+    delete:
+      tags:
+        - Gestión de Entrenadores
+      summary: Dar de baja a un alumno de un entrenamiento
+      description: Desvincula al alumno del entrenamiento especificado.
+      operationId: darDeBajaAlumnoEntrenamiento
+      parameters:
+        - name: id_entrenamiento
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del entrenamiento
+        - name: id_alumno
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID del alumno (usuario)
+      responses:
+        '200':
+          description: Alumno desvinculado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: No autorizado
+        '404':
+          description: Inscripción no encontrada
+
   # ==========================================
   # === 2. ACCESO CLIENTE (REGISTRADO) ===
   # ==========================================
