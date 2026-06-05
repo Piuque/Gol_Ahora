@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora - Mis Reservas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .scroll-horizontal {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding-bottom: 2rem;
+            padding-top: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: #00C16E #0A2540;
+        }
+
+        .scroll-horizontal::-webkit-scrollbar { height: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-track { background: rgba(10, 37, 64, 0.5); border-radius: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-thumb { background: #00C16E; border-radius: 10px; }
+
+        /* Tarjetas ajustadas: Más angostas y más altas (formato retrato) */
+        .reserva-card {
+            background-color: var(--bg-navy, #0A2540);
+            border: 1px solid rgba(0, 193, 110, 0.1);
+            border-radius: 12px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 20px;
+            /* Medidas ajustadas */
+            min-width: 270px;
+            max-width: 290px;
+            min-height: 400px;
+            flex: 0 0 auto;
+        }
+        .reserva-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 193, 110, 0.15) !important;
+            border-color: rgba(0, 193, 110, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-football-dark py-5 px-3">
+
+<div class="container mx-auto" style="max-width: 950px; min-height: 75vh; display: flex; flex-direction: column; justify-content: center;">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <a href="interfazCliente.html" class="fw-bold text-decoration-none text-sports mb-3 mb-md-0">
+            <i class="fa-solid fa-arrow-left me-2"></i> Volver al panel
+        </a>
+
+        <div class="text-center">
+            <h3 class="fw-bold text-white text-uppercase mb-0">
+                <i class="fa-solid fa-calendar-check me-2 text-sports"></i>Mis Reservas
+            </h3>
+        </div>
+
+        <a href="nuevaReserva.html" class="btn btn-sports fw-bold px-4 py-2 mt-3 mt-md-0">
+            <i class="fa-solid fa-plus me-2"></i>Nueva Reserva
+        </a>
+    </div>
+
+    <p class="text-light-50 small mb-2 text-center text-md-start">
+        <i class="fa-solid fa-arrows-left-right me-2 text-sports"></i>Deslizá para ver todos tus turnos
+    </p>
+
+    <div id="contenedor-reservas" class="scroll-horizontal">
+        <div class="w-100 text-center py-5">
+            <div class="spinner-border text-sports" role="status"></div>
+            <p class="text-light-50 mt-2 small">Buscando tus reservas...</p>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/misReservas.js"></script>
+</body>
+</html>
