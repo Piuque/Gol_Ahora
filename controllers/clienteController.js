@@ -154,9 +154,34 @@ const realizarReserva = async (req, res) => {
     res.status(500).json({ error: 'Error al procesar la reserva', message: err.message });
   }
 };
-//GET/clientes/reservas(listar mis reservas)
-const listarReservasCliente = async (req, res) => {
+// 1. Importa la base de datos (asegúrate de que la ruta sea correcta)
+const db = require('../config/db.js');
+
+// 2. Define tus funciones como constantes (ordenadas)
+
+const listarMisPagos = async (req, res) => {
   const idUsuario = req.user.id_usuario;
+  try {
+    const sql = `
+      SELECT cob.id_cobro AS id, cob.monto, 
+             to_char(cob.fecha, 'DD/MM/YYYY HH24:MI') AS fecha_pago, 
+             ec.estado AS estado, 
+             mp.nombre AS metodo 
+      FROM cobros cob 
+      LEFT JOIN estados_cobro ec ON cob.id_estado_cobro = ec.id_estado_cobro 
+      LEFT JOIN metodos_de_pago mp ON cob.id_metodo_de_pago = mp.id_metodo_de_pago 
+      WHERE cob.id_usuario = $1 
+      ORDER BY cob.fecha DESC
+    `;
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar cobros', message: err.message });
+  }
+};
+
+const listarReservasCliente = async (req, res) => {
+  const idUsuario = req.user.id_usuario; // Asumiendo que esta es la forma en que obtienes el ID
   try {
     const sql = `
       SELECT r.id_reserva, r.fecha_reserva, r.hora_inicio, r.hora_fin, 
@@ -167,20 +192,14 @@ const listarReservasCliente = async (req, res) => {
       WHERE r.id_cliente = $1
       ORDER BY r.fecha_reserva DESC
     `;
-    
-    // Respetando tu forma de llamar a la DB (db.query.all o db.query)
     const rows = await db.query.all(sql, [idUsuario]);
     res.json(rows);
-    
   } catch (err) {
-    res.status(500).json({ 
-      error: 'Error al consultar reservas', 
-      message: err.message 
-    });
+    res.status(500).json({ error: 'Error al consultar reservas', message: err.message });
   }
 };
 
-// Exportación al estilo "objeto centralizado"
+// 3. Exporta todas al final (esto soluciona el error de "ReferenceError")
 module.exports = {
   listarMisPagos,
   listarReservasCliente
