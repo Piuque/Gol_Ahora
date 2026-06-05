@@ -1,217 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
-    <meta charset="utf-8">
-    <title>Acceso - Panel Profesor</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-    <!-- Favicon -->
-    <link href="img/favicon.ico" rel="icon">
-
-    <!-- Google Web Fonts -->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <!-- Font Awesome & Bootstrap Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
-    <!-- Libraries Stylesheet -->
-    <link href="lib/animate/animate.min.css" rel="stylesheet">
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="css/style.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora - Panel de Control Profesor</title>
+    <!-- Google Fonts (Poppins) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Estilos específicos del Dashboard -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
+<body class="bg-football-dark text-light">
 
-<body>
-    <!-- Barra de navegacion comienzo -->
-    <div class="col-lg-12 px-0">
-        <nav class="navbar navbar-expand-lg navbar-dark py-0 px-0 nav-diagonal">
-            <div class="brand-section d-flex align-items-center">
-                <a href="" class="text-decoration-none d-flex align-items-center">
-                    <img src="img/icono1.png" alt="Logo GA" class="logo-img">
-                    <div class="d-flex align-items-center text-nowrap">
-                        <span class="h1 text-uppercase mb-0 brand-club">CLUB</span>
-                        <span class="h1 text-uppercase text-white mb-0 brand-gol">GOL AHORA</span>
-                    </div>
-                </a>
+    <div class="d-flex" id="wrapper">
+        <!-- SIDEBAR LATERAL -->
+        <div class="bg-navy border-end border-secondary border-opacity-25" id="sidebar-wrapper">
+            <div class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25">
+                <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
             </div>
-
-            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
-                <div class="navbar-nav py-0 pr-xl-5">
-                    <a href="/" class="nav-item nav-link active">Home</a>
-                    <a href="/Complejo deportivo Gol ahora/index.html#nosotros" class="nav-item nav-link">Sobre Nosotros</a>
-                    <a href="/Complejo deportivo Gol ahora/index.html#Contactanos" class="nav-item nav-link">Contactanos</a>
+            
+            <!-- Contenedor del perfil de usuario en el menú -->
+            <div id="user-profile-summary" class="p-3 border-bottom border-secondary border-opacity-25 bg-dark-navy">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-box bg-success bg-opacity-25 text-sports rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-white text-truncate lh-1 small" id="sidebar-user-fullname">Carlos Bilardo</div>
+                        <small class="text-sports text-uppercase fw-bold tracking-wider" style="font-size: 0.65rem;">Profesor</small>
+                    </div>
                 </div>
             </div>
-        </nav>
-    </div>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 bg-sidebar sidebar min-vh-100 d-flex flex-column justify-content-between p-0">
-                <div class="p-3 w-100">
-                    <div class="d-flex align-items-center mb-4 mt-2 px-2 text-white">
-                        <i class="bi bi-person-workspace fs-4 me-2 text-success"></i>
-                        <span class="fs-5 fw-bold">Panel Profesor</span>
-                    </div>
-
-                    <ul class="nav nav-pills flex-column mb-auto gap-1">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active gap-3 py-2.5 px-3">
-                                <i class="bi bi-person-fill"></i>
-                                Mi Perfil
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/profesor/MisClases" class="nav-link gap-3 py-2.5 px-3">
-                                <i class="bi bi-people-fill"></i>
-                                Mis Clases
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/profesor/Certificaciones" class="nav-link gap-3 py-2.5 px-3">
-                                <i class="bi bi-award-fill"></i>
-                                Mis Certificaciones
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link gap-3 py-2.5 px-3">
-                                <i class="bi bi-gear-fill"></i>
-                                Configuración
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="p-3 w-100 border-top border-dark-subtle">
-                    <a href="/logout" onclick="logout()" class="nav-link gap-3 py-2.5 px-3 mb-3 btn-logout rounded">
-                        <i class="bi bi-box-arrow-left"></i>
-                        Cerrar Sesión
+            <!-- Lista de navegación dinámica -->
+            <ul class="nav flex-column mt-2" id="sidebar-menu-items">
+                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link active" href="#"><i class="fa-solid fa-clipboard-user me-3"></i>Gestión de Clases</a></li>
+                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="#"><i class="fa-solid fa-trophy me-3"></i>Torneos y Ligas</a></li>
+                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="#"><i class="fa-solid fa-user-gear me-3"></i>Mi Perfil Técnico</a></li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger d-flex align-items-center py-2.5 px-3 sidebar-link" href="#" id="btn-logout-action">
+                        <i class="fa-solid fa-right-from-bracket me-3"></i><span>Cerrar Sesión</span>
                     </a>
-                    <div class="d-flex align-items-center gap-2 px-3 text-white">
-                        <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                            <span class="fw-bold text-dark text-uppercase" style="font-size: 11px;">GA</span>
-                        </div>
-                        <div>
-                            <p class="mb-0 fw-semibold" style="font-size: 0.85rem;">Gol Ahora Club</p>
-                        </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- CONTENIDO PRINCIPAL DE LA PÁGINA -->
+        <div id="page-content-wrapper" class="w-100 d-flex flex-column">
+            <!-- Barra superior de control -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
+                <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <span class="text-light-50 position-relative cursor-pointer">
+                        <i class="fa-regular fa-bell fa-lg"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                    </span>
+                    <div class="border-start border-secondary border-opacity-50 ps-3">
+                        <span class="small text-light-75 fw-medium" id="top-navbar-user-name">Carlos Bilardo</span>
                     </div>
                 </div>
             </nav>
 
-            <!-- Main Content -->
-            <main class="col-md-9 col-lg-10 px-md-4 py-4 bg-panel-derecho min-vh-100">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2 text-white">Datos Personales</h1>
+            <!-- Zona de Paneles e Información Dinámica -->
+            <div class="container-fluid px-4 py-4 flex-grow-1">
+                <!-- Breadcrumbs -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#" class="text-sports text-decoration-none">Inicio</a></li>
+                        <li class="breadcrumb-item active text-light-50" aria-current="page" id="breadcrumb-current">Panel Profesor</li>
+                    </ol>
+                </nav>
+
+                <!-- CONTENEDOR DE MÉTRICAS -->
+                <div class="row g-3 mb-4" id="metrics-container">
+                    <div class="col-md-4">
+                        <div class="card-metric p-3 border-start border-success border-4 shadow-sm">
+                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.72rem;">Clases Asignadas</small>
+                            <h3 class="fw-bold mt-1 mb-0 text-white">6 Semanales</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-metric p-3 border-start border-primary border-4 shadow-sm">
+                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.72rem;">Total Alumnos</small>
+                            <h3 class="fw-bold mt-1 mb-0 text-white">28 Activos</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-metric p-3 border-start border-warning border-4 shadow-sm">
+                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.72rem;">Próxima Actividad</small>
+                            <h3 class="fw-bold mt-1 mb-0 text-white" style="font-size: 1.4rem;">Hoy 19:00 hs</h3>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="card p-4 shadow-sm tarjeta-celeste-club">
-                    <form id="form-perfil">
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Nombre</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Nombre" value="" readonly>
-                            </div>
-                        </div>
+                <!-- CONTENEDOR DE TRABAJO PRINCIPAL -->
+                <div class="card bg-navy border-0 shadow-lg p-4" id="main-workspace-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0 text-white text-uppercase tracking-wide" id="workspace-title">Panel Técnico de Control - Profesor</h4>
+                        <div id="workspace-actions"></div>
+                    </div>
+                    <hr class="border-secondary border-opacity-50 my-3">
+                    
+                    <div id="workspace-content">
+                        <ul class="nav nav-tabs border-secondary border-opacity-25 mb-4" id="tecnicoTabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link text-white active bg-transparent border-0 border-bottom border-3 border-transparent px-3 py-2 small text-uppercase" id="actividades-tab" data-bs-toggle="tab" data-bs-target="#panel-actividades" type="button">Planificación y Alumnos</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link text-white bg-transparent border-0 border-bottom border-3 border-transparent px-3 py-2 small text-uppercase" id="competencias-tab" data-bs-toggle="tab" data-bs-target="#panel-competencias" type="button">Torneos y Ligas</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link text-white bg-transparent border-0 border-bottom border-3 border-transparent px-3 py-2 small text-uppercase" id="perfil-tab" data-bs-toggle="tab" data-bs-target="#panel-perfil" type="button">Datos de Perfil</button>
+                            </li>
+                        </ul>
 
-                        <div class="mb-4">
-                            <label class="form-label">Apellido</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Apellido" value="" readonly>
-                            </div>
-                        </div>
+                        <div class="tab-content" id="tecnicoTabsContent">
+                            <!-- PESTAÑA 1 -->
+                            <div class="tab-pane fade show active" id="panel-actividades" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-sports fw-bold mb-0 text-uppercase"><i class="fa-solid fa-list me-2"></i>Cronograma de Clases</h6>
+                                    <button class="btn btn-sm btn-outline-success border-sports text-white px-3" onclick="modificarBloqueActividad()"><i class="fa-regular fa-pen-to-square me-1"></i> Modificar Horarios</button>
+                                </div>
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                                        <thead>
+                                            <tr>
+                                                <th>Módulo</th>
+                                                <th>Días / Horarios</th>
+                                                <th>Cancha</th>
+                                                <th>Nivel</th>
+                                                <th>Cupo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-bold text-white">Escuelita F5</td>
+                                                <td>Lun y Mie - 19:00 hs</td>
+                                                <td>Cancha F5 "Sintético 1"</td>
+                                                <td>Amateur / Inicial</td>
+                                                <td>12 / 15 Alumnos</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold text-white">Táctica F11</td>
+                                                <td>Mar y Jue - 20:30 hs</td>
+                                                <td>Cancha F11 "Estadio Principal"</td>
+                                                <td>Avanzado / Ligas</td>
+                                                <td>16 / 22 Alumnos</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Dni</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Dni" value="" readonly>
+                                <h6 class="text-sports fw-bold mb-3 text-uppercase mt-4"><i class="fa-solid fa-users me-2"></i>Nómina Oficial de Alumnos Inscriptos</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                                        <thead>
+                                            <tr>
+                                                <th>Alumno</th>
+                                                <th>DNI</th>
+                                                <th>Contacto</th>
+                                                <th>Condición</th>
+                                                <th class="text-center">Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-bold">Juan Sebastián Verón</td>
+                                                <td class="text-light-50">30444888</td>
+                                                <td>11 5566-7788</td>
+                                                <td><span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">Regular</span></td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumno('Juan Sebastián Verón')"><i class="fa-solid fa-user-minus"></i> Dar Baja</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Ariel Ortega</td>
+                                                <td class="text-light-50">28999111</td>
+                                                <td>11 4433-2211</td>
+                                                <td><span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">Regular</span></td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumno('Ariel Ortega')"><i class="fa-solid fa-user-minus"></i> Dar Baja</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Nacionalidad</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Nacionalidad" value="" readonly>
+                            <!-- PESTAÑA 2 -->
+                            <div class="tab-pane fade" id="panel-competencias" role="tabpanel">
+                                <h6 class="text-sports fw-bold mb-3 text-uppercase"><i class="fa-solid fa-trophy me-2"></i>Fixture de Torneos Vigentes</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                                        <thead>
+                                            <tr>
+                                                <th>Torneo</th>
+                                                <th>Partido / Cruce</th>
+                                                <th>Fecha</th>
+                                                <th>Resultado Registrado</th>
+                                                <th class="text-center">Planilla</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-bold text-white">Liga Comercial F7</td>
+                                                <td>Deportivo Varela vs. Real Berazategui</td>
+                                                <td>Fecha 3 (Última)</td>
+                                                <td><span class="text-warning fw-bold">3 - 1</span></td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-success px-2 py-0.5 font-xs" style="background-color:#00C16E; border-color:#00C16E" onclick="cargarResultadoPartido('Deportivo Varela vs. Real Berazategui')"><i class="fa-solid fa-square-plus me-1"></i>Editar Goles</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Género</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Genero" value="" readonly>
+                            <!-- PESTAÑA 3 -->
+                            <div class="tab-pane fade" id="panel-perfil" role="tabpanel">
+                                <div class="row g-3">
+                                    <div class="col-md-8">
+                                        <div class="p-3 rounded bg-dark-navy border border-secondary border-opacity-25">
+                                            <h6 class="text-sports fw-bold mb-3 text-uppercase"><i class="fa-regular fa-id-card me-2"></i>Ficha del Profesional Matriculado</h6>
+                                            <form id="form-perfil-tecnico" onsubmit="event.preventDefault(); guardarDatosPerfil();">
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label small text-light-75 fw-medium">Nombre</label>
+                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Nombre" value="" readonly>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small text-light-75 fw-medium">Apellido</label>
+                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Apellido" value="" readonly>
+                                                    </div>
+                                                </div>
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label small text-light-75 fw-medium">DNI</label>
+                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Dni" value="" readonly>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small text-light-75 fw-medium">Nacionalidad</label>
+                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Nacionalidad" value="" readonly>
+                                                    </div>
+                                                </div>
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <label class="form-label small text-light-75 fw-medium">Género</label>
+                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Genero" value="" readonly>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label small text-light-75 fw-medium">Teléfono</label>
+                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Telefono" value="" readonly>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small text-light-75 fw-medium">Correo Institucional</label>
+                                                    <input type="email" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Email" value="" readonly>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <button type="submit" class="btn btn-sm btn-success px-3 fw-bold"><i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-light px-3" onclick="imprimirLegajoTecnico()"><i class="fa-solid fa-print me-1"></i> Imprimir Ficha</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 rounded border border-danger border-opacity-25 bg-dark-navy h-100 d-flex flex-column justify-content-between">
+                                            <div>
+                                                <h6 class="text-danger fw-bold text-uppercase mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i>Cese de Actividades</h6>
+                                                <p class="text-light-50 small">Solicitá la baja temporal o definitiva de tus comisiones asignadas en el predio mediante una notificación formal a la administración.</p>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-2 mt-2" onclick="solicitarBajaContrato()"><i class="fa-solid fa-user-xmark me-1"></i> Solicitar Baja de Legajo</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Fecha de nacimiento</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Fecha" value="" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Email</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Email" value="" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Teléfono</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Telefono" value="" readonly>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Dirección</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Direccion" value="" readonly>
-                            </div>
-                        </div>
-                    </form>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
-    <!-- Back to Top -->
-    <a href="#" class="btn btn-primary back-to-top"><i class="fa fa-angle-double-up"></i></a>
-    
-    <script>
-        function tieneCookie(nombre) {
-            return document.cookie.split(';').some(c => c.trim().startsWith(nombre + '='));
-        }
-
-        async function logout() {
-            await fetch('/logout', { method: 'POST' });
-            document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            document.cookie = "x-user-id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            location.reload();
-        }
-    </script>
-
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
-    <script src="lib/easing/easing.min.js"></script>
-    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
-
-    <script src="mail/jqBootstrapValidation.min.js"></script>
-    <script src="mail/contact.js"></script>
-
-    <script src="js/main.js"></script>
-    <script src="js/datosPersonales.js"></script>
+    <!-- SweetAlert2 y Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bundle.min.js"></script>
+    <!-- Tu archivo JS -->
+    <script src="js/datosPersonalesProfesores.js"></script>
 </body>
-
 </html>
