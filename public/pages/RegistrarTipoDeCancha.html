@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora - Registrar Tipo de Cancha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body class="bg-football-dark d-flex align-items-center justify-content-center py-5 px-3">
+
+    <div class="card login-card border-0 shadow-lg p-4 my-2" style="max-width: 560px;">
+        <div class="text-center mb-4">
+            <i class="fa-solid fa-futbol fa-2x mb-2" style="color: #00C16E;"></i>
+            <h3 class="fw-bold text-white text-uppercase mb-1">Registrar Tipo de Cancha</h3>
+            <p class="text-light-50 small">Completá los datos del nuevo tipo de cancha</p>
+        </div>
+
+        <p class="error escondido text-danger small mb-2"></p>
+
+        <form id="tipo-cancha-formulario">
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-white">Tipo de Cancha</label>
+                <input type="text" name="tipo_cancha" class="form-control bg-football-dark border-secondary text-white" required placeholder="Ej: Fútbol 5">
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-white">Duración mínima (min)</label>
+                    <input type="number" name="duracion_min" class="form-control bg-football-dark border-secondary text-white" required placeholder="Ej: 60">
+                </div>
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-white">Duración máxima (min)</label>
+                    <input type="number" name="duracion_max" class="form-control bg-football-dark border-secondary text-white" required placeholder="Ej: 120">
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-white">Ancho (m)</label>
+                    <input type="number" step="0.01" name="ancho" class="form-control bg-football-dark border-secondary text-white" required placeholder="Ej: 20">
+                </div>
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-white">Largo (m)</label>
+                    <input type="number" step="0.01" name="largo" class="form-control bg-football-dark border-secondary text-white" required placeholder="Ej: 40">
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-white">Capacidad (jugadores)</label>
+                    <input type="number" name="capacidad" class="form-control bg-football-dark border-secondary text-white" required placeholder="Ej: 10">
+                </div>
+                <div class="col-6" style="position: relative;">
+                    <label class="form-label small fw-bold text-white">Tipo de Superficie</label>
+                    <input type="text" id="id_superficie" class="form-control bg-football-dark border-secondary text-white" placeholder="Escribí para buscar..." autocomplete="off" required>
+                    <input type="hidden" name="id_superficie" id="id_superficie_hidden" required>
+                    <div id="id_superficie-suggestions" class="suggestions"></div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-white">Imagen</label>
+                <input type="file" name="imagen" class="form-control bg-football-dark border-secondary text-white">
+            </div>
+
+            <button type="submit" class="btn w-100 py-2 fw-bold text-white" style="background-color: #00C16E !important;">
+                Registrar Tipo de Cancha
+            </button>
+        </form>
+
+        <div class="text-center small mt-3">
+            <a href="/admin" style="color: #00C16E;" class="fw-bold text-decoration-none">
+                <i class="fa-solid fa-arrow-left me-1"></i> Volver al panel
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/registrarTipoDeCancha.js"></script>
+</body>
+</html>
