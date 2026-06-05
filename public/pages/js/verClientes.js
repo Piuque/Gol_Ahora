@@ -14,7 +14,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>`;
 
         try {
-            const res = await fetch(`/admin/clientes`, { credentials: "include" });
+            const userId = localStorage.getItem("userId");
+            const res = await fetch(`/admin/clientes`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": userId
+                },
+                credentials: "include"
+            });
             clientesData = await res.json();
 
             if (!clientesData || clientesData.length === 0) {
@@ -75,25 +83,33 @@ function renderClientes(clientes) {
 
 async function verDetalle(id) {
     try {
-        const res = await fetch(`/api/users/user_id=${id}/full_info`, { credentials: "include" });
+        const userId = localStorage.getItem("userId");
+        const res = await fetch(`/admin/clientes/${id}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "x-user-id": userId
+            },
+            credentials: "include"
+        });
         const c = await res.json();
 
         document.getElementById("modal-nombre").textContent = `${c.nombre} ${c.apellido}`;
         document.getElementById("modal-info").innerHTML = `
-            <div class="info-row"><span class="info-label">Username</span><span class="info-value">${c.username}</span></div>
-            <div class="info-row"><span class="info-label">DNI</span><span class="info-value">${c.dni}</span></div>
-            <div class="info-row"><span class="info-label">Email</span><span class="info-value">${c.email}</span></div>
-            <div class="info-row"><span class="info-label">Teléfono</span><span class="info-value">${c.telefono}</span></div>
-            <div class="info-row"><span class="info-label">Género</span><span class="info-value">${c.genero}</span></div>
-            <div class="info-row"><span class="info-label">Nacimiento</span><span class="info-value">${c.fecha_nacimiento}</span></div>
-            <div class="info-row"><span class="info-label">Nacionalidad</span><span class="info-value">${c.nacionalidad}</span></div>
-            <div class="info-row"><span class="info-label">Registro</span><span class="info-value">${new Date(c.fecha_registro).toLocaleDateString('es-AR')}</span></div>
-            <div class="info-row"><span class="info-label">Rol</span><span class="info-value">${c.user_level}</span></div>
+            <div class="info-row"><span class="info-label">Username</span><span class="info-value">${c.username || '-'}</span></div>
+            <div class="info-row"><span class="info-label">DNI</span><span class="info-value">${c.dni || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Email</span><span class="info-value">${c.email || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Teléfono</span><span class="info-value">${c.telefono || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Género</span><span class="info-value">${c.genero || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Nacimiento</span><span class="info-value">${c.fecha_nacimiento || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Nacionalidad</span><span class="info-value">${c.nacionalidad || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Registro</span><span class="info-value">${c.fecha_registro ? new Date(c.fecha_registro).toLocaleDateString('es-AR') : '-'}</span></div>
+            <div class="info-row"><span class="info-label">Rol</span><span class="info-value">${c.user_level || '-'}</span></div>
             <p class="text-light-50 small mt-3 mb-1">Dirección</p>
-            <div class="info-row"><span class="info-label">Calle</span><span class="info-value">${c.direccion.calle} ${c.direccion.numero}</span></div>
-            <div class="info-row"><span class="info-label">Localidad</span><span class="info-value">${c.direccion.localidad}, ${c.direccion.ciudad}</span></div>
-            <div class="info-row"><span class="info-label">Provincia</span><span class="info-value">${c.direccion.provincia}, ${c.direccion.pais}</span></div>
-            <div class="info-row"><span class="info-label">CP</span><span class="info-value">${c.direccion.cp}</span></div>
+            <div class="info-row"><span class="info-label">Calle</span><span class="info-value">${c.calle || ''} ${c.numero || ''}</span></div>
+            <div class="info-row"><span class="info-label">Localidad</span><span class="info-value">${c.localidad || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Provincia</span><span class="info-value">${c.provincia || '-'}</span></div>
+            <div class="info-row"><span class="info-label">CP</span><span class="info-value">${c.codigo_postal || '-'}</span></div>
         `;
 
         const modal = new bootstrap.Modal(document.getElementById("modalCliente"));
