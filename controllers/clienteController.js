@@ -154,7 +154,37 @@ const realizarReserva = async (req, res) => {
     res.status(500).json({ error: 'Error al procesar la reserva', message: err.message });
   }
 };
+//GET/clientes/reservas(listar mis reservas)
+const listarReservasCliente = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const sql = `
+      SELECT r.id_reserva, r.fecha_reserva, r.hora_inicio, r.hora_fin, 
+             c.nombre AS nombre_cancha, tc.tipo_cancha, r.estado
+      FROM reservas r
+      JOIN canchas c ON r.id_cancha = c.id_cancha
+      JOIN tipos_de_cancha tc ON c.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      WHERE r.id_cliente = $1
+      ORDER BY r.fecha_reserva DESC
+    `;
+    
+    // Respetando tu forma de llamar a la DB (db.query.all o db.query)
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows);
+    
+  } catch (err) {
+    res.status(500).json({ 
+      error: 'Error al consultar reservas', 
+      message: err.message 
+    });
+  }
+};
 
+// Exportación al estilo "objeto centralizado"
+module.exports = {
+  listarMisPagos,
+  listarReservasCliente
+};
 // PUT /cliente/reservas/:id (Modificar Horario)
 const modificarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
