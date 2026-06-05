@@ -1,24 +1,24 @@
-const userRole = localStorage.getItem("role") || "profesor";
-let relativePath = "/profesor/info";
-if (userRole === "admin" || userRole === "administrador") {
-    relativePath = "/admin/info";
-} else if (userRole === "entrenador") {
-    relativePath = "/entrenador/info";
-} else if (userRole === "cliente") {
-    relativePath = "/cliente/info";
+// --- CONFIGURACIÓN DE RUTA ---
+// Validamos que el acceso sea exclusivamente para el rol de profesor
+const userRole = localStorage.getItem("role");
+
+if (userRole !== "profesor") {
+    console.warn("Acceso restringido. Redirigiendo...");
+    window.location.href = '/acceder'; // Ajusta según tu ruta de login
 }
-const API = relativePath;
+
+const API = "/profesor/info";
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inicializar botones de colapso y cerrar sesión
+    // 1. Inicializar controles de UI
     initInterfaceControls();
     
-    // 2. Ejecutar tu fetch real para traer los datos personales de Neon
+    // 2. Obtener datos específicos del profesor
     ObtenerDatosPersonales();
 });
 
 function initInterfaceControls() {
-    // Control del botón de hamburguesa para achicar el sidebar
+    // Sidebar toggle
     const menuToggle = document.getElementById('menu-toggle');
     if (menuToggle) {
         menuToggle.addEventListener('click', (e) => {
@@ -27,7 +27,7 @@ function initInterfaceControls() {
         });
     }
 
-    // Listener para el botón de cerrar sesión
+    // Logout
     const logoutBtn = document.getElementById('btn-logout-action');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
@@ -36,7 +36,7 @@ function initInterfaceControls() {
         });
     }
 
-    // Lógica nativa de intercambio de pestañas (Tabs)
+    // Tabs logic
     const tabButtons = document.querySelectorAll('#tecnicoTabs button');
     tabButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -56,10 +56,9 @@ function initInterfaceControls() {
     });
 }
 
-// TU FUNCIÓN ASINCRÓNICA CONECTADA A LA API
 async function ObtenerDatosPersonales() {
     try {
-        const Respuesta = await fetch(API, {
+        const respuesta = await fetch(API, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -68,35 +67,43 @@ async function ObtenerDatosPersonales() {
             credentials: "include"
         });
 
-        const Datos = await Respuesta.json();
+        if (!respuesta.ok) throw new Error("Error en la conexión con el servidor");
 
-        // Si la base de datos devuelve datos correctos, actualiza los textos dinámicos
-        if (Datos) {
-            if(Datos.nombre && Datos.apellido) {
-                document.getElementById('top-navbar-user-name').textContent = `${Datos.nombre} ${Datos.apellido}`;
-                document.getElementById('sidebar-user-fullname').textContent = `${Datos.nombre} ${Datos.apellido}`;
+        const datos = await respuesta.json();
+
+        if (datos) {
+            // Actualización de textos en Navbar y Sidebar
+            if(datos.nombre && datos.apellido) {
+                const nombreCompleto = `${datos.nombre} ${datos.apellido}`;
+                document.getElementById('top-navbar-user-name').textContent = nombreCompleto;
+                document.getElementById('sidebar-user-fullname').textContent = nombreCompleto;
             }
             
-            // Rellenado de casilleros de perfil
-            if(document.querySelector('.input-Nombre')) document.querySelector('.input-Nombre').value = Datos.nombre || '';
-            if(document.querySelector('.input-Apellido')) document.querySelector('.input-Apellido').value = Datos.apellido || '';
-            if(document.querySelector('.input-Nacionalidad')) document.querySelector('.input-Nacionalidad').value = Datos.nacionalidad || '';
-            if(document.querySelector('.input-Dni')) document.querySelector('.input-Dni').value = Datos.dni || '';
-            if(document.querySelector('.input-Genero')) document.querySelector('.input-Genero').value = Datos.genero || '';
-            if(document.querySelector('.input-Telefono')) document.querySelector('.input-Telefono').value = Datos.telefono || '';
-            if(document.querySelector('.input-Email')) document.querySelector('.input-Email').value = Datos.email || '';
-        }
+            // Rellenado de campos de perfil
+            const campos = {
+                '.input-Nombre': datos.nombre,
+                '.input-Apellido': datos.apellido,
+                '.input-Nacionalidad': datos.nacionalidad,
+                '.input-Dni': datos.dni,
+                '.input-Genero': datos.genero,
+                '.input-Telefono': datos.telefono,
+                '.input-Email': datos.email
+            };
 
+            Object.entries(campos).forEach(([selector, valor]) => {
+                const el = document.querySelector(selector);
+                if (el) el.value = valor || '';
+            });
+        }
     } catch (error) {
-        console.error("Error al obtener datos personales de la base de datos:", error);
+        console.error("Error al obtener datos del profesor:", error);
     }
 }
 
+// --- CONTROLES Y SWEETALERT2 ---
 
-//ESTILOS DE LOS BOTONES DE LA INTERFAZ (SWEETALERT2) Y FUNCIONES DE CONTROL DE VENTANAS EMERGENTES
-// --- CONTROLES DE LAS VENTANAS EMERGENTES (SWEETALERT2) ---
-function executeLogout() {
-    Swal.fire({
+async function executeLogout() {
+    const result = await Swal.fire({
         title: '¿Cerrar sesión?',
         text: "Vas a salir del panel de gestión de Gol Ahora",
         icon: 'warning',
@@ -105,98 +112,67 @@ function executeLogout() {
         cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, salir',
         cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            localStorage.clear();
-            document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            document.cookie = "x-user-id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            
-            // Si el backend tiene un endpoint de logout, lo llamamos también
-            await fetch('/logout', { method: 'POST' }).catch(() => {});
-            
-            window.location.href = '/acceder';
-        }
     });
+
+    if (result.isConfirmed) {
+        localStorage.clear();
+        document.cookie.split(";").forEach(c => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        await fetch('/logout', { method: 'POST' }).catch(() => {});
+        window.location.href = '/acceder';
+    }
 }
 
-window.modificarBloqueActividad = function() {
+window.modificarBloqueActividad = () => {
     Swal.fire({
         title: 'Modificar Módulos Horarios',
-        text: 'La edición directa de la grilla horaria requiere confirmación de la intendencia del club para evitar superposición en las canchas.',
+        text: 'La edición directa requiere confirmación de la intendencia.',
         icon: 'info',
         confirmButtonColor: '#00C16E'
     });
 };
 
-window.darDeBajaAlumno = function(nombreAlumno) {
+window.darDeBajaAlumno = (nombreAlumno) => {
     Swal.fire({
         title: '¿Confirmar baja del alumno?',
-        text: `Se desvinculará a ${nombreAlumno} de la asistencia y el cupo quedará libre inmediatamente.`,
+        text: `Se desvinculará a ${nombreAlumno}.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
-        cancelButtonColor: '#0A2540',
-        confirmButtonText: 'Sí, dar de baja',
-        cancelButtonText: 'Cancelar'
+        confirmButtonText: 'Sí, dar de baja'
     }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire('Procesado', 'El alumno fue removido de la planilla de asistencia.', 'success');
-        }
+        if (result.isConfirmed) Swal.fire('Procesado', 'Alumno removido.', 'success');
     });
 };
 
-window.cargarResultadoPartido = function(partido) {
+window.cargarResultadoPartido = (partido) => {
     Swal.fire({
         title: 'Planilla Oficial de Resultados',
-        html: `
-            <p class="small text-muted mb-3">${partido}</p>
-            <div class="d-flex justify-content-center gap-2 mb-2">
-                <input type="number" id="goles-local" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0">
-                <span class="fs-4 text-white">-</span>
-                <input type="number" id="goles-visita" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0">
-            </div>
-        `,
-        showCancelButton: true,
-        confirmButtonColor: '#00C16E',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Publicar Goles',
-        cancelButtonText: 'Cancelar'
+        html: `<p class="small text-muted">${partido}</p>
+               <div class="d-flex justify-content-center gap-2">
+                   <input type="number" id="goles-local" class="form-control" style="width:60px" placeholder="0">
+                   <input type="number" id="goles-visita" class="form-control" style="width:60px" placeholder="0">
+               </div>`,
+        confirmButtonText: 'Publicar Goles'
     }).then((result) => {
-        if (result.isConfirmed) {
-            const loc = document.getElementById('goles-local').value || 0;
-            const vis = document.getElementById('goles-visita').value || 0;
-            Swal.fire('Éxito', `Marcador guardado: ${loc} - ${vis}. Fixture actualizado.`, 'success');
-        }
+        if (result.isConfirmed) Swal.fire('Éxito', 'Marcador guardado.', 'success');
     });
 };
 
-window.guardarDatosPerfil = function() {
-    Swal.fire({
-        icon: 'success',
-        title: 'Perfil Técnico Actualizado',
-        text: 'Los cambios sobre su legajo profesional han sido guardados con éxito.',
-        confirmButtonColor: '#00C16E'
-    });
+window.guardarDatosPerfil = () => {
+    Swal.fire({ icon: 'success', title: 'Perfil Actualizado', confirmButtonColor: '#00C16E' });
 };
 
-window.imprimirLegajoTecnico = function() { window.print(); };
+window.imprimirLegajoTecnico = () => window.print();
 
-window.solicitarBajaContrato = function() {
+window.solicitarBajaContrato = () => {
     Swal.fire({
-        title: 'Solicitud de Cese de Actividades',
+        title: 'Solicitud de Cese',
         input: 'textarea',
-        inputLabel: 'Indique los motivos del cese de comisiones (Privado para RRHH):',
-        inputPlaceholder: 'Escriba aquí sus motivos...',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#0A2540',
-        confirmButtonText: 'Enviar Solicitud',
-        cancelButtonText: 'Cancelar'
+        confirmButtonText: 'Enviar'
     }).then((result) => {
-        if (result.isConfirmed && result.value) {
-            Swal.fire('Enviado', 'Su solicitud fue registrada. La administración se contactará a la brevedad.', 'success');
-        }
+        if (result.isConfirmed) Swal.fire('Enviado', 'La administración se contactará.', 'success');
     });
 };
