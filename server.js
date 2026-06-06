@@ -351,4 +351,11 @@ const startServer = async () => {
   });
 };
 
+app.get(['/admin/Clases'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Clases.html'));
+});
+app.get(['/admin/Entrenamientos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Entrenamientos.html'));
+});
+
 startServer();
