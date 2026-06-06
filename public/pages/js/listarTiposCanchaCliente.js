@@ -1,9 +1,12 @@
 /* ==========================================================================
-   GOL AHORA — listarTiposCanchaCliente.js
+   GOL AHORA — listarTiposCanchaCliente.js (CONECTADO A RENDER)
    ========================================================================== */
 
-// MODO DE PRUEBA
-const USAR_MOCKS = true;
+// Apuntamos al servidor alojado en Render
+const API = "https://gol-ahora.onrender.com";
+
+// MODO DE PRUEBA: Cambiado a false para consumir la API real.
+const USAR_MOCKS = false;
 
 const MOCKS_TIPOS_CANCHA = [
     {
@@ -12,30 +15,7 @@ const MOCKS_TIPOS_CANCHA = [
         "descripcion_superficie": "Base de caucho y arena. Dureza media y buen agarre. Ideal para partidos rápidos.",
         "imagen_url": "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=800&auto=format&fit=crop"
     },
-    {
-        "id": 2, "tipo": "Fútbol 7 (Sintético)", "duracion_min": 60, "duracion_max": 240,
-        "ancho": "30.00", "largo": "50.00", "capacidad": 14, "superficie": "Césped sintético Premium",
-        "descripcion_superficie": "Fibras de última generación, amortigua el impacto articular. Espacio equilibrado.",
-        "imagen_url": "https://images.unsplash.com/photo-1518605368461-1ee7c514baf1?q=80&w=800&auto=format&fit=crop"
-    },
-    {
-        "id": 3, "tipo": "Fútbol 11 (Césped)", "duracion_min": 90, "duracion_max": 240,
-        "ancho": "68.00", "largo": "105.00", "capacidad": 22, "superficie": "Césped Natural",
-        "descripcion_superficie": "Superficie profesional de césped natural con riego automatizado. Experiencia oficial.",
-        "imagen_url": "https://images.unsplash.com/photo-1459865264687-595d652de67e?q=80&w=800&auto=format&fit=crop"
-    },
-    {
-        "id": 4, "tipo": "Fútbol 5 (Parquet)", "duracion_min": 60, "duracion_max": 180,
-        "ancho": "20.00", "largo": "40.00", "capacidad": 10, "superficie": "Parquet Indoor",
-        "descripcion_superficie": "Cancha techada con piso de madera pulida. Uso obligatorio de calzado flat/liso sin tapones.",
-        "imagen_url": "https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=800&auto=format&fit=crop"
-    },
-    {
-        "id": 5, "tipo": "Fútbol 6 (Sintético)", "duracion_min": 60, "duracion_max": 180,
-        "ancho": "25.00", "largo": "45.00", "capacidad": 12, "superficie": "Césped sintético",
-        "descripcion_superficie": "Formato intermedio muy popular. Espacio extra para mayor despliegue físico.",
-        "imagen_url": "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=800&auto=format&fit=crop"
-    }
+    // ... (Dejo los mocks acá por si alguna vez se cae el server y necesitas probar diseño visual rápido)
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,12 +33,17 @@ async function cargarTiposDeCancha() {
     }
 
     try {
-        const response = await fetch('/api/usuario/tipos-cancha', {
+        // Petición GET a la ruta exacta definida en clienteRoutes.js
+        const response = await fetch(`${API}/api/cliente/tipos_canchas`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
-            credentials: 'include'
+            headers: {
+                'Content-Type': 'application/json',
+                'plataform': 'web'
+            },
+            credentials: 'include' // Fundamental para que pasen las cookies de sesión
         });
 
+        // Si la sesión expiró o no tiene permisos, lo mandamos al login
         if (response.status === 401 || response.status === 403) {
             window.location.href = '/pages/acceder.html';
             return;
@@ -70,12 +55,12 @@ async function cargarTiposDeCancha() {
         renderizarTarjetas(tipos);
 
     } catch (error) {
-        console.error('Error al cargar tipos de cancha:', error);
+        console.error('Error al cargar tipos de cancha desde la API:', error);
         contenedor.innerHTML = `
             <div class="w-100 text-center text-danger py-5">
                 <i class="fa-solid fa-triangle-exclamation fa-3x mb-3"></i>
                 <h5 class="text-white">Problemas de conexión</h5>
-                <p class="text-light-50 small">No pudimos cargar los formatos disponibles. Intentá nuevamente.</p>
+                <p class="text-light-50 small">No pudimos conectar con el servidor para cargar las modalidades. Intentá nuevamente.</p>
                 <button onclick="cargarTiposDeCancha()" class="btn btn-outline-danger mt-3 btn-sm">Reintentar</button>
             </div>`;
     }
@@ -89,16 +74,16 @@ function renderizarTarjetas(tipos) {
         contenedor.innerHTML = `
             <div class="w-100 text-center text-light-50 py-5">
                 <i class="fa-solid fa-ban fa-3x mb-3 opacity-50"></i>
-                <p>En este momento no hay formatos de cancha disponibles para reservar.</p>
+                <p>En este momento no hay formatos de cancha disponibles en el sistema.</p>
                 <a href="misReservas.html" class="btn btn-sm btn-outline-light mt-2">Volver atrás</a>
             </div>`;
         return;
     }
 
     tipos.forEach(tipo => {
+        // Validación para la imagen de respaldo
         const imagenUrl = tipo.imagen_url ? tipo.imagen_url : 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=800&auto=format&fit=crop';
 
-        // Se eliminó el acordeón, ahora toda la tarjeta es clickeable
         const cardHTML = `
             <div class="tipo-cancha-card" onclick="avanzarPaso(${tipo.id})">
                 
@@ -139,5 +124,6 @@ function renderizarTarjetas(tipos) {
 }
 
 function avanzarPaso(idTipo) {
+    // Redirige pasando el ID elegido como parámetro en la URL
     window.location.href = `listarCanchasCliente.html?idTipo=${idTipo}`;
 }
