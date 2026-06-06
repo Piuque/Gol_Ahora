@@ -22,10 +22,12 @@ router.delete('/reservas/{id}', clienteController.cancelarReserva);
 router.delete('/reservas/:id', clienteController.cancelarReserva);
 
 // Clases
+router.get('/clases', clienteController.listarClasesCliente);
 router.post('/clases/inscripcion', clienteController.inscribirClase);
 router.delete('/clases/inscripcion/:id', clienteController.darBajaClase);
 
 // Entrenamientos
+router.get('/entrenamientos', clienteController.listarEntrenamientosCliente);
 router.post('/entrenamientos/inscripcion', clienteController.inscribirEntrenamiento);
 router.delete('/entrenamientos/inscripcion/:id', clienteController.darBajaEntrenamiento);
 

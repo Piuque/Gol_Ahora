@@ -179,16 +179,29 @@ const listarMisPagos = async (req, res) => {
 
 
 const listarReservasCliente = async (req, res) => {
-  const idUsuario = req.user.id_usuario; // Asumiendo que esta es la forma en que obtienes el ID
+  const idUsuario = req.user.id_usuario;
   try {
     const sql = `
-      SELECT r.id_reserva, r.fecha_reserva, r.hora_inicio, r.hora_fin, 
-             c.nombre AS nombre_cancha, tc.tipo_cancha, r.estado
+      SELECT r.id_reserva, 
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin, 
+             c.nombre AS cancha_nombre, 
+             tc.tipo_cancha, 
+             CASE 
+               WHEN ec.estado = 'Pagado' THEN 'Confirmada'
+               WHEN ec.estado = 'Pendiente' THEN 'Pendiente'
+               WHEN ec.estado = 'Cancelado' THEN 'Cancelada'
+               ELSE COALESCE(ec.estado, 'Pendiente')
+             END AS estado
       FROM reservas r
       JOIN canchas c ON r.id_cancha = c.id_cancha
       JOIN tipos_de_cancha tc ON c.id_tipo_de_cancha = tc.id_tipo_de_cancha
-      WHERE r.id_cliente = $1
-      ORDER BY r.fecha_reserva DESC
+      JOIN ocupaciones_cancha oc ON r.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      LEFT JOIN cobros cob ON r.id_cobro = cob.id_cobro
+      LEFT JOIN estados_cobro ec ON cob.id_estado_cobro = ec.id_estado_cobro
+      WHERE r.id_usuario = $1
+      ORDER BY oc.fecha DESC, oc.hora_inicio DESC
     `;
     const rows = await db.query.all(sql, [idUsuario]);
     res.json(rows);
@@ -197,10 +210,49 @@ const listarReservasCliente = async (req, res) => {
   }
 };
 
-// 3. Exporta todas al final (esto soluciona el error de "ReferenceError")
-module.exports = {
-  listarMisPagos,
-  listarReservasCliente
+const listarClasesCliente = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const sql = `
+      SELECT cc.id_cliente_clase AS id_inscripcion,
+             c.id_clase,
+             c.nombre AS nombre_clase,
+             c.capacidad_max AS capacidad_maxima,
+             COALESCE(u.nombre || ' ' || u.apellido, 'Por asignar') AS profesor
+      FROM clientes_clases cc
+      JOIN clases c ON cc.id_clase = c.id_clase
+      LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
+      WHERE cc.id_cliente = $1
+      ORDER BY c.nombre ASC
+    `;
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar clases del cliente', message: err.message });
+  }
+};
+
+const listarEntrenamientosCliente = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const sql = `
+      SELECT ce.id_cliente_capacitacion AS id_inscripcion,
+             e.id_entrenamiento,
+             'Entrenamiento ' || COALESCE(can.nombre, '') AS nombre_entrenamiento,
+             e.capacidad_max AS capacidad_maxima,
+             COALESCE(u.nombre || ' ' || u.apellido, 'Preparador asignado') AS entrenador
+      FROM clientes_entrenamientos ce
+      JOIN entrenamientos e ON ce.id_entrenamiento = e.id_entrenamiento
+      LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+      LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
+      WHERE ce.id_cliente = $1
+      ORDER BY e.id_entrenamiento ASC
+    `;
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar entrenamientos del cliente', message: err.message });
+  }
 };
 // PUT /cliente/reservas/:id (Modificar Horario)
 const modificarReserva = async (req, res) => {
@@ -381,7 +433,7 @@ const darBajaClase = async (req, res) => {
   try {
     const sql = `
       DELETE FROM clientes_clases 
-      WHERE id_clase = $1 AND id_cliente = $2
+      WHERE id_cliente_clase = $1 AND id_cliente = $2
     `;
     const result = await db.pool.query(sql, [id, idUsuario]);
     if (result.rowCount === 0) {
@@ -417,7 +469,7 @@ const darBajaEntrenamiento = async (req, res) => {
   try {
     const sql = `
       DELETE FROM clientes_entrenamientos 
-      WHERE id_entrenamiento = $1 AND id_cliente = $2
+      WHERE id_cliente_capacitacion = $1 AND id_cliente = $2
     `;
     const result = await db.pool.query(sql, [id, idUsuario]);
     if (result.rowCount === 0) {
@@ -481,6 +533,8 @@ module.exports = {
   listarCanchasCliente,
   realizarReserva,
   listarReservasCliente,
+  listarClasesCliente,
+  listarEntrenamientosCliente,
   modificarReserva,
   cancelarReserva,
   inscribirClase,

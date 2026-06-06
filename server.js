@@ -48,6 +48,53 @@ app.get('/api/generos', async (req, res) => {
   }
 });
 
+// Catálogo de clases disponibles para inscripción
+app.get('/api/clases/disponibles', async (req, res) => {
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT c.id_clase,
+             c.nombre AS nombre_clase,
+             c.capacidad_max AS capacidad_maxima,
+             COALESCE(u.nombre || ' ' || u.apellido, 'Por asignar') AS profesor,
+             (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos,
+             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios
+      FROM clases c
+      LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
+      LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      ORDER BY c.nombre ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener clases disponibles', message: err.message });
+  }
+});
+
+// Catálogo de entrenamientos disponibles para inscripción
+app.get('/api/entrenamientos/disponibles', async (req, res) => {
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT e.id_entrenamiento,
+             'Entrenamiento ' || COALESCE(can.nombre, '') AS nombre_entrenamiento,
+             e.capacidad_max AS capacidad_maxima,
+             COALESCE(u.nombre || ' ' || u.apellido, 'Preparador asignado') AS entrenador,
+             (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos,
+             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios
+      FROM entrenamientos e
+      LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+      LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
+      LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      ORDER BY e.id_entrenamiento ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener entrenamientos disponibles', message: err.message });
+  }
+});
+
 // Endpoints específicos para obtener la información de perfil por roles
 app.get(['/profesor/info', '/profesor/Info'], authMiddleware, requireRole(['profesor', 'admin']), usuarioController.obtenerInfoUsuarioLogueado);
 app.get(['/entrenador/info', '/entrenador/Info'], authMiddleware, requireRole(['entrenador', 'admin']), usuarioController.obtenerInfoUsuarioLogueado);
