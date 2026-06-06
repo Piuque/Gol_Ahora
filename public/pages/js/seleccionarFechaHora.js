@@ -1,160 +1,235 @@
 /* ==========================================================================
-   GOL AHORA — seleccionarFechaHora.js (Paso 3)
+   GOL AHORA — seleccionarFechaHora.js (PRODUCCIÓN - RENDER)
    ========================================================================== */
 
 const API = "https://gol-ahora.onrender.com";
-const USAR_MOCKS = false;
 
-// Variables globales para guardar el estado de la reserva
 let idCanchaSeleccionada = null;
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
+let duracionCanchaMinutos = 60; // Valor por defecto como salvavidas
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Obtener ID de la cancha desde la URL
     const urlParams = new URLSearchParams(window.location.search);
     idCanchaSeleccionada = urlParams.get('idCancha');
 
+    // Seguridad: Si no hay ID de cancha en la URL, lo devolvemos al paso anterior
     if (!idCanchaSeleccionada) {
         window.history.back();
         return;
     }
 
-    // 2. Configurar el calendario (Bloquear fechas pasadas)
-    configurarCalendario();
+    cargarDatosCancha(idCanchaSeleccionada);
 });
 
+// ==========================================
+// 1. LEER FORMATO Y DURACIÓN DE LA CANCHA
+// ==========================================
+async function cargarDatosCancha(id) {
+    try {
+        const response = await fetch(`${API}/api/cliente/canchas/${id}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Validamos por si tu API devuelve un arreglo con la cancha o el objeto directo
+            const canchaData = Array.isArray(data) ? (data.find(c => c.id == id) || data[0]) : data;
+            duracionCanchaMinutos = canchaData?.duracion_min || 60;
+        }
+    } catch (e) {
+        console.error("Error cargando duración de la cancha desde la API:", e);
+    }
+
+    // Una vez que sabemos cuánto dura el turno, habilitamos el calendario
+    configurarCalendario();
+}
+
+// ==========================================
+// 2. GENERAR GRILLA HASTA LA MEDIANOCHE
+// ==========================================
+function generarHorariosClub(duracionMinutos) {
+    const bloques = [];
+    let inicioHora = 8;
+    let inicioMinuto = 0;
+
+    const finHoraMax = 24; // Medianoche
+
+    while (inicioHora < finHoraMax) {
+        let finMinuto = inicioMinuto + duracionMinutos;
+        let finHora = inicioHora + Math.floor(finMinuto / 60);
+        finMinuto = finMinuto % 60;
+
+        if (finHora > finHoraMax || (finHora === finHoraMax && finMinuto > 0)) {
+            break;
+        }
+
+        const strInicio = `${String(inicioHora).padStart(2, '0')}:${String(inicioMinuto).padStart(2, '0')}`;
+
+        const strFinHora = finHora === 24 ? '00' : String(finHora).padStart(2, '0');
+        const strFin = `${strFinHora}:${String(finMinuto).padStart(2, '0')}`;
+
+        bloques.push({
+            horaInicio: strInicio,
+            horaFin: strFin,
+            rangoTexto: `${strInicio} hs a ${strFin} hs`
+        });
+
+        inicioHora = finHora;
+        inicioMinuto = finMinuto;
+    }
+    return bloques;
+}
+
+// ==========================================
+// 3. CONFIGURAR CALENDARIO NATIVO
+// ==========================================
 function configurarCalendario() {
     const inputFecha = document.getElementById('input-fecha');
+    inputFecha.disabled = false;
 
-    // Obtener fecha de hoy en formato YYYY-MM-DD
     const hoy = new Date();
-    // Ajuste de zona horaria local para evitar problemas con UTC
     hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
-    const hoyString = hoy.toISOString().split('T')[0];
+    inputFecha.min = hoy.toISOString().split('T')[0];
 
-    // Bloqueamos los días pasados
-    inputFecha.min = hoyString;
+    const limiteMaximo = new Date(hoy);
+    limiteMaximo.setMonth(limiteMaximo.getMonth() + 1);
+    inputFecha.max = limiteMaximo.toISOString().split('T')[0];
 
-    // Escuchar cuando el usuario cambia la fecha
+    document.getElementById('contenedor-horarios').innerHTML = `
+        <div class="col-12 text-center py-4 text-light-50">
+            <i class="fa-regular fa-calendar-days fa-3x opacity-50 mb-3"></i>
+            <p class="mb-0">Elegí un día para ver los bloques horarios disponibles.</p>
+        </div>`;
+
     inputFecha.addEventListener('change', (e) => {
         fechaSeleccionada = e.target.value;
-        horaSeleccionada = null; // Reiniciar hora si cambia el día
+        horaSeleccionada = null;
         ocultarBotonContinuar();
         buscarDisponibilidad(idCanchaSeleccionada, fechaSeleccionada);
     });
 }
 
+// ==========================================
+// 4. LÓGICA DE OCUPACIONES API REAL
+// ==========================================
 async function buscarDisponibilidad(idCancha, fecha) {
-    const contenedorHorarios = document.getElementById('contenedor-horarios');
-
-    // Mostrar spinner de carga
-    contenedorHorarios.innerHTML = `
-        <div class="col-12 text-center py-4">
-            <div class="spinner-border text-sports" role="status"></div>
-            <p class="text-light-50 mt-2 small">Buscando turnos disponibles...</p>
-        </div>`;
-
-    if (USAR_MOCKS) {
-        setTimeout(() => {
-            // Mock simulando horarios de 18:00 a 23:00
-            const horariosMock = ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
-            renderizarHorarios(horariosMock);
-        }, 800);
-        return;
-    }
+    const contenedor = document.getElementById('contenedor-horarios');
+    contenedor.innerHTML = `<div class="col-12 text-center py-4"><div class="spinner-border text-sports"></div><p class="text-light-50 mt-2 small">Calculando turnos reales...</p></div>`;
 
     try {
-        // Consultamos la ruta que vimos en tu clienteRoutes.js
-        const url = `${API}/api/cliente/canchas/${idCancha}/disponibilidad?fecha=${fecha}`;
-
+        const url = `${API}/api/cliente/canchas/${idCancha}/ocupaciones?fecha=${fecha}`;
         const response = await fetch(url, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
             credentials: 'include'
         });
 
+        // Si no está logueado, lo mandamos al login
         if (response.status === 401 || response.status === 403) {
             window.location.href = '/pages/acceder.html';
             return;
         }
 
-        if (!response.ok) throw new Error(`Error de red: ${response.status}`);
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
-        const datos = await response.json();
+        const ocupaciones = await response.json();
+        procesarYMostrarGrilla(fecha, ocupaciones);
 
-        // Asumiendo que la API devuelve un array de strings (ej: ["18:00", "19:00"])
-        // o un array de objetos dependiendo de tu backend.
-        // Si devuelve objetos tipo { hora: "18:00", disponible: true }, tendrías que mapearlo.
-        const horariosDisponibles = Array.isArray(datos) ? datos : datos.horarios || [];
-
-        renderizarHorarios(horariosDisponibles);
-
-    } catch (error) {
-        console.error('Error al cargar horarios:', error);
-        contenedorHorarios.innerHTML = `
+    } catch (e) {
+        console.error("Error al consultar ocupaciones:", e);
+        contenedor.innerHTML = `
             <div class="col-12 text-center text-danger py-4">
                 <i class="fa-solid fa-triangle-exclamation fa-2x mb-2"></i>
-                <p class="small text-light-50">Error al consultar turnos. Intentá nuevamente.</p>
+                <p class="small text-light-50">Error al conectar con el servidor. Intentá nuevamente.</p>
             </div>`;
     }
 }
 
-function renderizarHorarios(horarios) {
+function procesarYMostrarGrilla(fechaElegida, ocupacionesArray) {
+    const bloquesClub = generarHorariosClub(duracionCanchaMinutos);
+
+    const ocupacionesMapeadas = {};
+    if (Array.isArray(ocupacionesArray)) {
+        ocupacionesArray.forEach(oc => {
+            let horaStr = oc.hora_inicio || oc.horaInicio || oc.hora || '';
+            let tipo = oc.tipo || oc.motivo || 'Ocupado';
+            if (horaStr.length >= 5) {
+                ocupacionesMapeadas[horaStr.substring(0, 5)] = tipo;
+            }
+        });
+    }
+
+    const hoyObj = new Date();
+    const esHoy = (fechaElegida === hoyObj.toISOString().split('T')[0]);
+    const horaActual = hoyObj.getHours();
+
+    const grillaFinal = bloquesClub.map(bloque => {
+        const horaInicioNum = parseInt(bloque.horaInicio.split(':')[0]);
+
+        if (esHoy && horaInicioNum <= horaActual) {
+            return { ...bloque, disponible: false, motivo: "Pasado", claseCss: "ocupacion-pasado" };
+        }
+
+        if (ocupacionesMapeadas[bloque.horaInicio]) {
+            const motivoReal = ocupacionesMapeadas[bloque.horaInicio];
+            let css = "ocupacion-reserva";
+            if (motivoReal.toLowerCase().includes('clase') || motivoReal.toLowerCase().includes('entrenamiento')) css = "ocupacion-clase";
+            if (motivoReal.toLowerCase().includes('mantenimiento')) css = "ocupacion-mantenimiento";
+
+            return { ...bloque, disponible: false, motivo: motivoReal, claseCss: css };
+        }
+
+        return { ...bloque, disponible: true, motivo: "Disponible", claseCss: "" };
+    });
+
+    renderizarListaVertical(grillaFinal);
+}
+
+function renderizarListaVertical(grilla) {
     const contenedor = document.getElementById('contenedor-horarios');
     contenedor.innerHTML = '';
 
-    if (!horarios || horarios.length === 0) {
-        contenedor.innerHTML = `
-            <div class="col-12 text-center py-4">
-                <i class="fa-solid fa-face-frown fa-2x text-light-50 opacity-50 mb-3"></i>
-                <h6 class="text-white">Sin turnos disponibles</h6>
-                <p class="text-light-50 small mb-0">Esta cancha ya está completamente reservada para este día. Por favor, probá con otra fecha.</p>
-            </div>`;
-        return;
-    }
-
-    horarios.forEach(hora => {
-        // En caso de que la API devuelva "18:00:00", cortamos los segundos
-        const horaCorta = hora.length > 5 ? hora.substring(0, 5) : hora;
-
-        // Creamos la "Píldora"
+    grilla.forEach(turno => {
         const div = document.createElement('div');
-        div.className = 'col-4 col-sm-3'; // 3 columnas en móvil, 4 en tablet/PC
+        div.className = 'col-12';
 
-        div.innerHTML = `
-            <div class="hora-pill" onclick="seleccionarHora(this, '${horaCorta}')">
-                ${horaCorta}
-            </div>
-        `;
+        if (turno.disponible) {
+            div.innerHTML = `
+                <div class="hora-pill" onclick="seleccionarHora(this, '${turno.horaInicio}')">
+                    <span class="hora-texto"><i class="fa-regular fa-calendar-check me-2 text-sports"></i>${turno.rangoTexto}</span>
+                    <span class="hora-subtexto">Disponible</span>
+                </div>
+            `;
+        } else {
+            div.innerHTML = `
+                <div class="hora-pill disabled ${turno.claseCss}">
+                    <span class="hora-texto"><i class="fa-solid fa-lock opacity-50 me-2"></i>${turno.rangoTexto}</span>
+                    <span class="hora-subtexto">${turno.motivo}</span>
+                </div>
+            `;
+        }
         contenedor.appendChild(div);
     });
 }
 
-// Lógica de Selección Visual
-window.seleccionarHora = function(elementoPill, hora) {
-    // 1. Quitar la clase 'selected' de todos los demás botones
-    document.querySelectorAll('.hora-pill').forEach(pill => {
-        pill.classList.remove('selected');
-    });
-
-    // 2. Aplicar la clase 'selected' al tocado
+window.seleccionarHora = function(elementoPill, horaInicio) {
+    document.querySelectorAll('.hora-pill').forEach(pill => pill.classList.remove('selected'));
     elementoPill.classList.add('selected');
 
-    // 3. Guardar la hora y mostrar el botón para continuar
-    horaSeleccionada = hora;
+    horaSeleccionada = horaInicio;
     mostrarBotonContinuar();
 }
 
 function mostrarBotonContinuar() {
-    const contenedorBtn = document.getElementById('contenedor-continuar');
-    contenedorBtn.classList.remove('d-none');
+    document.getElementById('contenedor-continuar').classList.remove('d-none');
 
-    // Configurar el click del botón Continuar
     document.getElementById('btn-continuar').onclick = () => {
         if (!horaSeleccionada || !fechaSeleccionada) return;
 
-        // Avanzamos al PASO 4 pasando todos los datos necesarios por URL
+        // Redirección real al último paso enviando todos los datos recopilados por URL
         const queryParams = new URLSearchParams({
             idCancha: idCanchaSeleccionada,
             fecha: fechaSeleccionada,
