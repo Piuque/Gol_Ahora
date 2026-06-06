@@ -1,71 +1,118 @@
+let canchasData = [];
+
 document.addEventListener("DOMContentLoaded", async () => {
+    const buscador = document.getElementById("buscador");
+    const selectorTipo = document.getElementById("selector-tipo");
+
+    await cargarCanchas();
+
+    selectorTipo.addEventListener("change", () => {
+        buscador.value = "";
+        filtrarCanchas();
+    });
+
+    buscador.addEventListener("input", () => filtrarCanchas());
+});
+
+async function cargarCanchas() {
     const contenedor = document.getElementById("contenedor-canchas");
+    const userId = localStorage.getItem("userId");
+    contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
 
     try {
-        const res = await fetch("/api/canchas", { credentials: "include" });
-        const canchas = await res.json();
+        const res = await fetch("/admin/canchas/listar", {
+            credentials: "include",
+            headers: { "x-user-id": userId }
+        });
+        canchasData = await res.json();
 
-        console.log("Canchas:", canchas);
-
-        if (!canchas || canchas.length === 0) {
+        if (!canchasData || canchasData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay canchas registradas.</p>`;
             return;
         }
 
-        contenedor.innerHTML = "";
-
-        canchas.forEach(c => {
-            const col = document.createElement("div");
-            col.className = "col-md-4 col-sm-6";
-            col.innerHTML = `
-                <div class="cancha-card p-0" onclick="verDetalle(${c.id})">
-                    <img src="${c.imagen_url}" alt="${c.nombre}" class="cancha-img"
-                         onerror="this.src='/img/canchas/cancha.png'">
-                    <div class="p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="text-white fw-bold mb-0">${c.nombre}</h6>
-                            <span class="badge-tipo">${c.tipo_cancha}</span>
-                        </div>
-                        <p class="text-light-50 small mb-1">
-                            <i class="fa-solid fa-dollar-sign me-1" style="color:#00C16E"></i> $${c.precio_hora_reserva}/hora
-                        </p>
-                        <p class="text-light-50 small mb-0">
-                            <i class="fa-solid fa-users me-1" style="color:#00C16E"></i> ${c.capacidad} jugadores
-                        </p>
-                    </div>
-                </div>
-            `;
-            contenedor.appendChild(col);
-        });
-
-    } catch (error) {
-        console.error("Error:", error);
-        contenedor.innerHTML = `<p class="text-danger text-center py-4">Error al cargar las canchas.</p>`;
+        await cargarFiltroTipos();
+        renderCanchas(canchasData);
+    } catch (e) {
+        contenedor.innerHTML = `<p class="text-danger text-center py-4">Error al cargar.</p>`;
     }
-});
+}
+
+async function cargarFiltroTipos() {
+    const userId = localStorage.getItem("userId");
+    const selector = document.getElementById("selector-tipo");
+    try {
+        const res = await fetch("/admin/tipos-cancha", {
+            credentials: "include",
+            headers: { "x-user-id": userId }
+        });
+        const tipos = await res.json();
+        selector.innerHTML = `<option value="">Todos los tipos</option>`;
+        tipos.forEach(t => {
+            selector.innerHTML += `<option value="${t.id}">${t.tipo_cancha}</option>`;
+        });
+    } catch (e) {}
+}
+
+function filtrarCanchas() {
+    const query = document.getElementById("buscador").value.toLowerCase();
+    const tipoId = document.getElementById("selector-tipo").value;
+    const filtradas = canchasData.filter(c => {
+        const matchNombre = c.nombre.toLowerCase().includes(query);
+        const matchTipo = tipoId === "" || String(c.id_tipo_de_cancha) === tipoId;
+        return matchNombre && matchTipo;
+    });
+    renderCanchas(filtradas);
+}
+
+function renderCanchas(canchas) {
+    const contenedor = document.getElementById("contenedor-canchas");
+    if (canchas.length === 0) {
+        contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No se encontraron canchas.</p>`;
+        return;
+    }
+    contenedor.innerHTML = "";
+    canchas.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "cancha-card d-flex align-items-center gap-3";
+        div.onclick = () => verDetalle(c.id);
+        div.innerHTML = `
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <p class="text-white fw-bold mb-0">${c.nombre}</p>
+                    <span class="badge" style="background-color:#00C16E; font-size:0.75rem;">${c.categoria || '-'}</span>
+                </div>
+                <p class="text-light-50 small mb-0">
+                    <i class="fa-solid fa-dollar-sign me-1" style="color:#00C16E"></i> $${c.precio}/hora &nbsp;·&nbsp;
+                    <i class="fa-solid fa-clock me-1" style="color:#00C16E"></i> ${c.tiempo_cancelacion} min cancelacion
+                </p>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color: #00C16E;"></i>
+        `;
+        contenedor.appendChild(div);
+    });
+}
 
 async function verDetalle(id) {
+    const userId = localStorage.getItem("userId");
     try {
-        const res = await fetch(`/api/canchas/cancha_id=${id}`, { credentials: "include" });
+        const res = await fetch(`/admin/canchas/${id}`, {
+            credentials: "include",
+            headers: { "x-user-id": userId }
+        });
         const c = await res.json();
 
         document.getElementById("modal-nombre").textContent = c.nombre;
-        document.getElementById("modal-img").src = c.imagen_url || '/img/canchas/cancha.png';
         document.getElementById("modal-info").innerHTML = `
-            <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${c.tipo_cancha}</span></div>
-            <div class="info-row"><span class="info-label">Superficie</span><span class="info-value">${c.superficie.tipo}</span></div>
-            <div class="info-row"><span class="info-label">Medidas</span><span class="info-value">${c.largo}m x ${c.ancho}m</span></div>
-            <div class="info-row"><span class="info-label">Capacidad</span><span class="info-value">${c.capacidad} jugadores</span></div>
+            <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${c.tipo_cancha || '-'}</span></div>
             <div class="info-row"><span class="info-label">Precio/hora</span><span class="info-value">$${c.precio_hora_reserva}</span></div>
-            <div class="info-row"><span class="info-label">Duracion turno</span><span class="info-value">${c.duracion_min} - ${c.duracion_max} min</span></div>
             <div class="info-row"><span class="info-label">Cancelacion</span><span class="info-value">${c.tiempo_cancelacion} min de anticipacion</span></div>
-            <div class="info-row"><span class="info-label">Club</span><span class="info-value">${c.club.nombre}</span></div>
             <div class="d-flex gap-2 mt-3">
-                <button onclick="abrirModificarCancha(${c.id}, '${c.nombre}', ${c.precio_hora_reserva}, ${c.tiempo_cancelacion})"
+                <button onclick="abrirModificar(${c.id}, '${c.nombre}', ${c.precio_hora_reserva}, ${c.tiempo_cancelacion})"
                     class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #0d6efd;">
                     <i class="fa-solid fa-pen me-1"></i> Modificar
                 </button>
-                <button onclick="confirmarEliminarCancha(${c.id}, '${c.nombre}')"
+                <button onclick="confirmarEliminar(${c.id}, '${c.nombre}')"
                     class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #ef4444;">
                     <i class="fa-solid fa-trash me-1"></i> Eliminar
                 </button>
@@ -74,13 +121,10 @@ async function verDetalle(id) {
 
         const modal = new bootstrap.Modal(document.getElementById("modalCancha"));
         modal.show();
-
-    } catch (error) {
-        console.error(error);
-    }
+    } catch (e) { console.error(e); }
 }
 
-async function abrirModificarCancha(id, nombre, precio, tiempo_cancelacion) {
+async function abrirModificar(id, nombre, precio, tiempo_cancelacion) {
     bootstrap.Modal.getInstance(document.getElementById("modalCancha")).hide();
     await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -114,33 +158,34 @@ async function abrirModificarCancha(id, nombre, precio, tiempo_cancelacion) {
 
     if (!formValues) return;
 
+    const userId = localStorage.getItem("userId");
     try {
-        const res = await fetch(`/api/canchas/cancha_id=${id}`, {
+        const res = await fetch(`/admin/canchas/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
+            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
             credentials: 'include',
             body: JSON.stringify(formValues)
         });
         const data = await res.json();
         if (res.ok) {
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Cancha modificada correctamente.', confirmButtonColor: '#00C16E' });
-            await recargarCanchas();
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Cancha modificada.', confirmButtonColor: '#00C16E' });
+            await cargarCanchas();
         } else {
-            await Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#00C16E' });
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
         }
     } catch (e) {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
     }
 }
 
-async function confirmarEliminarCancha(id, nombre) {
+async function confirmarEliminar(id, nombre) {
     bootstrap.Modal.getInstance(document.getElementById("modalCancha")).hide();
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const confirm = await Swal.fire({
         icon: 'warning',
         title: 'Eliminar cancha?',
-        html: `Se eliminara <b>${nombre}</b> con todas sus reservas asociadas.`,
+        html: `Se eliminara <b>${nombre}</b> con todas sus reservas.`,
         confirmButtonText: 'Si, eliminar',
         confirmButtonColor: '#ef4444',
         cancelButtonText: 'Cancelar',
@@ -149,50 +194,21 @@ async function confirmarEliminarCancha(id, nombre) {
 
     if (!confirm.isConfirmed) return;
 
+    const userId = localStorage.getItem("userId");
     try {
-        const res = await fetch(`/api/canchas/cancha_id=${id}`, {
+        const res = await fetch(`/admin/canchas/${id}`, {
             method: 'DELETE',
             credentials: 'include',
-            headers: { 'plataform': 'web' }
+            headers: { 'x-user-id': userId }
         });
-        const data = await res.json();
         if (res.ok) {
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Cancha eliminada correctamente.', confirmButtonColor: '#00C16E' });
-            await recargarCanchas();
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Cancha eliminada.', confirmButtonColor: '#00C16E' });
+            await cargarCanchas();
         } else {
-            await Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#00C16E' });
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al eliminar.', confirmButtonColor: '#00C16E' });
         }
     } catch (e) {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
     }
-}
-
-async function recargarCanchas() {
-    const res = await fetch("/api/canchas", { credentials: "include" });
-    const canchas = await res.json();
-    const contenedor = document.getElementById("contenedor-canchas");
-    contenedor.innerHTML = "";
-    canchas.forEach(c => {
-        const col = document.createElement("div");
-        col.className = "col-md-4 col-sm-6";
-        col.innerHTML = `
-            <div class="cancha-card p-0" onclick="verDetalle(${c.id})">
-                <img src="${c.imagen_url}" alt="${c.nombre}" class="cancha-img"
-                     onerror="this.style.display='none'">
-                <div class="p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="text-white fw-bold mb-0">${c.nombre}</h6>
-                        <span class="badge-tipo">${c.tipo_cancha}</span>
-                    </div>
-                    <p class="text-light-50 small mb-1">
-                        <i class="fa-solid fa-dollar-sign me-1" style="color:#00C16E"></i> $${c.precio_hora_reserva}/hora
-                    </p>
-                    <p class="text-light-50 small mb-0">
-                        <i class="fa-solid fa-users me-1" style="color:#00C16E"></i> ${c.capacidad} jugadores
-                    </p>
-                </div>
-            </div>
-        `;
-        contenedor.appendChild(col);
-    });
 }
