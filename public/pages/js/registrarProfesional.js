@@ -45,23 +45,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("register-form-profesional").addEventListener("submit", async (e) => {
         e.preventDefault();
-        console.log("Submit ejecutado");
 
         const user_level = document.getElementById("user_level").value;
         const matricula = document.getElementById("matricula").value;
         const fecha_caducidad = document.getElementById("fecha_caducidad").value;
         const link_archivo = document.getElementById("link_archivo").value;
-        
-        // Validar fecha de caducidad
+
         const hoy = new Date();
         hoy.setHours(0, 0, 0, 0);
         const caducidad = new Date(fecha_caducidad);
         if (caducidad <= hoy) {
-            await Swal.fire({ icon: 'error', title: 'Certificacion vencida', text: 'La fecha de caducidad de la certificacion debe ser futura.', confirmButtonColor: '#00C16E' });
+            await Swal.fire({ icon: 'error', title: 'Certificacion vencida', text: 'La fecha de caducidad debe ser futura.', confirmButtonColor: '#00C16E' });
             return;
         }
 
-        // Validar edad minima 18 años
         const fechaNac = new Date(document.getElementById("fecha_nacimiento").value);
         const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
         if (edad < 18) {
@@ -76,60 +73,51 @@ document.addEventListener("DOMContentLoaded", async () => {
             fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
             email: document.getElementById("email").value,
             telefono: document.getElementById("telefono").value,
-            genero: document.getElementById("genero").value,
-            nacionalidad: document.getElementById("nacionalidad").value,
-            user_level,
-            calle: document.getElementById("calle").value,
-            numero: document.getElementById("numero").value,
-            codigo_postal: document.getElementById("codigo_postal").value,
-            pais: document.getElementById("pais").value,
-            provincia: document.getElementById("provincia").value,
-            ciudad: document.getElementById("ciudad").value,
-            localidad: document.getElementById("localidad").value
         };
 
         try {
-            // Registrar usuario
-            const resUsuario = await fetch("/api/register", {
+            const userId = localStorage.getItem("userId");
+            const endpoint = user_level === "10" ? "/admin/profesores" : "/admin/entrenadores";
+
+            const resUsuario = await fetch(endpoint, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "plataform": "admin" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": userId
+                },
                 credentials: "include",
-                body: JSON.stringify(datos)
+                body: JSON.stringify({
+                    username: datos.email.split('@')[0],
+                    nombre: datos.nombre,
+                    apellido: datos.apellido,
+                    email: datos.email,
+                    password: "Unaj2026@golahora",
+                    dni: datos.dni,
+                    telefono: datos.telefono,
+                    fecha_nacimiento: datos.fecha_nacimiento
+                })
             });
 
             const dataUsuario = await resUsuario.json();
 
             if (!resUsuario.ok) {
-                await Swal.fire({ icon: 'error', title: 'Error', text: dataUsuario.message, confirmButtonColor: '#00C16E' });
+                await Swal.fire({ icon: 'error', title: 'Error', text: dataUsuario.error || 'Error al registrar', confirmButtonColor: '#00C16E' });
                 return;
             }
 
-            // Obtener id del usuario recien creado
-            const resUser = await fetch(`/api/user_Info`, {
+            // Registrar certificacion
+            const idNuevoUsuario = dataUsuario.id;
+            const certEndpoint = user_level === "10" ? `/admin/profesores/${idNuevoUsuario}/certificaciones` : `/admin/entrenadores/${idNuevoUsuario}/certificaciones`;
+
+            await fetch(certEndpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": userId
+                },
                 credentials: "include",
-                headers: { "plataform": "web" }
+                body: JSON.stringify({ matricula, fecha_caducidad, link_archivo })
             });
-
-            // Buscar el usuario por email para obtener su id
-            const resSearch = await fetch(`/api/users`, { credentials: "include" });
-            const usuarios = await resSearch.json();
-            const nuevoUsuario = usuarios.find(u => u.email === datos.email.toLowerCase());
-
-            if (nuevoUsuario) {
-                // Registrar certificacion
-                const resCert = await fetch("/api/certificaciones/agregar", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "plataform": "web" },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        tipo_certificacion: user_level === "10" ? 0 : 1,
-                        matricula,
-                        fecha_caducidad,
-                        link_archivo,
-                        id_usuario: nuevoUsuario.id
-                    })
-                });
-            }
 
             await Swal.fire({
                 icon: 'success',
