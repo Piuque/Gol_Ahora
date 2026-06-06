@@ -1027,6 +1027,275 @@ const registrarAsistenciaEntrenamiento = async (req, res) => {
   }
 };
 
+const listarLigas = async (req, res) => {
+  try {
+    const sql = `
+      SELECT l.id_liga AS id, l.nombre, 
+             to_char(l.fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
+             to_char(l.fecha_fin, 'YYYY-MM-DD') AS fecha_fin,
+             u.nombre || ' ' || u.apellido AS tutor,
+             e.estado
+      FROM ligas l
+      LEFT JOIN usuarios u ON l.id_usuario_tutor = u.id_usuario
+      LEFT JOIN estados e ON l.id_estado = e.id_estado
+      ORDER BY l.fecha_inicio DESC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar ligas', message: err.message });
+  }
+};
+
+const obtenerLiga = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const liga = await db.query.get(`
+      SELECT l.id_liga AS id, l.nombre,
+             to_char(l.fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
+             to_char(l.fecha_fin, 'YYYY-MM-DD') AS fecha_fin,
+             u.nombre || ' ' || u.apellido AS tutor, l.id_usuario_tutor,
+             e.estado
+      FROM ligas l
+      LEFT JOIN usuarios u ON l.id_usuario_tutor = u.id_usuario
+      LEFT JOIN estados e ON l.id_estado = e.id_estado
+      WHERE l.id_liga = $1
+    `, [id]);
+    if (!liga) return res.status(404).json({ error: 'Liga no encontrada' });
+    
+    const partidos = await db.query.all(`
+      SELECT p.id_partido AS id, 
+             u1.nombre || ' ' || u1.apellido AS equipo_local,
+             u2.nombre || ' ' || u2.apellido AS equipo_visitante,
+             p.goles_local, p.goles_visitante,
+             to_char(p.fecha, 'YYYY-MM-DD') AS fecha
+      FROM partidos p
+      LEFT JOIN usuarios u1 ON p.id_equipo_local = u1.id_usuario
+      LEFT JOIN usuarios u2 ON p.id_equipo_visitante = u2.id_usuario
+      WHERE p.id_liga = $1
+    `, [id]);
+    
+    res.json({ ...liga, partidos });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener liga', message: err.message });
+  }
+};
+
+const modificarLiga = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, fecha_inicio, fecha_fin } = req.body;
+  try {
+    await db.query.run(`UPDATE ligas SET nombre=$1, fecha_inicio=$2, fecha_fin=$3 WHERE id_liga=$4`,
+      [nombre, fecha_inicio, fecha_fin, id]);
+    res.json({ message: 'Liga modificada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar liga', message: err.message });
+  }
+};
+
+const eliminarLiga = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM partidos WHERE id_liga = $1', [id]);
+    await db.pool.query('DELETE FROM inscripciones_ligas WHERE id_liga = $1', [id]);
+    await db.pool.query('DELETE FROM ligas WHERE id_liga = $1', [id]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar liga', message: err.message });
+  }
+};
+
+const generarFixture = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const inscriptos = await db.query.all(
+      'SELECT id_usuario FROM inscripciones_ligas WHERE id_liga = $1', [id]
+    );
+    if (inscriptos.length < 2) return res.status(400).json({ error: 'Se necesitan al menos 2 equipos' });
+
+    await db.pool.query('DELETE FROM partidos WHERE id_liga = $1', [id]);
+
+    const equipos = inscriptos.map(i => i.id_usuario);
+    const partidos = [];
+    for (let i = 0; i < equipos.length; i++) {
+      for (let j = i + 1; j < equipos.length; j++) {
+        partidos.push([equipos[i], equipos[j], id]);
+      }
+    }
+
+    for (const p of partidos) {
+      await db.pool.query(
+        'INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_liga) VALUES ($1, $2, $3)',
+        p
+      );
+    }
+
+    await db.pool.query('COMMIT');
+    res.json({ message: `Fixture generado con ${partidos.length} partidos` });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar fixture', message: err.message });
+  }
+};
+
+const inscribirEnLiga = async (req, res) => {
+  const { id } = req.params;
+  const { id_usuario } = req.body;
+  try {
+    await db.query.run('INSERT INTO inscripciones_ligas (id_liga, id_usuario) VALUES ($1, $2)', [id, id_usuario]);
+    res.status(201).json({ message: 'Usuario inscripto en la liga' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al inscribir en liga', message: err.message });
+  }
+};
+
+const registrarResultadoLiga = async (req, res) => {
+  const { idPartido } = req.params;
+  const { goles_local, goles_visitante } = req.body;
+  try {
+    await db.query.run(
+      'UPDATE partidos SET goles_local=$1, goles_visitante=$2 WHERE id_partido=$3',
+      [goles_local, goles_visitante, idPartido]
+    );
+    res.json({ message: 'Resultado registrado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar resultado', message: err.message });
+  }
+};
+
+const crearTorneo = async (req, res) => {
+  const { nombre, fecha_inicio, fecha_fin, id_usuario_tutor } = req.body;
+  try {
+    const result = await db.query.run(`
+      INSERT INTO torneos (nombre, fecha_inicio, fecha_fin, id_usuario_tutor, id_club, id_estado)
+      VALUES ($1, $2, $3, $4, 1, 1) RETURNING id_torneo
+    `, [nombre, fecha_inicio, fecha_fin, id_usuario_tutor]);
+    res.status(201).json({ message: 'Torneo creado', id: result.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al crear torneo', message: err.message });
+  }
+};
+
+const listarTorneos = async (req, res) => {
+  try {
+    const sql = `
+      SELECT t.id_torneo AS id, t.nombre,
+             to_char(t.fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
+             to_char(t.fecha_fin, 'YYYY-MM-DD') AS fecha_fin,
+             u.nombre || ' ' || u.apellido AS tutor,
+             e.estado
+      FROM torneos t
+      LEFT JOIN usuarios u ON t.id_usuario_tutor = u.id_usuario
+      LEFT JOIN estados e ON t.id_estado = e.id_estado
+      ORDER BY t.fecha_inicio DESC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar torneos', message: err.message });
+  }
+};
+
+const obtenerTorneo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const torneo = await db.query.get(`
+      SELECT t.id_torneo AS id, t.nombre,
+             to_char(t.fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
+             to_char(t.fecha_fin, 'YYYY-MM-DD') AS fecha_fin,
+             u.nombre || ' ' || u.apellido AS tutor,
+             e.estado
+      FROM torneos t
+      LEFT JOIN usuarios u ON t.id_usuario_tutor = u.id_usuario
+      LEFT JOIN estados e ON t.id_estado = e.id_estado
+      WHERE t.id_torneo = $1
+    `, [id]);
+    if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado' });
+    res.json(torneo);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener torneo', message: err.message });
+  }
+};
+
+const modificarTorneo = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, fecha_inicio, fecha_fin } = req.body;
+  try {
+    await db.query.run(`UPDATE torneos SET nombre=$1, fecha_inicio=$2, fecha_fin=$3 WHERE id_torneo=$4`,
+      [nombre, fecha_inicio, fecha_fin, id]);
+    res.json({ message: 'Torneo modificado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar torneo', message: err.message });
+  }
+};
+
+const eliminarTorneo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM partidos WHERE id_torneo = $1', [id]);
+    await db.pool.query('DELETE FROM inscripciones_torneos WHERE id_torneo = $1', [id]);
+    await db.pool.query('DELETE FROM torneos WHERE id_torneo = $1', [id]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar torneo', message: err.message });
+  }
+};
+
+const generarCuadroTorneo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const inscriptos = await db.query.all(
+      'SELECT id_usuario FROM inscripciones_torneos WHERE id_torneo = $1', [id]
+    );
+    if (inscriptos.length < 2) return res.status(400).json({ error: 'Se necesitan al menos 2 equipos' });
+
+    await db.pool.query('DELETE FROM partidos WHERE id_torneo = $1', [id]);
+
+    const equipos = inscriptos.map(i => i.id_usuario);
+    for (let i = 0; i < equipos.length - 1; i += 2) {
+      await db.pool.query(
+        'INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_torneo) VALUES ($1, $2, $3)',
+        [equipos[i], equipos[i + 1], id]
+      );
+    }
+
+    res.json({ message: 'Cuadro generado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar cuadro', message: err.message });
+  }
+};
+
+const inscribirEnTorneo = async (req, res) => {
+  const { id } = req.params;
+  const { id_usuario } = req.body;
+  try {
+    await db.query.run('INSERT INTO inscripciones_torneos (id_torneo, id_usuario) VALUES ($1, $2)', [id, id_usuario]);
+    res.status(201).json({ message: 'Usuario inscripto en el torneo' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al inscribir en torneo', message: err.message });
+  }
+};
+
+const registrarResultadoTorneo = async (req, res) => {
+  const { idPartido } = req.params;
+  const { goles_local, goles_visitante } = req.body;
+  try {
+    await db.query.run(
+      'UPDATE partidos SET goles_local=$1, goles_visitante=$2 WHERE id_partido=$3',
+      [goles_local, goles_visitante, idPartido]
+    );
+    res.json({ message: 'Resultado registrado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar resultado', message: err.message });
+  }
+};
+
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -1079,5 +1348,19 @@ module.exports = {
   eliminarEntrenamiento,
   asignarEntrenamientoParticular,
   registrarAsistenciaEntrenamiento,
-
+  listarLigas,
+  obtenerLiga,
+  modificarLiga,
+  eliminarLiga,
+  generarFixture,
+  inscribirEnLiga,
+  registrarResultadoLiga,
+  crearTorneo,
+  listarTorneos,
+  obtenerTorneo,
+  modificarTorneo,
+  eliminarTorneo,
+  generarCuadroTorneo,
+  inscribirEnTorneo,
+  registrarResultadoTorneo,
 };

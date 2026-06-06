@@ -1,0 +1,323 @@
+let torneosData = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await cargarTorneos();
+    document.getElementById("buscador").addEventListener("input", () => {
+        const query = document.getElementById("buscador").value.toLowerCase();
+        const filtrados = torneosData.filter(t => t.nombre.toLowerCase().includes(query));
+        renderTorneos(filtrados);
+    });
+});
+
+async function cargarTorneos() {
+    const contenedor = document.getElementById("contenedor-torneos");
+    const userId = localStorage.getItem("userId");
+    contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
+    try {
+        const res = await fetch("/admin/torneos", { credentials: "include", headers: { "x-user-id": userId } });
+        torneosData = await res.json();
+        if (!torneosData || torneosData.length === 0) {
+            contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay torneos registrados.</p>`;
+            return;
+        }
+        renderTorneos(torneosData);
+    } catch (e) {
+        contenedor.innerHTML = `<p class="text-danger text-center py-4">Error al cargar.</p>`;
+    }
+}
+
+function renderTorneos(torneos) {
+    const contenedor = document.getElementById("contenedor-torneos");
+    if (torneos.length === 0) {
+        contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No se encontraron torneos.</p>`;
+        return;
+    }
+    contenedor.innerHTML = "";
+    torneos.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "torneo-card d-flex align-items-center gap-3";
+        div.onclick = () => verDetalle(t.id);
+        div.innerHTML = `
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <p class="text-white fw-bold mb-0">${t.nombre}</p>
+                    <span class="badge" style="background-color:#f59e0b;">${t.estado || 'Programado'}</span>
+                </div>
+                <p class="text-light-50 small mb-0">
+                    <i class="fa-solid fa-calendar me-1" style="color:#00C16E"></i> ${t.fecha_inicio} → ${t.fecha_fin} &nbsp;·&nbsp;
+                    <i class="fa-solid fa-user me-1" style="color:#00C16E"></i> ${t.tutor || 'Sin tutor'}
+                </p>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color: #00C16E;"></i>
+        `;
+        contenedor.appendChild(div);
+    });
+}
+
+async function verDetalle(id) {
+    const userId = localStorage.getItem("userId");
+    try {
+        const res = await fetch(`/admin/torneos/${id}`, { credentials: "include", headers: { "x-user-id": userId } });
+        const t = await res.json();
+
+        document.getElementById("modal-titulo").textContent = t.nombre;
+        document.getElementById("modal-info").innerHTML = `
+            <div class="info-row"><span class="info-label">Estado</span><span class="info-value">${t.estado || '-'}</span></div>
+            <div class="info-row"><span class="info-label">Inicio</span><span class="info-value">${t.fecha_inicio}</span></div>
+            <div class="info-row"><span class="info-label">Fin</span><span class="info-value">${t.fecha_fin}</span></div>
+            <div class="info-row"><span class="info-label">Tutor</span><span class="info-value">${t.tutor || '-'}</span></div>
+            <div class="d-flex gap-2 mt-3">
+                <button onclick="abrirModificar(${t.id}, '${t.nombre}', '${t.fecha_inicio}', '${t.fecha_fin}')"
+                    class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color:#0d6efd;">
+                    <i class="fa-solid fa-pen me-1"></i> Modificar
+                </button>
+                <button onclick="confirmarEliminar(${t.id}, '${t.nombre}')"
+                    class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color:#ef4444;">
+                    <i class="fa-solid fa-trash me-1"></i> Eliminar
+                </button>
+            </div>
+            <div class="d-flex gap-2 mt-2">
+                <button onclick="inscribirEquipo(${t.id})" class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color:#6c757d;">
+                    <i class="fa-solid fa-user-plus me-1"></i> Inscribir Equipo
+                </button>
+                <button onclick="generarCuadro(${t.id})" class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color:#f59e0b;">
+                    <i class="fa-solid fa-trophy me-1"></i> Generar Cuadro
+                </button>
+            </div>
+        `;
+
+        const modal = new bootstrap.Modal(document.getElementById("modalTorneo"));
+        modal.show();
+    } catch (e) { console.error(e); }
+}
+
+async function abrirRegistrar() {
+    const userId = localStorage.getItem("userId");
+    const resAdmins = await fetch("/admin/administradores", { credentials: "include", headers: { "x-user-id": userId } });
+    const admins = await resAdmins.json();
+    const adminOptions = admins.map(a => `<option value="${a.id_usuario}">${a.nombre} ${a.apellido}</option>`).join('');
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Nuevo Torneo',
+        html: `
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Nombre</label>
+                <input id="swal-nombre" class="swal2-input" placeholder="Ej: Torneo Verano 2026">
+            </div>
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Fecha inicio</label>
+                <input id="swal-inicio" type="date" class="swal2-input">
+            </div>
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Fecha fin</label>
+                <input id="swal-fin" type="date" class="swal2-input">
+            </div>
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Tutor</label>
+                <select id="swal-tutor" class="swal2-input"><option value="">Sin tutor</option>${adminOptions}</select>
+            </div>
+        `,
+        confirmButtonText: 'Crear Torneo',
+        confirmButtonColor: '#00C16E',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        focusConfirm: false,
+        preConfirm: () => {
+            const nombre = document.getElementById('swal-nombre').value;
+            const fecha_inicio = document.getElementById('swal-inicio').value;
+            const fecha_fin = document.getElementById('swal-fin').value;
+            if (!nombre || !fecha_inicio || !fecha_fin) {
+                Swal.showValidationMessage('Todos los campos son obligatorios');
+                return false;
+            }
+            return { nombre, fecha_inicio, fecha_fin, id_usuario_tutor: document.getElementById('swal-tutor').value || null };
+        }
+    });
+
+    if (!formValues) return;
+
+    try {
+        const res = await fetch("/admin/torneos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-user-id": userId },
+            credentials: "include",
+            body: JSON.stringify(formValues)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Torneo creado.', confirmButtonColor: '#00C16E' });
+            await cargarTorneos();
+        } else {
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+async function abrirModificar(id, nombre, fecha_inicio, fecha_fin) {
+    bootstrap.Modal.getInstance(document.getElementById("modalTorneo")).hide();
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Modificar Torneo',
+        html: `
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Nombre</label>
+                <input id="swal-nombre" class="swal2-input" value="${nombre}">
+            </div>
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Fecha inicio</label>
+                <input id="swal-inicio" type="date" class="swal2-input" value="${fecha_inicio}">
+            </div>
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Fecha fin</label>
+                <input id="swal-fin" type="date" class="swal2-input" value="${fecha_fin}">
+            </div>
+        `,
+        confirmButtonText: 'Guardar',
+        confirmButtonColor: '#00C16E',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        focusConfirm: false,
+        preConfirm: () => ({
+            nombre: document.getElementById('swal-nombre').value,
+            fecha_inicio: document.getElementById('swal-inicio').value,
+            fecha_fin: document.getElementById('swal-fin').value
+        })
+    });
+
+    if (!formValues) return;
+
+    const userId = localStorage.getItem("userId");
+    try {
+        const res = await fetch(`/admin/torneos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+            credentials: 'include',
+            body: JSON.stringify(formValues)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Torneo modificado.', confirmButtonColor: '#00C16E' });
+            await cargarTorneos();
+        } else {
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+async function confirmarEliminar(id, nombre) {
+    bootstrap.Modal.getInstance(document.getElementById("modalTorneo")).hide();
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const confirm = await Swal.fire({
+        icon: 'warning',
+        title: 'Eliminar torneo?',
+        html: `Se eliminara <b>${nombre}</b> con todos sus partidos.`,
+        confirmButtonText: 'Si, eliminar',
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const userId = localStorage.getItem("userId");
+    try {
+        const res = await fetch(`/admin/torneos/${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'x-user-id': userId }
+        });
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Torneo eliminado.', confirmButtonColor: '#00C16E' });
+            await cargarTorneos();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al eliminar.', confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+async function inscribirEquipo(id_torneo) {
+    bootstrap.Modal.getInstance(document.getElementById("modalTorneo")).hide();
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const userId = localStorage.getItem("userId");
+    const res = await fetch("/admin/clientes", { credentials: "include", headers: { "x-user-id": userId } });
+    const clientes = await res.json();
+    const options = clientes.map(c => `<option value="${c.id_usuario}">${c.nombre} ${c.apellido}</option>`).join('');
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Inscribir Equipo',
+        html: `
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Seleccionar usuario</label>
+                <select id="swal-usuario" class="swal2-input">${options}</select>
+            </div>
+        `,
+        confirmButtonText: 'Inscribir',
+        confirmButtonColor: '#00C16E',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true,
+        focusConfirm: false,
+        preConfirm: () => ({ id_usuario: parseInt(document.getElementById('swal-usuario').value) })
+    });
+
+    if (!formValues) return;
+
+    try {
+        const res = await fetch(`/admin/torneos/${id_torneo}/inscripciones`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+            credentials: 'include',
+            body: JSON.stringify(formValues)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Equipo inscripto.', confirmButtonColor: '#00C16E' });
+            verDetalle(id_torneo);
+        } else {
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+async function generarCuadro(id_torneo) {
+    const userId = localStorage.getItem("userId");
+    const confirm = await Swal.fire({
+        icon: 'question',
+        title: 'Generar Cuadro?',
+        text: 'Se generara el cuadro del torneo con los equipos inscriptos.',
+        confirmButtonText: 'Si, generar',
+        confirmButtonColor: '#00C16E',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+        const res = await fetch(`/admin/torneos/${id_torneo}/cuadro`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'x-user-id': userId }
+        });
+        const data = await res.json();
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Cuadro generado correctamente.', confirmButtonColor: '#00C16E' });
+            verDetalle(id_torneo);
+        } else {
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}

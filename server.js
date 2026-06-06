@@ -358,4 +358,11 @@ app.get(['/admin/Entrenamientos'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/Entrenamientos.html'));
 });
 
+app.get(['/admin/Ligas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Ligas.html'));
+});
+app.get(['/admin/Torneos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Torneos.html'));
+});
+
 startServer();

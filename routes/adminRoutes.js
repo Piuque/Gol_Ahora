@@ -72,6 +72,41 @@ router.delete('/reservas/:id', adminController.eliminarReserva);
 router.get('/certificaciones/:id_usuario', adminController.listarCertificaciones);
 router.put('/certificaciones/:id/validar', adminController.validarCertificacion);
 
+// Clases
+router.post('/clases', adminController.crearClase);
+router.get('/clases', adminController.listarClases);
+router.get('/clases/:id', adminController.obtenerClase);
+router.put('/clases/:id', adminController.modificarClase);
+router.delete('/clases/:id', adminController.eliminarClase);
+router.post('/clases/asignacion-particular', adminController.asignarClaseParticular);
+router.post('/clases/:id/asistencia', adminController.registrarAsistenciaClase);
 
+// Entrenamientos
+router.post('/entrenamientos', adminController.crearEntrenamiento);
+router.get('/entrenamientos', adminController.listarEntrenamientos);
+router.get('/entrenamientos/:id', adminController.obtenerEntrenamiento);
+router.put('/entrenamientos/:id', adminController.modificarEntrenamiento);
+router.delete('/entrenamientos/:id', adminController.eliminarEntrenamiento);
+router.post('/entrenamientos/asignacion-particular', adminController.asignarEntrenamientoParticular);
+router.post('/entrenamientos/:id/asistencia', adminController.registrarAsistenciaEntrenamiento);
+
+// Ligas
+router.get('/ligas', adminController.listarLigas);
+router.get('/ligas/:id', adminController.obtenerLiga);
+router.put('/ligas/:id', adminController.modificarLiga);
+router.delete('/ligas/:id', adminController.eliminarLiga);
+router.post('/ligas/:id/fixture', adminController.generarFixture);
+router.post('/ligas/:id/inscripciones', adminController.inscribirEnLiga);
+router.put('/ligas/:id/partidos/:idPartido/resultado', adminController.registrarResultadoLiga);
+
+// Torneos
+router.post('/torneos', adminController.crearTorneo);
+router.get('/torneos', adminController.listarTorneos);
+router.get('/torneos/:id', adminController.obtenerTorneo);
+router.put('/torneos/:id', adminController.modificarTorneo);
+router.delete('/torneos/:id', adminController.eliminarTorneo);
+router.post('/torneos/:id/cuadro', adminController.generarCuadroTorneo);
+router.post('/torneos/:id/inscripciones', adminController.inscribirEnTorneo);
+router.put('/torneos/:id/partidos/:idPartido/resultado', adminController.registrarResultadoTorneo);
 
 module.exports = router;
