@@ -279,6 +279,31 @@ app.get(['/entrenador', '/Entrenador', '/pages/interfazEntrenador.html'], (req, 
   res.sendFile(path.join(__dirname, 'public/pages/interfazEntrenador.html'));
 });
 
+app.get(['/admin', '/Admin'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/InterfazAdministrador.html'));
+});
+app.get(['/admin/VerCanchas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/VerCanchas.html'));
+});
+app.get(['/admin/ListarTiposCanchas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ListarTiposCanchas.html'));
+});
+app.get(['/admin/ListarReservas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ListarReservas.html'));
+});
+app.get(['/admin/RegistrarReserva'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarReserva.html'));
+});
+app.get(['/admin/RegistrarProfesional'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarProfesional.html'));
+});
+app.get(['/admin/ListarProfesionales'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ListarProfesionales.html'));
+});
+app.get(['/admin/ConsultaClientes'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ConsultaClientes.html'));
+});
+
 // Endpoint de fallback para Swagger UI
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
