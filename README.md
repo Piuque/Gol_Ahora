@@ -4,7 +4,7 @@ Este es el backend de gestión para el complejo deportivo **"El buen deporte"**,
 
 ---
 
-## Estructura del Proyecto
+## Estructura del Proye cto
 
 * **`server.js`**: Servidor Node.js que expone los endpoints y sirve Swagger UI.
 * **`db.js`**: Conexión nativa a PostgreSQL con inicialización de tablas automática.

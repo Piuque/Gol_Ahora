@@ -16,6 +16,45 @@ const PORT = process.env.PORT || 3000;
 // Configurar Middlewares globales
 app.use(cors());
 app.use(express.json());
+app.use('/css', express.static(path.join(__dirname, 'public/pages/css')));
+app.use('/js', express.static(path.join(__dirname, 'public/pages/js')));
+app.use('/img', express.static(path.join(__dirname, 'public/pages/img')));
+
+// Primero las rutas HTML (sin autenticación)
+app.get(['/admin', '/Admin'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/InterfazAdministrador.html'));
+});
+app.get(['/admin/VerCanchas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/VerCanchas.html'));
+});
+app.get(['/admin/ListarTiposCanchas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ListarTiposCanchas.html'));
+});
+app.get(['/admin/ListarReservas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ListarReservas.html'));
+});
+app.get(['/admin/RegistrarReserva'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarReserva.html'));
+});
+app.get(['/admin/RegistrarProfesional'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarProfesional.html'));
+});
+app.get(['/admin/ListarProfesionales'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ListarProfesionales.html'));
+});
+app.get(['/admin/ConsultaClientes'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ConsultaClientes.html'));
+});
+app.get(['/admin/RegistrarCancha', '/admin/RegistrarCancha.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarCancha.html'));
+});
+app.get(['/admin/RegistrarCliente', '/admin/RegistrarCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarCliente.html'));
+});
+app.get(['/admin/RegistrarTipoDeCancha', '/admin/RegistrarTipoDeCancha.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/RegistrarTipoDeCancha.html'));
+});
+
 
 // Montar Rutas de la API por prefijos de roles
 app.use('/usuario', usuarioRoutes);

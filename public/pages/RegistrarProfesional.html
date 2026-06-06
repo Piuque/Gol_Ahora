@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gol Ahora - Registrar Usuario</title>
+    <title>Gol Ahora - Registrar Profesional</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,12 +13,21 @@
 
     <div class="card login-card border-0 shadow-lg p-4 my-2" style="max-width: 560px;">
         <div class="text-center mb-4">
-            <i class="fa-solid fa-user-plus fa-2x mb-2" style="color: #00C16E;"></i>
-            <h3 class="fw-bold text-white text-uppercase mb-1">Registrar Usuario</h3>
-            <p class="text-light-50 small">Completá los datos del nuevo usuario</p>
+            <i class="fa-solid fa-user-tie fa-2x mb-2" style="color: #00C16E;"></i>
+            <h3 class="fw-bold text-white text-uppercase mb-1">Registrar Profesional</h3>
+            <p class="text-light-50 small">Completá los datos del profesor o entrenador</p>
         </div>
 
-        <form id="register-form-admin">
+        <form id="register-form-profesional">
+
+            <!-- Rol -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-white">Tipo de Profesional</label>
+                <select class="form-control bg-football-dark border-secondary text-white" id="user_level" required>
+                    <option value="10">Profesor</option>
+                    <option value="20">Entrenador</option>
+                </select>
+            </div>
 
             <div class="row g-2 mb-3">
                 <div class="col-6">
@@ -66,14 +75,6 @@
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-white">Rol</label>
-                <select class="form-control bg-football-dark border-secondary text-white" id="user_level" required>
-                    <option value="1">Cliente</option>
-                    <option value="152">Administrador</option>
-                </select>
-            </div>
-
             <p class="text-light-50 small mb-2 mt-1">Dirección</p>
 
             <div class="row g-2 mb-3">
@@ -112,14 +113,32 @@
                 </div>
             </div>
 
-            <div class="mb-4" style="position: relative;">
+            <div class="mb-3" style="position: relative;">
                 <label class="form-label small fw-bold text-white">Localidad</label>
                 <input type="text" class="form-control bg-football-dark border-secondary text-white" id="localidad" required>
                 <div id="localidad-suggestions" class="suggestions"></div>
             </div>
 
+            <!-- Certificacion -->
+            <p class="text-light-50 small mb-2 mt-1">Certificación</p>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-white">Matrícula</label>
+                <input type="text" class="form-control bg-football-dark border-secondary text-white" id="matricula" required placeholder="Ej: MP-12345">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-white">Fecha de caducidad</label>
+                <input type="date" class="form-control bg-football-dark border-secondary text-white" id="fecha_caducidad" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-white">Link del archivo de certificación</label>
+                <input type="text" class="form-control bg-football-dark border-secondary text-white" id="link_archivo" required placeholder="https://drive.google.com/...">
+            </div>
+
             <button type="submit" class="btn w-100 py-2 fw-bold text-white" style="background-color: #00C16E !important;">
-                Registrar Usuario
+                Registrar Profesional
             </button>
         </form>
 
@@ -131,6 +150,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/js/registrarUsuarioAdmin.js"></script>
+    <script src="/js/registrarProfesional.js"></script>
 </body>
 </html>
