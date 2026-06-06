@@ -302,7 +302,10 @@ const cancelarReserva = async (req, res) => {
 
     // Regla de Negocio: Verificar si falta más o menos de 6 horas
     const now = new Date();
-    const [year, month, day] = reserva.fecha.toISOString().split('T')[0].split('-');
+    const fechaString = reserva.fecha instanceof Date 
+      ? reserva.fecha.toISOString().split('T')[0] 
+      : String(reserva.fecha).split('T')[0];
+    const [year, month, day] = fechaString.split('-');
     const [hours, minutes] = reserva.hora_inicio.split(':');
     const reservaTime = new Date(year, month - 1, day, hours, minutes);
     const diffHours = (reservaTime - now) / (1000 * 60 * 60);

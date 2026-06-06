@@ -98,9 +98,59 @@
                 <div class="modal-body">
                     <div id="modal-info"></div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm text-white" style="background-color: #00C16E;" data-bs-dismiss="modal">Cerrar</button>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" id="btn-eliminar-cliente" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-user-slash me-1"></i> Dar de Baja</button>
+                    <div>
+                        <button type="button" id="btn-editar-cliente" class="btn btn-sm btn-outline-warning text-white me-2"><i class="fa-solid fa-user-pen me-1"></i> Editar</button>
+                        <button type="button" class="btn btn-sm text-white" style="background-color: #00C16E;" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Cliente -->
+    <div class="modal fade" id="modalEditarCliente" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-2">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Editar Datos del Cliente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="form-editar-cliente">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-id-usuario">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Nombre</label>
+                            <input type="text" class="form-control search-input" id="edit-nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Apellido</label>
+                            <input type="text" class="form-control search-input" id="edit-apellido" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Email</label>
+                            <input type="email" class="form-control search-input" id="edit-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Teléfono</label>
+                            <input type="text" class="form-control search-input" id="edit-telefono">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Rol / Nivel de Usuario</label>
+                            <select class="form-control search-input" id="edit-user-level" required>
+                                <option value="cliente">Cliente</option>
+                                <option value="administrador">Administrador</option>
+                                <option value="profesor">Profesor</option>
+                                <option value="entrenador">Entrenador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-outline-secondary text-white" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm text-white" style="background-color: #00C16E;">Guardar Cambios</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -82,10 +82,57 @@ const eliminarCliente = async (req, res) => {
   const { id } = req.params;
   try {
     await db.pool.query('BEGIN');
-    // Eliminar relaciones secundarias si existen
+
+    // 1. Obtener los ids de ocupaciones y cobros asociados a las reservas de este cliente
+    const resReservas = await db.pool.query(
+      'SELECT id_ocupacion_cancha, id_cobro FROM reservas WHERE id_usuario = $1',
+      [id]
+    );
+    const ocupacionIds = resReservas.rows.map(r => r.id_ocupacion_cancha).filter(Boolean);
+    const cobroIdsFromReservas = resReservas.rows.map(r => r.id_cobro).filter(Boolean);
+
+    // 2. Eliminar las reservas
+    await db.pool.query('DELETE FROM reservas WHERE id_usuario = $1', [id]);
+
+    // 3. Eliminar las ocupaciones de cancha asociadas a las reservas
+    if (ocupacionIds.length > 0) {
+      await db.pool.query(
+        'DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = ANY($1::int[])',
+        [ocupacionIds]
+      );
+    }
+
+    // 4. Obtener todos los cobros de este usuario (incluyendo los que no están en reservas)
+    const resCobros = await db.pool.query(
+      'SELECT id_cobro FROM cobros WHERE id_usuario = $1',
+      [id]
+    );
+    const allCobroIds = [...new Set([
+      ...resCobros.rows.map(c => c.id_cobro),
+      ...cobroIdsFromReservas
+    ])].filter(Boolean);
+
+    // 5. Eliminar recibos asociados a esos cobros
+    if (allCobroIds.length > 0) {
+      await db.pool.query(
+        'DELETE FROM recibos WHERE id_cobro = ANY($1::int[])',
+        [allCobroIds]
+      );
+    }
+
+    // 6. Eliminar cobros
+    await db.pool.query('DELETE FROM cobros WHERE id_usuario = $1', [id]);
+
+    // 7. Eliminar inscripciones de clases y entrenamientos
     await db.pool.query('DELETE FROM clientes_clases WHERE id_cliente = $1', [id]);
     await db.pool.query('DELETE FROM clientes_entrenamientos WHERE id_cliente = $1', [id]);
+
+    // 8. Eliminar certificaciones si las tuviera
+    await db.pool.query('DELETE FROM certificaciones WHERE id_usuario = $1', [id]);
+
+    // 9. Eliminar al usuario
     await db.pool.query('DELETE FROM usuarios WHERE id_usuario = $1', [id]);
+
     await db.pool.query('COMMIT');
     res.status(204).end();
   } catch (err) {
