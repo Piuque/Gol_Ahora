@@ -15,6 +15,8 @@ router.put('/perfil', clienteController.modificarPerfil);
 
 // Canchas y Reservas
 router.get('/canchas', clienteController.listarCanchasCliente);
+router.get('/canchas/:id', clienteController.listarCanchasClientePorTipo);
+router.get('/tipos_canchas', clienteController.listarTiposCanchaCliente);
 router.post('/reservas', clienteController.realizarReserva);
 router.get('/reservas', clienteController.listarReservasCliente);
 router.put('/reservas/:id', clienteController.modificarReserva);
@@ -23,11 +25,13 @@ router.delete('/reservas/:id', clienteController.cancelarReserva);
 
 // Clases
 router.get('/clases', clienteController.listarClasesCliente);
+router.get('/clases/disponibles', clienteController.listarClasesDisponibles);
 router.post('/clases/inscripcion', clienteController.inscribirClase);
 router.delete('/clases/inscripcion/:id', clienteController.darBajaClase);
 
 // Entrenamientos
 router.get('/entrenamientos', clienteController.listarEntrenamientosCliente);
+router.get('/entrenamientos/disponibles', clienteController.listarEntrenamientosDisponibles);
 router.post('/entrenamientos/inscripcion', clienteController.inscribirEntrenamiento);
 router.delete('/entrenamientos/inscripcion/:id', clienteController.darBajaEntrenamiento);
 

@@ -546,6 +546,109 @@ paths:
                 items:
                   $ref: '#/components/schemas/Cancha'
 
+  /cliente/canchas/{id}:
+    get:
+      tags:
+        - Gestión de Canchas
+      summary: Listar canchas según la categoría o tipo de cancha elegida
+      operationId: listarCanchasClientePorTipo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la categoría / tipo de cancha
+      responses:
+        '200':
+          description: Lista de canchas del tipo indicado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    nombre:
+                      type: string
+                    tipo_cancha:
+                      type: string
+                    ancho:
+                      type: string
+                    largo:
+                      type: string
+                    capacidad:
+                      type: integer
+                    superficie:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        tipo:
+                          type: string
+                        descripcion:
+                          type: string
+                    precio_hora_reserva:
+                      type: string
+                    tiempo_cancelacion:
+                      type: integer
+                    duracion_min:
+                      type: integer
+                    duracion_max:
+                      type: integer
+                    club:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        nombre:
+                          type: string
+                    imagen_url:
+                      type: string
+        '401':
+          description: No autorizado
+
+  /cliente/tipos_canchas:
+    get:
+      tags:
+        - Gestión de Canchas
+      summary: Obtener lista de tipos de cancha y sus especificaciones (Neon)
+      operationId: listarTiposCanchasClienteCompleto
+      responses:
+        '200':
+          description: Lista de tipos de cancha con detalles de superficie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    tipo:
+                      type: string
+                    duracion_min:
+                      type: integer
+                    duracion_max:
+                      type: integer
+                    ancho:
+                      type: string
+                    largo:
+                      type: string
+                    capacidad:
+                      type: integer
+                    superficie:
+                      type: string
+                    descripcion_superficie:
+                      type: string
+                    imagen_url:
+                      type: string
+        '401':
+          description: No autorizado
+
   /cliente/reservas:
     post:
       tags:
@@ -658,6 +761,37 @@ paths:
                 items:
                   $ref: '#/components/schemas/Clase'
 
+  /cliente/clases/disponibles:
+    get:
+      tags:
+        - Clases y Entrenamientos
+      summary: Consultar la catálogo de clases dictadas por profesores disponibles
+      operationId: listarClasesDisponiblesCliente
+      responses:
+        '200':
+          description: Lista de clases disponibles para inscripción
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_clase:
+                      type: integer
+                    nombre_clase:
+                      type: string
+                    capacidad_maxima:
+                      type: integer
+                    profesor:
+                      type: string
+                    inscriptos:
+                      type: integer
+                    horarios:
+                      type: string
+        '401':
+          description: No autorizado
+
   /cliente/clases/inscripcion:
     post:
       tags:
@@ -716,6 +850,37 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Entrenamiento'
+
+  /cliente/entrenamientos/disponibles:
+    get:
+      tags:
+        - Clases y Entrenamientos
+      summary: Consultar la catálogo de entrenamientos dictados por entrenadores disponibles
+      operationId: listarEntrenamientosDisponiblesCliente
+      responses:
+        '200':
+          description: Lista de entrenamientos disponibles para inscripción
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_entrenamiento:
+                      type: integer
+                    nombre_entrenamiento:
+                      type: string
+                    capacidad_maxima:
+                      type: integer
+                    entrenador:
+                      type: string
+                    inscriptos:
+                      type: integer
+                    horarios:
+                      type: string
+        '401':
+          description: No autorizado
 
   /cliente/entrenamientos/inscripcion:
     post:
@@ -828,6 +993,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cobro'
+
+  /cliente/cobros/{id}/pagar:
+    post:
+      tags:
+        - Finanzas y Cobros
+      summary: Realizar el pago electrónico de un cobro específico
+      operationId: realizarPagoCobroCliente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID del cobro a pagar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nro_transaccion:
+                  type: string
+                detalles:
+                  type: string
+      responses:
+        '201':
+          description: Pago procesado y recibo emitido con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id_recibo:
+                    type: integer
+        '400':
+          description: El cobro ya fue pagado
+        '404':
+          description: Cobro no encontrado o no pertenece al usuario
+        '401':
+          description: No autorizado
 
   /cliente/recibos:
     get:

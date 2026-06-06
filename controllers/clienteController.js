@@ -89,6 +89,91 @@ const listarCanchasCliente = async (req, res) => {
   }
 };
 
+// GET /cliente/canchas/:id (Listar canchas según tipo de cancha)
+const listarCanchasClientePorTipo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const sql = `
+      SELECT 
+        can.id_cancha AS id,
+        can.nombre,
+        tc.tipo_cancha,
+        tc.ancho,
+        tc.largo,
+        tc.capacidad,
+        s.id_superficie AS superficie_id,
+        s.tipo_superficie AS superficie_tipo,
+        s.descripcion AS superficie_descripcion,
+        can.precio_hora_reserva,
+        can.tiempo_cancelacion,
+        tc.duracion_min,
+        tc.duracion_max,
+        cl.id_club AS club_id,
+        cl.nombre AS club_nombre,
+        tc.imagen_url
+      FROM canchas can
+      LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      LEFT JOIN superficies s ON tc.id_superficie = s.id_superficie
+      LEFT JOIN clubes cl ON can.id_club = cl.id_club
+      WHERE can.id_tipo_de_cancha = $1
+    `;
+    const rows = await db.query.all(sql, [id]);
+    
+    const canchasFormateadas = rows.map(row => ({
+      id: row.id,
+      nombre: row.nombre,
+      tipo_cancha: row.tipo_cancha,
+      ancho: row.ancho,
+      largo: row.largo,
+      capacidad: row.capacidad,
+      superficie: {
+        id: row.superficie_id,
+        tipo: row.superficie_tipo,
+        descripcion: row.superficie_descripcion
+      },
+      precio_hora_reserva: row.precio_hora_reserva,
+      tiempo_cancelacion: row.tiempo_cancelacion,
+      duracion_min: row.duracion_min,
+      duracion_max: row.duracion_max,
+      club: {
+        id: row.club_id,
+        nombre: row.club_nombre
+      },
+      imagen_url: row.imagen_url
+    }));
+
+    res.json(canchasFormateadas);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar canchas por tipo de cancha', message: err.message });
+  }
+};
+
+// GET /cliente/tipos_canchas
+const listarTiposCanchaCliente = async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        tc.id_tipo_de_cancha AS id,
+        tc.tipo_cancha AS tipo,
+        tc.duracion_min,
+        tc.duracion_max,
+        tc.ancho,
+        tc.largo,
+        tc.capacidad,
+        s.tipo_superficie AS superficie,
+        s.descripcion AS descripcion_superficie,
+        tc.imagen_url
+      FROM tipos_de_cancha tc
+      LEFT JOIN superficies s ON tc.id_superficie = s.id_superficie
+      ORDER BY tc.id_tipo_de_cancha ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar las categorías de canchas', message: err.message });
+  }
+};
+
 // POST /cliente/reservas
 const realizarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
@@ -222,7 +307,7 @@ const listarClasesCliente = async (req, res) => {
       FROM clientes_clases cc
       JOIN clases c ON cc.id_clase = c.id_clase
       LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
-      WHERE cc.id_cliente = $1
+      WHERE cc.id_cliente = $1 AND (u.user_level = 'profesor' OR c.id_profesional IS NULL)
       ORDER BY c.nombre ASC
     `;
     const rows = await db.query.all(sql, [idUsuario]);
@@ -245,7 +330,7 @@ const listarEntrenamientosCliente = async (req, res) => {
       JOIN entrenamientos e ON ce.id_entrenamiento = e.id_entrenamiento
       LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
       LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
-      WHERE ce.id_cliente = $1
+      WHERE ce.id_cliente = $1 AND (u.user_level = 'entrenador' OR e.id_profesional IS NULL)
       ORDER BY e.id_entrenamiento ASC
     `;
     const rows = await db.query.all(sql, [idUsuario]);
@@ -254,6 +339,52 @@ const listarEntrenamientosCliente = async (req, res) => {
     res.status(500).json({ error: 'Error al listar entrenamientos del cliente', message: err.message });
   }
 };
+
+const listarClasesDisponibles = async (req, res) => {
+  try {
+    const sql = `
+      SELECT c.id_clase,
+             c.nombre AS nombre_clase,
+             c.capacidad_max AS capacidad_maxima,
+             COALESCE(u.nombre || ' ' || u.apellido, 'Por asignar') AS profesor,
+             (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos,
+             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios
+      FROM clases c
+      LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
+      LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE u.user_level = 'profesor' OR c.id_profesional IS NULL
+      ORDER BY c.nombre ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener clases disponibles', message: err.message });
+  }
+};
+
+const listarEntrenamientosDisponibles = async (req, res) => {
+  try {
+    const sql = `
+      SELECT e.id_entrenamiento,
+             'Entrenamiento ' || COALESCE(can.nombre, '') AS nombre_entrenamiento,
+             e.capacidad_max AS capacidad_maxima,
+             COALESCE(u.nombre || ' ' || u.apellido, 'Preparador asignado') AS entrenador,
+             (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos,
+             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios
+      FROM entrenamientos e
+      LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+      LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
+      LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE u.user_level = 'entrenador' OR e.id_profesional IS NULL
+      ORDER BY e.id_entrenamiento ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener entrenamientos disponibles', message: err.message });
+  }
+};
+
 // PUT /cliente/reservas/:id (Modificar Horario)
 const modificarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
@@ -534,10 +665,14 @@ module.exports = {
   obtenerPerfil,
   modificarPerfil,
   listarCanchasCliente,
+  listarCanchasClientePorTipo,
+  listarTiposCanchaCliente,
   realizarReserva,
   listarReservasCliente,
   listarClasesCliente,
   listarEntrenamientosCliente,
+  listarClasesDisponibles,
+  listarEntrenamientosDisponibles,
   modificarReserva,
   cancelarReserva,
   inscribirClase,
