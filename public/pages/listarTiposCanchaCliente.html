@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora - Formato de Cancha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* Corrección forzada del fondo oscuro Premium */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #071524 !important;
+        }
+
+        /* Barra de Progreso */
+        .stepper-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .step {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        .step.active {
+            background-color: #00C16E;
+            color: #071524;
+            box-shadow: 0 0 10px rgba(0, 193, 110, 0.4);
+        }
+        .step.inactive {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .step-line {
+            height: 2px;
+            width: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Carrusel Horizontal */
+        .scroll-horizontal {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 1.5rem; /* El espacio equivale a 24px (1.5rem) */
+            padding-bottom: 2rem;
+            padding-top: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: #00C16E #0A2540;
+        }
+        .scroll-horizontal::-webkit-scrollbar { height: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-track { background: rgba(10, 37, 64, 0.5); border-radius: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-thumb { background: #00C16E; border-radius: 10px; }
+
+        /* Tarjetas con cálculo matemático para encajar exactas */
+        .tipo-cancha-card {
+            background-color: var(--bg-navy, #0A2540);
+            border: 1px solid rgba(0, 193, 110, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 420px;
+            cursor: pointer;
+
+            /* Por defecto en celulares (entrará 1 tarjeta y un pedacito de la siguiente para indicar que hay scroll) */
+            flex: 0 0 auto;
+            width: 85%;
+        }
+
+        /* En pantallas de tablet/desktop: Calculamos EXACTAMENTE 3 tarjetas por vista */
+        @media (min-width: 768px) {
+            .tipo-cancha-card {
+                /* (100% del contenedor - 2 gaps de 1.5rem) dividido en 3 */
+                flex: 0 0 calc((100% - 3rem) / 3);
+                width: calc((100% - 3rem) / 3);
+            }
+        }
+
+        .tipo-cancha-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 193, 110, 0.15) !important;
+            border-color: rgba(0, 193, 110, 0.4);
+        }
+
+        /* Contenedor de la Imagen */
+        .img-wrapper {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            background-color: #040d17;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .tipo-cancha-card:hover .img-wrapper img {
+            transform: scale(1.05);
+        }
+        .img-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(10, 37, 64, 0.1) 0%, #0A2540 100%);
+        }
+
+        .caracteristica-badge {
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .caracteristica-badge i { color: #00C16E; }
+    </style>
+</head>
+<body class="py-5 px-3">
+
+<div class="container mx-auto" style="max-width: 950px; min-height: 75vh; display: flex; flex-direction: column; justify-content: center;">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-50">
+        <a href="misReservas.html" class="fw-bold text-decoration-none text-sports mb-3 mb-md-0">
+            <i class="fa-solid fa-arrow-left me-2"></i> Volver a Mis Reservas
+        </a>
+
+        <div class="text-center">
+            <h3 class="fw-bold text-white text-uppercase mb-0">
+                <i class="fa-solid fa-layer-group me-2 text-sports"></i>Formato de Cancha
+            </h3>
+        </div>
+
+        <div style="width: 180px;" class="d-none d-md-block"></div>
+    </div>
+
+    <div class="stepper-container">
+        <div class="step active">1</div>
+        <div class="step-line"></div>
+        <div class="step inactive">2</div>
+        <div class="step-line"></div>
+        <div class="step inactive">3</div>
+        <div class="step-line"></div>
+        <div class="step inactive">4</div>
+    </div>
+
+    <p class="text-light-50 small mb-2 text-center text-md-start">
+        <i class="fa-solid fa-arrows-left-right me-2 text-sports"></i>Deslizá para ver las superficies y formatos disponibles:
+    </p>
+
+    <div id="contenedor-tipos" class="scroll-horizontal">
+        <div class="w-100 text-center py-5">
+            <div class="spinner-border text-sports" role="status"></div>
+            <p class="text-light-50 mt-2 small">Cargando opciones...</p>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/listarTiposCanchaCliente.js"></script>
+</body>
+</html>

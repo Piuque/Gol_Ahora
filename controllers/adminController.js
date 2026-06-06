@@ -542,6 +542,78 @@ const listarAdministradores = async (req, res) => {
   }
 };
 
+const obtenerProfesor = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await db.query.get(`SELECT id_usuario AS id, nombre, apellido, email, dni, telefono, fecha_nacimiento, user_level FROM usuarios WHERE id_usuario = $1 AND user_level = 'profesor'`, [id]);
+    if (!user) return res.status(404).json({ error: 'Profesor no encontrado' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener profesor', message: err.message });
+  }
+};
+
+const modificarProfesor = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, apellido, email, telefono } = req.body;
+  try {
+    await db.query.run(`UPDATE usuarios SET nombre=$1, apellido=$2, email=$3, telefono=$4 WHERE id_usuario=$5`, [nombre, apellido, email, telefono, id]);
+    res.json({ message: 'Profesor modificado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar profesor', message: err.message });
+  }
+};
+
+const eliminarProfesor = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM certificaciones WHERE id_usuario = $1', [id]);
+    await db.pool.query('DELETE FROM usuarios WHERE id_usuario = $1', [id]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar profesor', message: err.message });
+  }
+};
+
+const obtenerEntrenador = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await db.query.get(`SELECT id_usuario AS id, nombre, apellido, email, dni, telefono, fecha_nacimiento, user_level FROM usuarios WHERE id_usuario = $1 AND user_level = 'entrenador'`, [id]);
+    if (!user) return res.status(404).json({ error: 'Entrenador no encontrado' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener entrenador', message: err.message });
+  }
+};
+
+const modificarEntrenador = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, apellido, email, telefono } = req.body;
+  try {
+    await db.query.run(`UPDATE usuarios SET nombre=$1, apellido=$2, email=$3, telefono=$4 WHERE id_usuario=$5`, [nombre, apellido, email, telefono, id]);
+    res.json({ message: 'Entrenador modificado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar entrenador', message: err.message });
+  }
+};
+
+const eliminarEntrenador = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM certificaciones WHERE id_usuario = $1', [id]);
+    await db.pool.query('DELETE FROM usuarios WHERE id_usuario = $1', [id]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar entrenador', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -561,5 +633,11 @@ module.exports = {
   confirmarPagoEfectivo,
   listarCanchas,
   eliminarCancha,
-  listarAdministradores
+  listarAdministradores,
+  obtenerProfesor,
+  modificarProfesor,
+  eliminarProfesor,
+  obtenerEntrenador,
+  modificarEntrenador,
+  eliminarEntrenador,
 };
