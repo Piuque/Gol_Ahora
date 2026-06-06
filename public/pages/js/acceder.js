@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (data.usuario.role === 'entrenador') {
                     window.location.href = "/pages/perfilEntrenador.html";
                 } else {
-                    window.location.href = "/pages/perfilCliente.html";
+                    window.location.href = "/pages/interfazCliente.html";
                 }
             } else {
                 errorEl.textContent = data.details || data.error || "Credenciales incorrectas";
