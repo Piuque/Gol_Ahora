@@ -109,4 +109,17 @@ router.post('/torneos/:id/cuadro', adminController.generarCuadroTorneo);
 router.post('/torneos/:id/inscripciones', adminController.inscribirEnTorneo);
 router.put('/torneos/:id/partidos/:idPartido/resultado', adminController.registrarResultadoTorneo);
 
+// Descuentos
+router.post('/descuentos', adminController.crearDescuento);
+router.get('/descuentos', adminController.listarDescuentos);
+router.get('/descuentos/:id', adminController.obtenerDescuento);
+router.put('/descuentos/:id', adminController.modificarDescuento);
+router.delete('/descuentos/:id', adminController.eliminarDescuento);
+
+// Cobros
+router.post('/cobros', adminController.crearCobro);
+router.get('/cobros', adminController.listarCobros);
+router.get('/cobros/:id', adminController.obtenerCobro);
+router.put('/cobros/:id', adminController.modificarCobro);
+
 module.exports = router;

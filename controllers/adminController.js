@@ -1295,6 +1295,141 @@ const registrarResultadoTorneo = async (req, res) => {
   }
 };
 
+const crearDescuento = async (req, res) => {
+  const { descripcion, porcentaje_descuento, activo } = req.body;
+  try {
+    const result = await db.query.run(
+      `INSERT INTO descuentos (descripcion, porcentaje_descuento, activo) VALUES ($1, $2, $3) RETURNING id_descuento`,
+      [descripcion, porcentaje_descuento, activo ?? true]
+    );
+    res.status(201).json({ message: 'Descuento registrado', id: result.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al crear descuento', message: err.message });
+  }
+};
+
+const listarDescuentos = async (req, res) => {
+  try {
+    const rows = await db.query.all(
+      `SELECT id_descuento AS id, descripcion, porcentaje_descuento, activo FROM descuentos ORDER BY id_descuento ASC`
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar descuentos', message: err.message });
+  }
+};
+
+const obtenerDescuento = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const row = await db.query.get(
+      `SELECT id_descuento AS id, descripcion, porcentaje_descuento, activo FROM descuentos WHERE id_descuento = $1`, [id]
+    );
+    if (!row) return res.status(404).json({ error: 'Descuento no encontrado' });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener descuento', message: err.message });
+  }
+};
+
+const modificarDescuento = async (req, res) => {
+  const { id } = req.params;
+  const { descripcion, porcentaje_descuento, activo } = req.body;
+  try {
+    await db.query.run(
+      `UPDATE descuentos SET descripcion=$1, porcentaje_descuento=$2, activo=$3 WHERE id_descuento=$4`,
+      [descripcion, porcentaje_descuento, activo, id]
+    );
+    res.json({ message: 'Descuento modificado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar descuento', message: err.message });
+  }
+};
+
+const eliminarDescuento = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query.run(`DELETE FROM descuentos WHERE id_descuento = $1`, [id]);
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar descuento', message: err.message });
+  }
+};
+
+const crearCobro = async (req, res) => {
+  const { idCliente, monto, detalles, idMetodoPago } = req.body;
+  try {
+    await db.pool.query('BEGIN');
+    const result = await db.pool.query(
+      `INSERT INTO cobros (monto, detalles, id_metodo_de_pago, id_estado_cobro, id_usuario, fecha)
+       VALUES ($1, $2, $3, 1, $4, NOW()) RETURNING id_cobro`,
+      [monto, detalles, idMetodoPago, idCliente]
+    );
+    await db.pool.query('COMMIT');
+    res.status(201).json({ message: 'Cobro registrado correctamente', id: result.rows[0].id_cobro });
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al registrar cobro', message: err.message });
+  }
+};
+
+const listarCobros = async (req, res) => {
+  try {
+    const sql = `
+      SELECT c.id_cobro AS id, c.monto, c.detalles,
+             u.nombre || ' ' || u.apellido AS cliente,
+             mp.nombre AS metodo_pago,
+             ec.estado AS estado_cobro,
+             to_char(c.fecha, 'YYYY-MM-DD HH24:MI') AS fecha
+      FROM cobros c
+      LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario
+      LEFT JOIN metodos_de_pago mp ON c.id_metodo_de_pago = mp.id_metodo_de_pago
+      LEFT JOIN estados_cobro ec ON c.id_estado_cobro = ec.id_estado_cobro
+      ORDER BY c.fecha DESC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar cobros', message: err.message });
+  }
+};
+
+const obtenerCobro = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const sql = `
+      SELECT c.id_cobro AS id, c.monto, c.detalles,
+             u.nombre || ' ' || u.apellido AS cliente, c.id_usuario,
+             mp.nombre AS metodo_pago, c.id_metodo_de_pago,
+             ec.estado AS estado_cobro, c.id_estado_cobro,
+             to_char(c.fecha, 'YYYY-MM-DD HH24:MI') AS fecha
+      FROM cobros c
+      LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario
+      LEFT JOIN metodos_de_pago mp ON c.id_metodo_de_pago = mp.id_metodo_de_pago
+      LEFT JOIN estados_cobro ec ON c.id_estado_cobro = ec.id_estado_cobro
+      WHERE c.id_cobro = $1
+    `;
+    const row = await db.query.get(sql, [id]);
+    if (!row) return res.status(404).json({ error: 'Cobro no encontrado' });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener cobro', message: err.message });
+  }
+};
+
+const modificarCobro = async (req, res) => {
+  const { id } = req.params;
+  const { id_estado_cobro } = req.body;
+  try {
+    await db.query.run(
+      `UPDATE cobros SET id_estado_cobro=$1 WHERE id_cobro=$2`,
+      [id_estado_cobro, id]
+    );
+    res.json({ message: 'Cobro modificado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar cobro', message: err.message });
+  }
+};
 
 module.exports = {
   listarClientes,
@@ -1363,4 +1498,13 @@ module.exports = {
   generarCuadroTorneo,
   inscribirEnTorneo,
   registrarResultadoTorneo,
+  crearDescuento,
+  listarDescuentos,
+  obtenerDescuento,
+  modificarDescuento,
+  eliminarDescuento,
+  crearCobro,
+  listarCobros,
+  obtenerCobro,
+  modificarCobro,
 };

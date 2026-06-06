@@ -1,25 +1,24 @@
-const API = "http://localhost:3000/user_Info";
-
 async function ObtenerDatosPersonales() {
     try {
-        const Respuesta = await fetch(API, {
+        const userId = localStorage.getItem("userId");
+        const res = await fetch(`/admin/clientes/${userId}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "plataform": "web"
+                "x-user-id": userId
             },
             credentials: "include"
         });
 
-        const Datos = await Respuesta.json();
+        const datos = await res.json();
 
-        document.querySelector('.input-Nombre').value = Datos.nombre;
-        document.querySelector('.input-Apellido').value = Datos.apellido;
-        document.querySelector('.input-Nacionalidad').value = Datos.nacionalidad;
-        document.querySelector('.input-Dni').value = Datos.dni;
-        document.querySelector('.input-Genero').value = Datos.genero;
-        document.querySelector('.input-Telefono').value = Datos.telefono;
-        document.querySelector('.input-Email').value = Datos.email;
+        document.querySelector('.input-Nombre').value = datos.nombre || '';
+        document.querySelector('.input-Apellido').value = datos.apellido || '';
+        document.querySelector('.input-Nacionalidad').value = datos.nacionalidad || '';
+        document.querySelector('.input-Dni').value = datos.dni || '';
+        document.querySelector('.input-Genero').value = datos.genero || '';
+        document.querySelector('.input-Telefono').value = datos.telefono || '';
+        document.querySelector('.input-Email').value = datos.email || '';
 
     } catch (error) {
         console.error("Error al obtener datos personales:", error);

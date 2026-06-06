@@ -365,4 +365,12 @@ app.get(['/admin/Torneos'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/Torneos.html'));
 });
 
+app.get(['/admin/Descuentos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Descuentos.html'));
+});
+
+app.get(['/admin/Cobros'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Cobros.html'));
+});
+
 startServer();
