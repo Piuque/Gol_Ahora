@@ -43,11 +43,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.usuario.role === 'admin' || data.usuario.role === 'administrador') {
                     window.location.href = "/pages/interfazAdministrador.html";
                 } else if (data.usuario.role === 'profesor') {
-                    window.location.href = "/pages/interfazProfesor.html";
+                    window.location.href = "/pages/perfilProfesor.html";
                 } else if (data.usuario.role === 'entrenador') {
-                    window.location.href = "/pages/interfazEntrenador.html";
+                    window.location.href = "/pages/perfilEntrenador.html";
                 } else {
-                    window.location.href = "/pages/interfazCliente.html";
+                    window.location.href = "/pages/perfilCliente.html";
                 }
             } else {
                 errorEl.textContent = data.details || data.error || "Credenciales incorrectas";

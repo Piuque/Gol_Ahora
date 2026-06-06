@@ -429,6 +429,49 @@ const confirmarPagoEfectivo = async (req, res) => {
   }
 };
 
+// DELETE /admin/canchas/:id
+const eliminarCancha = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    
+    // 1. Eliminar inscripciones de alumnos a clases asociadas a esta cancha
+    await db.pool.query('DELETE FROM clientes_clases WHERE id_clase IN (SELECT id_clase FROM clases WHERE id_cancha = $1)', [id]);
+    
+    // 2. Eliminar clases asociadas a esta cancha
+    await db.pool.query('DELETE FROM clases WHERE id_cancha = $1', [id]);
+    
+    // 3. Eliminar inscripciones de alumnos a entrenamientos asociados a esta cancha
+    await db.pool.query('DELETE FROM clientes_entrenamientos WHERE id_entrenamiento IN (SELECT id_entrenamiento FROM entrenamientos WHERE id_cancha = $1)', [id]);
+    
+    // 4. Eliminar entrenamientos asociados a esta cancha
+    await db.pool.query('DELETE FROM entrenamientos WHERE id_cancha = $1', [id]);
+    
+    // 5. Eliminar reservas asociadas a esta cancha
+    await db.pool.query('DELETE FROM reservas WHERE id_cancha = $1', [id]);
+    
+    // 6. Eliminar ocupaciones de cancha asociadas a esta cancha
+    await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_cancha = $1', [id]);
+    
+    // 7. Eliminar excepciones de disponibilidad
+    await db.pool.query('DELETE FROM disponibilidad_excepciones WHERE id_cancha = $1', [id]);
+    
+    // 8. Eliminar la cancha físicamente
+    const result = await db.pool.query('DELETE FROM canchas WHERE id_cancha = $1', [id]);
+    
+    if (result.rowCount === 0) {
+      await db.pool.query('ROLLBACK');
+      return res.status(404).json({ error: 'Cancha no encontrada' });
+    }
+    
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar cancha', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -446,5 +489,6 @@ module.exports = {
   reporteFinanciero,
   listarReservasPendientes,
   confirmarPagoEfectivo,
-  listarCanchas
+  listarCanchas,
+  eliminarCancha
 };
