@@ -23,7 +23,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         try {
             const userId = localStorage.getItem("userId");
-            const res = await fetch(`/admin/clientes`, {
+            const url = rol === 'administradores' ? '/admin/administradores' : '/admin/clientes';
+            const res = await fetch(url, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",

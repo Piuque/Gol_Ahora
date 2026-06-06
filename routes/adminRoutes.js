@@ -43,4 +43,8 @@ router.post('/ligas', adminController.crearLiga);
 // Reportes agregados
 router.get('/reportes/ingresos', adminController.reporteFinanciero);
 
+//Administradores
+router.get('/administradores', adminController.listarAdministradores);
+
+
 module.exports = router;
