@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gol Ahora - Clientes</title>
+    <title>Gol Ahora - Reservas</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/login.css">
     <style>
-        .cliente-card {
+        .reserva-card {
             background-color: #0d1f33;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
@@ -17,39 +17,18 @@
             cursor: pointer;
             padding: 16px;
         }
-        .cliente-card:hover {
+        .reserva-card:hover {
             transform: translateY(-3px);
             border-color: #00C16E;
         }
-        .avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background-color: #00C16E;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: white;
-            flex-shrink: 0;
+        .badge-estado {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
         }
-        .modal-content {
-            background-color: #0A2540;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-        }
-        .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            font-size: 0.9rem;
-        }
-        .info-label { color: rgba(255,255,255,0.5); }
-        .info-value { color: white; font-weight: 500; }
+        .badge-pendiente { background-color: #f59e0b; color: white; }
+        .badge-aprobado { background-color: #00C16E; color: white; }
+        .badge-cancelado { background-color: #ef4444; color: white; }
         .search-input {
             background-color: #0d1f33 !important;
             border-color: rgba(255,255,255,0.15) !important;
@@ -63,36 +42,32 @@
     <div class="container" style="max-width: 900px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold text-white text-uppercase mb-1">Clientes</h3>
-                <p class="text-light-50 small mb-0">Listado de clientes registrados</p>
+                <h3 class="fw-bold text-white text-uppercase mb-1">Reservas</h3>
+                <p class="text-light-50 small mb-0">Listado de reservas registradas</p>
             </div>
             <a href="/admin" style="color: #00C16E;" class="fw-bold text-decoration-none small">
                 <i class="fa-solid fa-arrow-left me-1"></i> Volver al panel
             </a>
         </div>
 
-        <div class="d-flex gap-2 mb-3">
-            <select id="selector-rol" class="form-control search-input" style="max-width: 200px;">
-                <option value="clientes">Clientes</option>
-                <option value="administradores">Administradores</option>
-            </select>
-            <input type="text" id="buscador" class="form-control search-input" placeholder="Buscar por nombre, apellido o DNI...">
+        <div class="mb-3">
+            <input type="text" id="buscador" class="form-control search-input" placeholder="Buscar por nombre, cancha o estado...">
         </div>
 
-        <div id="contenedor-clientes" class="d-flex flex-column gap-2">
+        <div id="contenedor-reservas" class="d-flex flex-column gap-2">
             <div class="text-center py-5">
                 <div class="spinner-border text-success" role="status"></div>
-                <p class="text-light-50 mt-2 small">Cargando clientes...</p>
+                <p class="text-light-50 mt-2 small">Cargando reservas...</p>
             </div>
         </div>
     </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="modalCliente" tabindex="-1">
+    <div class="modal fade" id="modalReserva" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-2">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="modal-nombre"></h5>
+                    <h5 class="modal-title fw-bold" id="modal-titulo"></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -107,6 +82,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/js/verClientes.js"></script>
+    <script src="/js/listarReservas.js"></script>
 </body>
 </html>
