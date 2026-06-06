@@ -287,6 +287,11 @@ const cleanupExpiredReservations = async () => {
     console.error('[Limpieza] Error al limpiar reservas vencidas:', err.message);
   }
 };
+//rutas amigables para listar mis reservas
+// Ruta amigable para que el cliente acceda a "mis reservas"
+app.get(['/misReservas', '/misReservas.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misReservas.html'));
+});
 
 // Inicializar base de datos y levantar el servidor
 const startServer = async () => {

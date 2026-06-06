@@ -155,6 +155,53 @@ const realizarReserva = async (req, res) => {
   }
 };
 
+// GET /cliente/cobros (Historial de Pagos)
+const listarMisPagos = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const sql = `
+      SELECT cob.id_cobro AS id, cob.monto, 
+             to_char(cob.fecha, 'DD/MM/YYYY HH24:MI') AS fecha_pago, 
+             ec.estado AS estado, 
+             mp.nombre AS metodo 
+      FROM cobros cob 
+      LEFT JOIN estados_cobro ec ON cob.id_estado_cobro = ec.id_estado_cobro 
+      LEFT JOIN metodos_de_pago mp ON cob.id_metodo_de_pago = mp.id_metodo_de_pago 
+      WHERE cob.id_usuario = $1 
+      ORDER BY cob.fecha DESC
+    `;
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar cobros', message: err.message });
+  }
+};
+
+
+const listarReservasCliente = async (req, res) => {
+  const idUsuario = req.user.id_usuario; // Asumiendo que esta es la forma en que obtienes el ID
+  try {
+    const sql = `
+      SELECT r.id_reserva, r.fecha_reserva, r.hora_inicio, r.hora_fin, 
+             c.nombre AS nombre_cancha, tc.tipo_cancha, r.estado
+      FROM reservas r
+      JOIN canchas c ON r.id_cancha = c.id_cancha
+      JOIN tipos_de_cancha tc ON c.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      WHERE r.id_cliente = $1
+      ORDER BY r.fecha_reserva DESC
+    `;
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar reservas', message: err.message });
+  }
+};
+
+// 3. Exporta todas al final (esto soluciona el error de "ReferenceError")
+module.exports = {
+  listarMisPagos,
+  listarReservasCliente
+};
 // PUT /cliente/reservas/:id (Modificar Horario)
 const modificarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
@@ -231,27 +278,7 @@ const cancelarReserva = async (req, res) => {
   }
 };
 
-// GET /cliente/cobros (Historial de Pagos)
-const listarMisPagos = async (req, res) => {
-  const idUsuario = req.user.id_usuario;
-  try {
-    const sql = `
-      SELECT cob.id_cobro AS id, cob.monto, 
-             to_char(cob.fecha, 'DD/MM/YYYY HH24:MI') AS fecha_pago, 
-             ec.estado AS estado, 
-             mp.nombre AS metodo 
-      FROM cobros cob 
-      LEFT JOIN estados_cobro ec ON cob.id_estado_cobro = ec.id_estado_cobro 
-      LEFT JOIN metodos_de_pago mp ON cob.id_metodo_de_pago = mp.id_metodo_de_pago 
-      WHERE cob.id_usuario = $1 
-      ORDER BY cob.fecha DESC
-    `;
-    const rows = await db.query.all(sql, [idUsuario]);
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Error al consultar cobros', message: err.message });
-  }
-};
+
 
 // GET /cliente/cobros/:id
 const consultarMiPago = async (req, res) => {
@@ -453,15 +480,16 @@ module.exports = {
   modificarPerfil,
   listarCanchasCliente,
   realizarReserva,
+  listarReservasCliente,
   modificarReserva,
   cancelarReserva,
-  listarMisPagos,
-  consultarMiPago,
-  listarMisRecibos,
-  consultarMiRecibo,
   inscribirClase,
   darBajaClase,
   inscribirEntrenamiento,
   darBajaEntrenamiento,
+  listarMisPagos,
+  consultarMiPago,
+  listarMisRecibos,
+  consultarMiRecibo,
   realizarPago
 };

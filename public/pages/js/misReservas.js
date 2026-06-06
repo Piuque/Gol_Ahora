@@ -11,7 +11,7 @@ async function cargarReservas() {
 
     try {
         // Usamos ruta relativa. Funciona mágico tanto en Localhost como en Render.
-        const response = await fetch('/api/cliente/reservas', {
+        const response = await fetch('/cliente/reservas', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

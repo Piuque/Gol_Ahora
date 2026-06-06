@@ -30,6 +30,7 @@ router.post('/entrenadores/:id/certificaciones', adminController.registrarCertif
 // Canchas y Mantenimiento
 router.post('/canchas/registrar', adminController.crearCancha);
 router.get('/canchas/listar', adminController.listarCanchas);
+router.delete('/canchas/{id}',adminController.eliminarCancha);//falta implementar
 router.post('/canchas/bloqueo', adminController.bloquearCanchaMantenimiento);
 
 // Gestión de Cobros y Reservas Pendientes
