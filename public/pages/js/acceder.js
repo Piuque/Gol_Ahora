@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Redirección inteligente basada en el rol
                 if (data.usuario.role === 'admin' || data.usuario.role === 'administrador') {
-                    window.location.href = "/pages/interfazAdministrador.html";
+                    window.location.href = "/admin";
                 } else if (data.usuario.role === 'profesor') {
                     window.location.href = "/pages/perfilProfesor.html";
                 } else if (data.usuario.role === 'entrenador') {
