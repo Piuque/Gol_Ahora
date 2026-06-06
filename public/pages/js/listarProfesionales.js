@@ -81,11 +81,39 @@ async function verDetalle(id, tipo) {
     const userId = localStorage.getItem("userId");
     try {
         const tipoSingular = tipo === "profesores" ? "profesores" : "entrenadores";
-        const resUser = await fetch(`/admin/${tipoSingular}/${id}`, {
-            credentials: "include",
-            headers: { "x-user-id": userId }
-        });
+        const [resUser, resCerts] = await Promise.all([
+            fetch(`/admin/${tipoSingular}/${id}`, {
+                credentials: "include",
+                headers: { "x-user-id": userId }
+            }),
+            fetch(`/admin/certificaciones/${id}`, {
+                credentials: "include",
+                headers: { "x-user-id": userId }
+            })
+        ]);
+
         const p = await resUser.json();
+        const certs = await resCerts.json();
+
+        const certHTML = Array.isArray(certs) && certs.length > 0 ? certs.map(c => `
+            <div class="cert-item mb-2 p-2" style="background:#071524; border-radius:8px;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-white fw-bold small">Matricula: ${c.matricula}</span>
+                    <span class="badge" style="background-color:${c.validada ? '#00C16E' : '#f59e0b'};">
+                        ${c.validada ? 'VALIDADA' : 'PENDIENTE DE VALIDAR'}
+                    </span>
+                </div>
+                <p class="text-light-50 small mb-1">Vence: ${c.fecha_caducidad}</p>
+                <a href="${c.link_archivo}" target="_blank" style="color:#00C16E; font-size:0.8rem;">Ver archivo</a>
+                <div class="d-flex gap-2 mt-2">
+                    <button onclick="cambiarValidacion(${c.id}, ${!c.validada}, ${id}, '${tipo}')"
+                        class="btn btn-sm fw-bold text-white w-100"
+                        style="background-color:${c.validada ? '#f59e0b' : '#00C16E'}; font-size:0.75rem;">
+                        ${c.validada ? 'Marcar Pendiente' : 'Validar'}
+                    </button>
+                </div>
+            </div>
+        `).join('') : `<p class="text-light-50 small">Sin certificaciones registradas.</p>`;
 
         document.getElementById("modal-nombre").textContent = `${p.nombre} ${p.apellido}`;
         document.getElementById("modal-info").innerHTML = `
@@ -94,6 +122,8 @@ async function verDetalle(id, tipo) {
             <div class="info-row"><span class="info-label">Telefono</span><span class="info-value">${p.telefono || '-'}</span></div>
             <div class="info-row"><span class="info-label">Nacimiento</span><span class="info-value">${p.fecha_nacimiento || '-'}</span></div>
             <div class="info-row"><span class="info-label">Rol</span><span class="info-value">${p.user_level || '-'}</span></div>
+            <p class="text-light-50 small mt-3 mb-2">Certificaciones</p>
+            ${certHTML}
             <div class="d-flex gap-2 mt-3">
                 <button onclick="abrirModificar(${id}, '${p.nombre}', '${p.apellido}', '${p.email}', '${p.telefono}', '${tipo}')"
                     class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #0d6efd;">
@@ -110,6 +140,28 @@ async function verDetalle(id, tipo) {
         modal.show();
 
     } catch (e) { console.error(e); }
+}
+
+async function cambiarValidacion(idCert, validada, idUsuario, tipo) {
+    const userId = localStorage.getItem("userId");
+    try {
+        const res = await fetch(`/admin/certificaciones/${idCert}/validar`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+            credentials: 'include',
+            body: JSON.stringify({ validada })
+        });
+        if (res.ok) {
+            bootstrap.Modal.getInstance(document.getElementById("modalProfesional")).hide();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            verDetalle(idUsuario, tipo);
+        } else {
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al actualizar.', confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
 }
 
 async function abrirModificar(id, nombre, apellido, email, telefono, tipo) {
