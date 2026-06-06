@@ -17,44 +17,20 @@
             cursor: pointer;
             padding: 16px;
         }
-        .cliente-card:hover {
-            transform: translateY(-3px);
-            border-color: #00C16E;
-        }
+        .cliente-card:hover { transform: translateY(-3px); border-color: #00C16E; }
         .avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background-color: #00C16E;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: white;
-            flex-shrink: 0;
+            width: 45px; height: 45px; border-radius: 50%;
+            background-color: #00C16E; display: flex; align-items: center;
+            justify-content: center; font-weight: bold; font-size: 1.1rem;
+            color: white; flex-shrink: 0;
         }
-        .modal-content {
-            background-color: #0A2540;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-        }
+        .modal-content { background-color: #0A2540; border: 1px solid rgba(255,255,255,0.1); color: white; }
         .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
         .modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            font-size: 0.9rem;
-        }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 0.9rem; }
         .info-label { color: rgba(255,255,255,0.5); }
         .info-value { color: white; font-weight: 500; }
-        .search-input {
-            background-color: #0d1f33 !important;
-            border-color: rgba(255,255,255,0.15) !important;
-            color: white !important;
-        }
+        .search-input { background-color: #0d1f33 !important; border-color: rgba(255,255,255,0.15) !important; color: white !important; }
         .search-input::placeholder { color: rgba(255,255,255,0.35) !important; }
     </style>
 </head>
@@ -63,8 +39,8 @@
     <div class="container" style="max-width: 900px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold text-white text-uppercase mb-1">Clientes</h3>
-                <p class="text-light-50 small mb-0">Listado de clientes registrados</p>
+                <h3 class="fw-bold text-white text-uppercase mb-1">Usuarios</h3>
+                <p class="text-light-50 small mb-0">Listado de usuarios registrados</p>
             </div>
             <a href="/admin" style="color: #00C16E;" class="fw-bold text-decoration-none small">
                 <i class="fa-solid fa-arrow-left me-1"></i> Volver al panel
@@ -82,12 +58,12 @@
         <div id="contenedor-clientes" class="d-flex flex-column gap-2">
             <div class="text-center py-5">
                 <div class="spinner-border text-success" role="status"></div>
-                <p class="text-light-50 mt-2 small">Cargando clientes...</p>
+                <p class="text-light-50 mt-2 small">Cargando usuarios...</p>
             </div>
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal Detalle -->
     <div class="modal fade" id="modalCliente" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-2">
@@ -99,7 +75,56 @@
                     <div id="modal-info"></div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" id="btn-editar-cliente" class="btn btn-sm fw-bold text-white" style="background-color: #0d6efd;">
+                        <i class="fa-solid fa-pen me-1"></i> Modificar
+                    </button>
+                    <button type="button" id="btn-eliminar-cliente" class="btn btn-sm fw-bold text-white" style="background-color: #ef4444;">
+                        <i class="fa-solid fa-trash me-1"></i> Dar de baja
+                    </button>
                     <button type="button" class="btn btn-sm text-white" style="background-color: #00C16E;" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar -->
+    <div class="modal fade" id="modalEditarCliente" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-2">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Modificar Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-editar-cliente">
+                        <input type="hidden" id="edit-id-usuario">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Nombre</label>
+                            <input type="text" id="edit-nombre" class="form-control bg-football-dark border-secondary text-white" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Apellido</label>
+                            <input type="text" id="edit-apellido" class="form-control bg-football-dark border-secondary text-white" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Email</label>
+                            <input type="email" id="edit-email" class="form-control bg-football-dark border-secondary text-white" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Teléfono</label>
+                            <input type="text" id="edit-telefono" class="form-control bg-football-dark border-secondary text-white">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Rol</label>
+                            <select id="edit-user-level" class="form-control bg-football-dark border-secondary text-white">
+                                <option value="cliente">Cliente</option>
+                                <option value="administrador">Administrador</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn w-100 py-2 fw-bold text-white" style="background-color: #00C16E !important;">
+                            Guardar Cambios
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

@@ -519,6 +519,29 @@ const eliminarCancha = async (req, res) => {
   }
 };
 
+const listarAdministradores = async (req, res) => {
+  try {
+    const sql = `
+      SELECT u.id_usuario, u.id_usuario AS id, u.username, u.user_level, u.nombre, u.apellido, u.email, u.dni, u.telefono, u.fecha_nacimiento, u.fecha_registro,
+             g.genero AS genero, pa.nombre AS nacionalidad,
+             d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia
+      FROM usuarios u
+      LEFT JOIN generos g ON u.id_genero = g.id_genero
+      LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais
+      LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion
+      LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad
+      LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad
+      LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia
+      WHERE u.user_level = 'administrador'
+      ORDER BY u.id_usuario ASC
+    `;
+    const admins = await db.query.all(sql);
+    res.json(admins);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar administradores', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -537,5 +560,6 @@ module.exports = {
   listarReservasPendientes,
   confirmarPagoEfectivo,
   listarCanchas,
-  eliminarCancha
+  eliminarCancha,
+  listarAdministradores
 };

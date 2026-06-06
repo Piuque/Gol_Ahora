@@ -100,12 +100,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
         
         try {
-            console.log("Datos a enviar:", datos);
-            const res = await fetch("/api/register", {
+            const userId = localStorage.getItem("userId");
+            const res = await fetch("/admin/usuarios/registrar", {
                 method: "POST",
-                headers: {
+                headers: { 
                     "Content-Type": "application/json",
-                    "plataform": "admin"
+                    "x-user-id": userId
                 },
                 credentials: "include",
                 body: JSON.stringify(datos)

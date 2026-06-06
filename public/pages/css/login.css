@@ -36,7 +36,7 @@
     }
 }
 
-css:root {
+:root {
     --sports-green: #00C16E;
     --sports-green-dark: #009A58;
 }
@@ -83,7 +83,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
 }
 
-css.suggestions {
+.suggestions {
     position: absolute;
     z-index: 1000;
     background-color: #0d1f33;
