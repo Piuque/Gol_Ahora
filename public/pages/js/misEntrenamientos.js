@@ -1,8 +1,3 @@
-/**
- * ARCHIVO DE PRODUCCIÓN STRICTO: misEntrenamientos.js
- * Cero mock data. Solo consume datos reales de /api/cliente/entrenamientos
- */
-
 let misEntrenamientosInscriptos = [];
 let catalogoEntrenamientosDisponibles = [];
 

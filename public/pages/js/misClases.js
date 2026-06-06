@@ -1,8 +1,3 @@
-/**
- * ARCHIVO DE PRODUCCIÓN STRICTO: misClases.js
- * Cero mock data. Solo consume datos reales de /api/cliente/clases
- */
-
 let misClasesInscriptas = [];
 let catalogoClasesDisponibles = [];
 
