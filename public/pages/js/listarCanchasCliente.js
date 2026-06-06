@@ -3,21 +3,13 @@
    ========================================================================== */
 
 const API = "https://gol-ahora.onrender.com";
-const USAR_MOCKS = false;
-
-// Mocks para pruebas sin servidor
-const MOCKS_CANCHAS = [
-    { id: 1, nombre: "Cancha 1 - La Bombonerita", categoria: "Fútbol 5", precio: 15000.00, imagen_url: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=800" },
-    { id: 2, nombre: "Cancha 2 - El Monumentalito", categoria: "Fútbol 5", precio: 15000.00, imagen_url: "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=800" },
-    { id: 3, nombre: "Cancha Techada VIP", categoria: "Fútbol 5", precio: 18500.00, imagen_url: "https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=800" }
-];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Obtener el ID del tipo de cancha desde la URL (ej: ?idTipo=1)
+    // 1. Obtener el ID del formato elegido desde la URL
     const urlParams = new URLSearchParams(window.location.search);
     const idTipoCancha = urlParams.get('idTipo');
 
-    // Si no hay ID, lo regresamos al paso 1 por seguridad
+    // Si entra a la página sin ID, lo devolvemos al Paso 1
     if (!idTipoCancha) {
         window.location.href = 'listarTiposCanchaCliente.html';
         return;
@@ -29,16 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 async function cargarCanchasFiltradas(idTipoCancha) {
     const contenedor = document.getElementById('contenedor-canchas');
 
-    if (USAR_MOCKS) {
-        setTimeout(() => {
-            renderizarTarjetas(MOCKS_CANCHAS);
-        }, 500);
-        return;
-    }
-
     try {
-        // Petición GET al endpoint con el query param (Ej: /api/cliente/canchas?idTipoCancha=1)
-        const response = await fetch(`${API}/api/cliente/canchas?idTipoCancha=${idTipoCancha}`, {
+        // Petición GET a la ruta específica por ID que me enviaste
+        const response = await fetch(`${API}/api/cliente/canchas/${idTipoCancha}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
             credentials: 'include'
@@ -71,9 +56,7 @@ function renderizarTarjetas(canchas) {
     contenedor.innerHTML = '';
 
     if (!canchas || canchas.length === 0) {
-        // Actualizar badge
         document.getElementById('badge-categoria').textContent = 'Sin resultados';
-
         contenedor.innerHTML = `
             <div class="w-100 text-center text-light-50 py-5">
                 <i class="fa-regular fa-folder-open fa-3x mb-3 opacity-50"></i>
@@ -83,16 +66,31 @@ function renderizarTarjetas(canchas) {
         return;
     }
 
-    // Actualizamos el badge con la categoría de la primera cancha encontrada
-    document.getElementById('badge-categoria').textContent = canchas[0].categoria || 'Modalidad Seleccionada';
+    // Actualizamos el badge leyendo el JSON exacto (tipo_cancha)
+    document.getElementById('badge-categoria').textContent = canchas[0].tipo_cancha || 'Modalidad Seleccionada';
 
     canchas.forEach(cancha => {
-        const imagenUrl = cancha.imagen_url ? cancha.imagen_url : 'https://images.unsplash.com/photo-1518605368461-1ee7c514baf1?q=80&w=800&auto=format&fit=crop';
 
-        // Formatear precio a moneda ARS
+        // ==========================================
+        // SOLUCIÓN PARA LA CARGA DE LA IMAGEN
+        // ==========================================
+        let imagenUrl = cancha.imagen_url;
+
+        // Si la URL arranca con "/" significa que es relativa. Le concatenamos la URL de Render.
+        if (imagenUrl && imagenUrl.startsWith('/')) {
+            imagenUrl = API + imagenUrl;
+        }
+        // Si viene vacía, nula o dice "string" (por culpa del Swagger), usamos la imagen default.
+        else if (!imagenUrl || imagenUrl === "string") {
+            imagenUrl = 'https://images.unsplash.com/photo-1518605368461-1ee7c514baf1?q=80&w=800&auto=format&fit=crop';
+        }
+        // ==========================================
+
+        // Mapeo seguro del precio basado en tu JSON
+        const precioNumero = parseFloat(cancha.precio_hora_reserva) || 0;
         const precioFormateado = new Intl.NumberFormat('es-AR', {
             style: 'currency', currency: 'ARS', minimumFractionDigits: 0
-        }).format(cancha.precio || 0);
+        }).format(precioNumero);
 
         const cardHTML = `
             <div class="cancha-card" onclick="avanzarPaso(${cancha.id})">
@@ -105,7 +103,7 @@ function renderizarTarjetas(canchas) {
                 <div class="p-4 d-flex flex-column flex-grow-1">
                     
                     <h5 class="fw-bold text-white mb-1" style="font-size: 1.15rem; line-height: 1.3;">${cancha.nombre}</h5>
-                    <p class="text-light-50 small mb-4"><i class="fa-solid fa-layer-group text-sports me-2"></i>Formato: ${cancha.categoria}</p>
+                    <p class="text-light-50 small mb-4"><i class="fa-solid fa-layer-group text-sports me-2"></i>Formato: ${cancha.tipo_cancha}</p>
                     
                     <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex flex-column gap-3">
                         <div class="d-flex justify-content-between align-items-center">
