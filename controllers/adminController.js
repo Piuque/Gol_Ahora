@@ -614,6 +614,173 @@ const eliminarEntrenador = async (req, res) => {
   }
 };
 
+
+const crearTipoCancha = async (req, res) => {
+  const { tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max, id_superficie } = req.body;
+  try {
+    const sql = `INSERT INTO tipos_de_cancha (tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max, id_superficie)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id_tipo_de_cancha`;
+    const result = await db.query.run(sql, [tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max, id_superficie || 1]);
+    res.status(201).json({ message: 'Tipo de cancha creado', id: result.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al crear tipo de cancha', message: err.message });
+  }
+};
+
+const listarTiposCanchas = async (req, res) => {
+  try {
+    const rows = await db.query.all(`SELECT id_tipo_de_cancha AS id, tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max FROM tipos_de_cancha ORDER BY id_tipo_de_cancha ASC`);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar tipos de cancha', message: err.message });
+  }
+};
+
+const obtenerTipoCancha = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const row = await db.query.get(`SELECT id_tipo_de_cancha AS id, tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max FROM tipos_de_cancha WHERE id_tipo_de_cancha = $1`, [id]);
+    if (!row) return res.status(404).json({ error: 'Tipo de cancha no encontrado' });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener tipo de cancha', message: err.message });
+  }
+};
+
+const modificarTipoCancha = async (req, res) => {
+  const { id } = req.params;
+  const { tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max } = req.body;
+  try {
+    await db.query.run(`UPDATE tipos_de_cancha SET tipo_cancha=$1, ancho=$2, largo=$3, capacidad=$4, duracion_min=$5, duracion_max=$6 WHERE id_tipo_de_cancha=$7`,
+      [tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max, id]);
+    res.json({ message: 'Tipo de cancha modificado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar tipo de cancha', message: err.message });
+  }
+};
+
+const eliminarTipoCancha = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    const canchas = await db.query.all('SELECT id_cancha FROM canchas WHERE id_tipo_de_cancha = $1', [id]);
+    for (const c of canchas) {
+      await db.pool.query('DELETE FROM reservas WHERE id_cancha = $1', [c.id_cancha]);
+      await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_cancha = $1', [c.id_cancha]);
+      await db.pool.query('DELETE FROM canchas WHERE id_cancha = $1', [c.id_cancha]);
+    }
+    await db.pool.query('DELETE FROM tipos_de_cancha WHERE id_tipo_de_cancha = $1', [id]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar tipo de cancha', message: err.message });
+  }
+};
+
+const obtenerCancha = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const row = await db.query.get(`SELECT can.id_cancha AS id, can.nombre, can.precio_hora_reserva, can.tiempo_cancelacion, tc.tipo_cancha, tc.id_tipo_de_cancha
+                                    FROM canchas can LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
+                                    WHERE can.id_cancha = $1`, [id]);
+    if (!row) return res.status(404).json({ error: 'Cancha no encontrada' });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener cancha', message: err.message });
+  }
+};
+
+const modificarCancha = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, precio_hora_reserva, tiempo_cancelacion } = req.body;
+  try {
+    await db.query.run(`UPDATE canchas SET nombre=$1, precio_hora_reserva=$2, tiempo_cancelacion=$3 WHERE id_cancha=$4`,
+      [nombre, precio_hora_reserva, tiempo_cancelacion, id]);
+    res.json({ message: 'Cancha modificada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar cancha', message: err.message });
+  }
+};
+
+const listarReservas = async (req, res) => {
+  try {
+    const sql = `
+      SELECT r.id_reserva AS id, u.nombre AS cliente_nombre, u.apellido AS cliente_apellido,
+             u.email AS cliente_email, can.nombre AS cancha,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             c.monto, mp.nombre AS metodo_pago, ec.estado AS estado_cobro
+      FROM reservas r
+      INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
+      INNER JOIN canchas can ON r.id_cancha = can.id_cancha
+      INNER JOIN ocupaciones_cancha oc ON r.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      INNER JOIN cobros c ON r.id_cobro = c.id_cobro
+      INNER JOIN metodos_de_pago mp ON c.id_metodo_de_pago = mp.id_metodo_de_pago
+      INNER JOIN estados_cobro ec ON c.id_estado_cobro = ec.id_estado_cobro
+      ORDER BY oc.fecha DESC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar reservas', message: err.message });
+  }
+};
+
+const modificarReserva = async (req, res) => {
+  const { id } = req.params;
+  const { fecha, hora_inicio, hora_fin } = req.body;
+  try {
+    const reserva = await db.query.get('SELECT id_ocupacion_cancha FROM reservas WHERE id_reserva = $1', [id]);
+    if (!reserva) return res.status(404).json({ error: 'Reserva no encontrada' });
+    await db.query.run('UPDATE ocupaciones_cancha SET fecha=$1, hora_inicio=$2, hora_fin=$3 WHERE id_ocupacion_cancha=$4',
+      [fecha, hora_inicio, hora_fin, reserva.id_ocupacion_cancha]);
+    res.json({ message: 'Reserva modificada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar reserva', message: err.message });
+  }
+};
+
+const eliminarReserva = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    const r = await db.query.get('SELECT id_ocupacion_cancha, id_cobro FROM reservas WHERE id_reserva = $1', [id]);
+    if (!r) { await db.pool.query('ROLLBACK'); return res.status(404).json({ error: 'Reserva no encontrada' }); }
+    await db.pool.query('DELETE FROM reservas WHERE id_reserva = $1', [id]);
+    await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = $1', [r.id_ocupacion_cancha]);
+    await db.pool.query('DELETE FROM cobros WHERE id_cobro = $1', [r.id_cobro]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar reserva', message: err.message });
+  }
+};
+
+const listarCertificaciones = async (req, res) => {
+  const { id_usuario } = req.params;
+  try {
+    const rows = await db.query.all(`SELECT id_certificacion AS id, matricula, DATE_FORMAT(fecha_caducidad, '%Y-%m-%d') AS fecha_caducidad, link_archivo, validada
+                                     FROM certificaciones WHERE id_usuario = $1`, [id_usuario]);
+    res.json(rows || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar certificaciones', message: err.message });
+  }
+};
+
+const validarCertificacion = async (req, res) => {
+  const { id } = req.params;
+  const { validada } = req.body;
+  try {
+    await db.query.run('UPDATE certificaciones SET validada=$1 WHERE id_certificacion=$2', [validada, id]);
+    res.json({ message: validada ? 'Certificacion validada' : 'Certificacion marcada como pendiente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al validar certificacion', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -640,4 +807,17 @@ module.exports = {
   obtenerEntrenador,
   modificarEntrenador,
   eliminarEntrenador,
+  crearTipoCancha,
+  listarTiposCanchas,
+  obtenerTipoCancha,
+  modificarTipoCancha,
+  eliminarTipoCancha,
+  obtenerCancha,
+  modificarCancha,
+  listarReservas,
+  modificarReserva,
+  eliminarReserva,
+  listarCertificaciones,
+  validarCertificacion,
+
 };

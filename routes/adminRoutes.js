@@ -52,4 +52,26 @@ router.get('/entrenadores/:id', adminController.obtenerEntrenador);
 router.put('/entrenadores/:id', adminController.modificarEntrenador);
 router.delete('/entrenadores/:id', adminController.eliminarEntrenador);
 
+// Tipos de cancha
+router.post('/tipos-cancha', adminController.crearTipoCancha);
+router.get('/tipos-cancha', adminController.listarTiposCanchas);
+router.get('/tipos-cancha/:id', adminController.obtenerTipoCancha);
+router.put('/tipos-cancha/:id', adminController.modificarTipoCancha);
+router.delete('/tipos-cancha/:id', adminController.eliminarTipoCancha);
+
+// Canchas CRUD completo
+router.get('/canchas/:id', adminController.obtenerCancha);
+router.put('/canchas/:id', adminController.modificarCancha);
+
+// Reservas admin
+router.get('/reservas', adminController.listarReservas);
+router.put('/reservas/:id', adminController.modificarReserva);
+router.delete('/reservas/:id', adminController.eliminarReserva);
+
+// Certificaciones
+router.get('/certificaciones/:id_usuario', adminController.listarCertificaciones);
+router.put('/certificaciones/:id/validar', adminController.validarCertificacion);
+
+
+
 module.exports = router;
