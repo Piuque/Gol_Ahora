@@ -781,6 +781,252 @@ const validarCertificacion = async (req, res) => {
   }
 };
 
+const crearClase = async (req, res) => {
+  const { nombre, capacidad_max, id_profesional, id_cancha, fecha, hora_inicio, hora_fin } = req.body;
+  try {
+    await db.pool.query('BEGIN');
+    const ocupacionSql = `INSERT INTO ocupaciones_cancha (fecha, hora_inicio, hora_fin, id_tipo_ocupacion, id_cancha)
+                          VALUES ($1, $2, $3, 2, $4) RETURNING id_ocupacion_cancha`;
+    const ocupacion = await db.pool.query(ocupacionSql, [fecha, hora_inicio, hora_fin, id_cancha]);
+    const id_ocupacion = ocupacion.rows[0].id_ocupacion_cancha;
+    const claseSql = `INSERT INTO clases (nombre, capacidad_max, id_profesional, id_cancha, id_ocupacion_cancha)
+                      VALUES ($1, $2, $3, $4, $5) RETURNING id_clase`;
+    const clase = await db.pool.query(claseSql, [nombre, capacidad_max, id_profesional, id_cancha, id_ocupacion]);
+    await db.pool.query('COMMIT');
+    res.status(201).json({ message: 'Clase creada correctamente', id: clase.rows[0].id_clase });
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al crear clase', message: err.message });
+  }
+};
+
+const listarClases = async (req, res) => {
+  try {
+    const sql = `
+      SELECT c.id_clase AS id, c.nombre, c.capacidad_max,
+             u.nombre || ' ' || u.apellido AS profesor,
+             can.nombre AS cancha,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos
+      FROM clases c
+      LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
+      LEFT JOIN canchas can ON c.id_cancha = can.id_cancha
+      LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      ORDER BY oc.fecha DESC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar clases', message: err.message });
+  }
+};
+
+const obtenerClase = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const sql = `
+      SELECT c.id_clase AS id, c.nombre, c.capacidad_max,
+             u.nombre || ' ' || u.apellido AS profesor, c.id_profesional,
+             can.nombre AS cancha, c.id_cancha,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos
+      FROM clases c
+      LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
+      LEFT JOIN canchas can ON c.id_cancha = can.id_cancha
+      LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE c.id_clase = $1
+    `;
+    const row = await db.query.get(sql, [id]);
+    if (!row) return res.status(404).json({ error: 'Clase no encontrada' });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener clase', message: err.message });
+  }
+};
+
+const modificarClase = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, capacidad_max, id_profesional } = req.body;
+  try {
+    await db.query.run(`UPDATE clases SET nombre=$1, capacidad_max=$2, id_profesional=$3 WHERE id_clase=$4`,
+      [nombre, capacidad_max, id_profesional, id]);
+    res.json({ message: 'Clase modificada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar clase', message: err.message });
+  }
+};
+
+const eliminarClase = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    const clase = await db.query.get('SELECT id_ocupacion_cancha FROM clases WHERE id_clase = $1', [id]);
+    if (!clase) { await db.pool.query('ROLLBACK'); return res.status(404).json({ error: 'Clase no encontrada' }); }
+    await db.pool.query('DELETE FROM clientes_clases WHERE id_clase = $1', [id]);
+    await db.pool.query('DELETE FROM clases WHERE id_clase = $1', [id]);
+    await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = $1', [clase.id_ocupacion_cancha]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar clase', message: err.message });
+  }
+};
+
+const asignarClaseParticular = async (req, res) => {
+  const { id_cliente, id_clase } = req.body;
+  try {
+    await db.query.run('INSERT INTO clientes_clases (id_cliente, id_clase) VALUES ($1, $2)', [id_cliente, id_clase]);
+    res.status(201).json({ message: 'Cliente asignado a la clase correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al asignar cliente a clase', message: err.message });
+  }
+};
+
+const registrarAsistenciaClase = async (req, res) => {
+  const { id } = req.params;
+  const { id_cliente, estado } = req.body;
+  try {
+    const asistencia = await db.query.run(
+      `INSERT INTO asistencias (estado) VALUES ($1) RETURNING id_asistencia`, [estado]
+    );
+    await db.query.run(
+      `UPDATE clientes_clases SET id_asistencia = $1 WHERE id_clase = $2 AND id_cliente = $3`,
+      [asistencia.id, id, id_cliente]
+    );
+    res.json({ message: 'Asistencia registrada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar asistencia', message: err.message });
+  }
+};
+
+const crearEntrenamiento = async (req, res) => {
+  const { capacidad_max, id_profesional, id_cancha, fecha, hora_inicio, hora_fin } = req.body;
+  try {
+    await db.pool.query('BEGIN');
+    const ocupacionSql = `INSERT INTO ocupaciones_cancha (fecha, hora_inicio, hora_fin, id_tipo_ocupacion, id_cancha)
+                          VALUES ($1, $2, $3, 3, $4) RETURNING id_ocupacion_cancha`;
+    const ocupacion = await db.pool.query(ocupacionSql, [fecha, hora_inicio, hora_fin, id_cancha]);
+    const id_ocupacion = ocupacion.rows[0].id_ocupacion_cancha;
+    const entSql = `INSERT INTO entrenamientos (capacidad_max, id_profesional, id_cancha, id_ocupacion_cancha)
+                    VALUES ($1, $2, $3, $4) RETURNING id_entrenamiento`;
+    const ent = await db.pool.query(entSql, [capacidad_max, id_profesional, id_cancha, id_ocupacion]);
+    await db.pool.query('COMMIT');
+    res.status(201).json({ message: 'Entrenamiento creado correctamente', id: ent.rows[0].id_entrenamiento });
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al crear entrenamiento', message: err.message });
+  }
+};
+
+const listarEntrenamientos = async (req, res) => {
+  try {
+    const sql = `
+      SELECT e.id_entrenamiento AS id, e.capacidad_max,
+             u.nombre || ' ' || u.apellido AS entrenador,
+             can.nombre AS cancha,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos
+      FROM entrenamientos e
+      LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
+      LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+      LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      ORDER BY oc.fecha DESC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar entrenamientos', message: err.message });
+  }
+};
+
+const obtenerEntrenamiento = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const sql = `
+      SELECT e.id_entrenamiento AS id, e.capacidad_max,
+             u.nombre || ' ' || u.apellido AS entrenador, e.id_profesional,
+             can.nombre AS cancha, e.id_cancha,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos
+      FROM entrenamientos e
+      LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
+      LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+      LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE e.id_entrenamiento = $1
+    `;
+    const row = await db.query.get(sql, [id]);
+    if (!row) return res.status(404).json({ error: 'Entrenamiento no encontrado' });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener entrenamiento', message: err.message });
+  }
+};
+
+const modificarEntrenamiento = async (req, res) => {
+  const { id } = req.params;
+  const { capacidad_max, id_profesional } = req.body;
+  try {
+    await db.query.run(`UPDATE entrenamientos SET capacidad_max=$1, id_profesional=$2 WHERE id_entrenamiento=$3`,
+      [capacidad_max, id_profesional, id]);
+    res.json({ message: 'Entrenamiento modificado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar entrenamiento', message: err.message });
+  }
+};
+
+const eliminarEntrenamiento = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    const ent = await db.query.get('SELECT id_ocupacion_cancha FROM entrenamientos WHERE id_entrenamiento = $1', [id]);
+    if (!ent) { await db.pool.query('ROLLBACK'); return res.status(404).json({ error: 'Entrenamiento no encontrado' }); }
+    await db.pool.query('DELETE FROM clientes_entrenamientos WHERE id_entrenamiento = $1', [id]);
+    await db.pool.query('DELETE FROM entrenamientos WHERE id_entrenamiento = $1', [id]);
+    await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = $1', [ent.id_ocupacion_cancha]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar entrenamiento', message: err.message });
+  }
+};
+
+const asignarEntrenamientoParticular = async (req, res) => {
+  const { id_cliente, id_entrenamiento } = req.body;
+  try {
+    await db.query.run('INSERT INTO clientes_entrenamientos (id_cliente, id_entrenamiento) VALUES ($1, $2)', [id_cliente, id_entrenamiento]);
+    res.status(201).json({ message: 'Cliente asignado al entrenamiento correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al asignar cliente a entrenamiento', message: err.message });
+  }
+};
+
+const registrarAsistenciaEntrenamiento = async (req, res) => {
+  const { id } = req.params;
+  const { id_cliente, estado } = req.body;
+  try {
+    const asistencia = await db.query.run(
+      `INSERT INTO asistencias (estado) VALUES ($1) RETURNING id_asistencia`, [estado]
+    );
+    await db.query.run(
+      `UPDATE clientes_entrenamientos SET id_asistencia = $1 WHERE id_entrenamiento = $2 AND id_cliente = $3`,
+      [asistencia.id, id, id_cliente]
+    );
+    res.json({ message: 'Asistencia registrada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar asistencia', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -819,5 +1065,19 @@ module.exports = {
   eliminarReserva,
   listarCertificaciones,
   validarCertificacion,
+  crearClase,
+  listarClases,
+  obtenerClase,
+  modificarClase,
+  eliminarClase,
+  asignarClaseParticular,
+  registrarAsistenciaClase,
+  crearEntrenamiento,
+  listarEntrenamientos,
+  obtenerEntrenamiento,
+  modificarEntrenamiento,
+  eliminarEntrenamiento,
+  asignarEntrenamientoParticular,
+  registrarAsistenciaEntrenamiento,
 
 };
