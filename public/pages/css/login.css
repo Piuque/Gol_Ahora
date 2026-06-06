@@ -1,0 +1,115 @@
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    border-radius: 16px;
+    background-color: #0A2540; /* Fondo Integrado */
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.input-group-text {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-control {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.form-control:focus {
+    background-color: #071524;
+    border-color: var(--sports-green);
+    color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 193, 110, 0.25);
+}
+
+
+.form-check-input:checked {
+    background-color: var(--sports-green);
+    border-color: var(--sports-green);
+}
+
+/* Modificaciones estructurales adaptivas para portátiles chicos */
+@media (max-width: 576px) {
+    .login-card {
+        box-shadow: none !important;
+        background: transparent;
+        border: none !important;
+    }
+}
+
+css:root {
+    --sports-green: #00C16E;
+    --sports-green-dark: #009A58;
+}
+
+.btn-sports {
+    background-color: var(--sports-green);
+    border-color: var(--sports-green);
+    color: #ffffff;
+}
+
+.btn-sports:hover {
+    background-color: var(--sports-green-dark);
+    border-color: var(--sports-green-dark);
+    color: #ffffff;
+}
+
+.text-sports {
+    color: var(--sports-green) !important;
+}
+
+.bg-football-dark {
+    background-color: #071524 !important;
+}
+
+.text-light-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+select {
+    background-color: #0d1f33 !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+input::placeholder {
+    color: rgba(255, 255, 255, 0.35) !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+css.suggestions {
+    position: absolute;
+    z-index: 1000;
+    background-color: #0d1f33;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    width: 100%;
+    max-height: 180px;
+    overflow-y: auto;
+    margin-top: 2px;
+}
+
+.suggestions div {
+    padding: 8px 12px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.suggestions div:hover {
+    background-color: #00C16E;
+    color: #ffffff;
+}
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-size: 0.9rem;
+}
