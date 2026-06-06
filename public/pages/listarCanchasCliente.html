@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gol Ahora - Fecha y Hora</title>
+    <title>Gol Ahora - Elegir Cancha</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,13 +15,13 @@
             background-color: #071524 !important;
         }
 
-        /* Barra de Progreso (Pasos 1 y 2 completados, Paso 3 activo) */
+        /* Barra de Progreso Actualizada (Paso 1 completado, Paso 2 activo) */
         .stepper-container {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         .step {
             width: 32px;
@@ -48,74 +48,107 @@
             color: rgba(255, 255, 255, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .step-line { height: 2px; width: 30px; background-color: rgba(255, 255, 255, 0.1); }
-        .step-line.completed { background-color: #00C16E; }
-
-        /* Estilo del input de fecha Premium */
-        .date-picker-dark {
-            background-color: #0A2540;
-            border: 1px solid rgba(0, 193, 110, 0.3);
-            color: #fff;
-            padding: 12px 15px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            width: 100%;
-            transition: all 0.3s;
-            color-scheme: dark; /* Hace que el calendario nativo sea oscuro */
+        .step-line {
+            height: 2px;
+            width: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
         }
-        .date-picker-dark:focus {
-            outline: none;
-            border-color: #00C16E;
-            box-shadow: 0 0 10px rgba(0, 193, 110, 0.2);
-        }
-
-        /* Píldoras de Horarios */
-        .hora-pill {
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #e2e8f0;
-            border-radius: 8px;
-            padding: 12px 0;
-            text-align: center;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        .hora-pill:hover {
-            background-color: rgba(0, 193, 110, 0.1);
-            border-color: rgba(0, 193, 110, 0.4);
-            color: #00C16E;
-        }
-        .hora-pill.selected {
+        .step-line.completed {
             background-color: #00C16E;
-            border-color: #00C16E;
-            color: #071524;
-            font-weight: 700;
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 193, 110, 0.3);
         }
-        .hora-pill.disabled {
-            background-color: rgba(255, 255, 255, 0.02);
-            color: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.05);
-            cursor: not-allowed;
-            text-decoration: line-through;
+
+        /* Carrusel Horizontal */
+        .scroll-horizontal {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding-bottom: 2rem;
+            padding-top: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: #00C16E #0A2540;
+        }
+        .scroll-horizontal::-webkit-scrollbar { height: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-track { background: rgba(10, 37, 64, 0.5); border-radius: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-thumb { background: #00C16E; border-radius: 10px; }
+
+        /* Tarjetas Calculadas Matemáticamente */
+        .cancha-card {
+            background-color: var(--bg-navy, #0A2540);
+            border: 1px solid rgba(0, 193, 110, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
+            cursor: pointer;
+
+            flex: 0 0 auto;
+            width: 85%; /* Móviles */
+        }
+
+        @media (min-width: 768px) {
+            .cancha-card {
+                flex: 0 0 calc((100% - 3rem) / 3); /* 3 Tarjetas exactas */
+                width: calc((100% - 3rem) / 3);
+            }
+        }
+
+        .cancha-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 193, 110, 0.15) !important;
+            border-color: rgba(0, 193, 110, 0.4);
+        }
+
+        .img-wrapper {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            overflow: hidden;
+            background-color: #040d17;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .cancha-card:hover .img-wrapper img { transform: scale(1.05); }
+        .img-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(10, 37, 64, 0.1) 0%, #0A2540 100%);
+        }
+
+        /* Badge de Precio destacado */
+        .precio-badge {
+            background: rgba(0, 193, 110, 0.15);
+            border: 1px solid rgba(0, 193, 110, 0.3);
+            color: #00C16E;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
     </style>
 </head>
 <body class="py-5 px-3">
 
-<div class="container mx-auto" style="max-width: 800px; min-height: 75vh; display: flex; flex-direction: column;">
+<div class="container mx-auto" style="max-width: 950px; min-height: 75vh; display: flex; flex-direction: column; justify-content: center;">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-50">
-        <a href="javascript:window.history.back();" class="fw-bold text-decoration-none text-sports mb-3 mb-md-0">
-            <i class="fa-solid fa-arrow-left me-2"></i> Volver a Canchas
+        <a href="listarTiposCanchaCliente.html" class="fw-bold text-decoration-none text-sports mb-3 mb-md-0">
+            <i class="fa-solid fa-arrow-left me-2"></i> Cambiar Formato
         </a>
 
         <div class="text-center">
             <h3 class="fw-bold text-white text-uppercase mb-0">
-                <i class="fa-regular fa-clock me-2 text-sports"></i>Día y Hora
+                <i class="fa-solid fa-map-pin me-2 text-sports"></i>Elegir Cancha
             </h3>
         </div>
 
@@ -125,46 +158,31 @@
     <div class="stepper-container">
         <div class="step completed"><i class="fa-solid fa-check"></i></div>
         <div class="step-line completed"></div>
-        <div class="step completed"><i class="fa-solid fa-check"></i></div>
-        <div class="step-line completed"></div>
-        <div class="step active">3</div>
+        <div class="step active">2</div>
+        <div class="step-line"></div>
+        <div class="step inactive">3</div>
         <div class="step-line"></div>
         <div class="step inactive">4</div>
     </div>
 
-    <div class="bg-navy p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg flex-grow-1 d-flex flex-column" style="background-color: #0A2540;">
+    <div class="d-flex justify-content-between align-items-end mb-2">
+        <p class="text-light-50 small mb-0">
+            <i class="fa-solid fa-arrows-left-right me-2 text-sports"></i>Canchas disponibles para la modalidad elegida:
+        </p>
+        <span class="badge bg-secondary text-white fw-medium px-2 py-1" id="badge-categoria">Filtrando...</span>
+    </div>
 
-        <div class="mb-4">
-            <label class="form-label text-light-50 small fw-bold text-uppercase" style="letter-spacing: 1px;">1. Seleccioná la Fecha</label>
-            <input type="date" id="input-fecha" class="date-picker-dark">
+    <div id="contenedor-canchas" class="scroll-horizontal">
+        <div class="w-100 text-center py-5">
+            <div class="spinner-border text-sports" role="status"></div>
+            <p class="text-light-50 mt-2 small">Buscando canchas...</p>
         </div>
-
-        <div class="flex-grow-1">
-            <label class="form-label text-light-50 small fw-bold text-uppercase d-flex justify-content-between" style="letter-spacing: 1px;">
-                <span>2. Horarios Disponibles</span>
-                <span id="duracion-reserva" class="text-sports"><i class="fa-solid fa-stopwatch me-1"></i>1 Hora</span>
-            </label>
-
-            <div id="contenedor-horarios" class="row g-3 mt-1">
-                <div class="col-12 text-center py-4" id="mensaje-inicial">
-                    <i class="fa-regular fa-calendar-days fa-3x text-light-50 opacity-50 mb-3"></i>
-                    <p class="text-light-50 mb-0">Elegí un día para ver los turnos libres.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 d-none" id="contenedor-continuar">
-            <button id="btn-continuar" class="btn btn-sports w-100 py-3 fw-bold fs-5 shadow">
-                Ir al Pago Confirmatorio <i class="fa-solid fa-arrow-right ms-2"></i>
-            </button>
-        </div>
-
     </div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="js/seleccionarFechaHora.js"></script>
+<script src="js/listarCanchasCliente.js"></script>
 </body>
 </html>
