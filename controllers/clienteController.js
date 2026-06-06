@@ -318,6 +318,54 @@ const consultarDisponibilidadCanchaEspecifica = async (req, res) => {
   }
 };
 
+// GET /cliente/canchas/:id/ocupaciones (Consultar ocupaciones de cancha específica por fecha)
+const consultarOcupacionesCanchaEspecifica = async (req, res) => {
+  const { id } = req.params;
+  const { fecha } = req.query;
+
+  if (!fecha) {
+    return res.status(400).json({ error: 'Se requiere el parámetro "fecha" en formato YYYY-MM-DD' });
+  }
+
+  try {
+    const sqlOcupaciones = `
+      SELECT 
+        oc.id_ocupacion_cancha AS id_ocupacion,
+        to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio, 
+        to_char(oc.hora_fin, 'HH24:MI') AS hora_fin, 
+        oc.id_tipo_ocupacion,
+        toc.tipo_ocupacion AS tipo,
+        COALESCE(
+          u_res.nombre || ' ' || u_res.apellido,
+          clase.nombre,
+          'Entrenamiento',
+          de.motivo,
+          toc.tipo_ocupacion
+        ) AS detalle
+      FROM ocupaciones_cancha oc
+      LEFT JOIN tipos_de_ocupaciones toc ON oc.id_tipo_ocupacion = toc.id_tipo_ocupacion
+      LEFT JOIN reservas r ON oc.id_ocupacion_cancha = r.id_ocupacion_cancha
+      LEFT JOIN usuarios u_res ON r.id_usuario = u_res.id_usuario
+      LEFT JOIN clases clase ON oc.id_ocupacion_cancha = clase.id_ocupacion_cancha
+      LEFT JOIN entrenamientos ent ON oc.id_ocupacion_cancha = ent.id_ocupacion_cancha
+      LEFT JOIN disponibilidad_excepciones de ON (oc.id_cancha = de.id_cancha AND oc.fecha = de.dia AND oc.hora_inicio = de.hora_inicio)
+      WHERE oc.id_cancha = $1 AND oc.fecha = $2
+      ORDER BY oc.hora_inicio ASC
+    `;
+    const ocupaciones = await db.query.all(sqlOcupaciones, [id, fecha]);
+
+    res.json(ocupaciones.map(oc => ({
+      id_ocupacion: oc.id_ocupacion,
+      hora_inicio: oc.hora_inicio,
+      hora_fin: oc.hora_fin,
+      tipo: oc.tipo,
+      detalle: oc.detalle
+    })));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar ocupaciones de la cancha', message: err.message });
+  }
+};
+
 // POST /cliente/reservas
 const realizarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
@@ -812,6 +860,7 @@ module.exports = {
   listarCanchasClientePorTipo,
   listarTiposCanchaCliente,
   consultarDisponibilidadCanchaEspecifica,
+  consultarOcupacionesCanchaEspecifica,
   realizarReserva,
   listarReservasCliente,
   listarClasesCliente,

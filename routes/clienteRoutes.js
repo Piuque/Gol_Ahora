@@ -17,6 +17,7 @@ router.put('/perfil', clienteController.modificarPerfil);
 router.get('/canchas', clienteController.listarCanchasCliente);
 router.get('/canchas/:id', clienteController.listarCanchasClientePorTipo);
 router.get('/canchas/:id/disponibilidad', clienteController.consultarDisponibilidadCanchaEspecifica);
+router.get('/canchas/:id/ocupaciones', clienteController.consultarOcupacionesCanchaEspecifica);
 router.get('/tipos_canchas', clienteController.listarTiposCanchaCliente);
 router.post('/reservas', clienteController.realizarReserva);
 router.get('/reservas', clienteController.listarReservasCliente);

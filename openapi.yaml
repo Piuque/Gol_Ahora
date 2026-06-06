@@ -695,6 +695,53 @@ paths:
         '401':
           description: No autorizado
 
+  /cliente/canchas/{id}/ocupaciones:
+    get:
+      tags:
+        - Gestión de Canchas
+      summary: Consultar las ocupaciones detalladas de una cancha específica para una fecha
+      operationId: consultarOcupacionesCanchaEspecifica
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la cancha
+        - name: fecha
+          in: query
+          required: true
+          description: Fecha a consultar (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista de ocupaciones de la cancha para la fecha
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_ocupacion:
+                      type: integer
+                    hora_inicio:
+                      type: string
+                    hora_fin:
+                      type: string
+                    tipo:
+                      type: string
+                    detalle:
+                      type: string
+        '400':
+          description: Parámetro fecha requerido
+        '404':
+          description: Cancha no encontrada
+        '401':
+          description: No autorizado
+
   /cliente/tipos_canchas:
     get:
       tags:
