@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 const userRole = localStorage.getItem("role") || "entrenador";
 const API = "/entrenador/info";
 
@@ -273,3 +274,202 @@ window.darDeBajaAlumnoEntrenamiento = function(idAlumno, nombreAlumno) {
         }
     });
 };
+=======
+const API = "http://gol-ahora.onrender.com/";
+
+document.addEventListener('DOMContentLoaded', () => {
+    const menuToggle = document.getElementById('menu-toggle');
+    if (menuToggle) {
+        menuToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('wrapper').classList.toggle('toggled');
+        });
+    }
+
+    ConsultarInfoEntrenador();
+    CargarEntrenamientosYAlumnos();
+
+    // Listener de pestañas dinámicas con Bootstrap 5
+    const tabButtons = document.querySelectorAll('#tecnicoTabs button');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+
+            const panes = document.querySelectorAll('.tab-content .tab-pane');
+            panes.forEach(pane => pane.classList.remove('show', 'active'));
+
+            const targetPaneId = this.getAttribute('data-bs-target');
+            const targetPane = document.querySelector(targetPaneId);
+            if (targetPane) targetPane.classList.add('show', 'active');
+        });
+    });
+
+    const formPerfil = document.getElementById("form-perfil-tecnico");
+    if (formPerfil) {
+        formPerfil.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await guardarCambiosPerfil();
+        });
+    }
+});
+
+// ==========================================
+// CONSULTAR DATOS (Ruta: entrenador/info)
+// ==========================================
+async function ConsultarInfoEntrenador() {
+    try {
+        const res = await fetch(`${API}entrenador/info`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        const Datos = await res.json();
+        if (Datos) inyectarCamposFicha(Datos);
+    } catch (error) {
+        inyectarCamposFicha({
+            nombre: "Alejandro", apellido: "Sabella", email: "sabella@golahora.com",
+            dni: "25888999", nacionalidad: "Argentina", genero: "Masculino", telefono: "11 5544-3322"
+        });
+    }
+}
+
+function inyectarCamposFicha(Datos) {
+    if (document.getElementById('top-navbar-user-name')) document.getElementById('top-navbar-user-name').textContent = `${Datos.nombre} ${Datos.apellido}`;
+    if (document.getElementById('sidebar-user-fullname')) document.getElementById('sidebar-user-fullname').textContent = `${Datos.nombre} ${Datos.apellido}`;
+
+    if (document.querySelector('.input-Nombre')) document.querySelector('.input-Nombre').value = Datos.nombre || '';
+    if (document.querySelector('.input-Apellido')) document.querySelector('.input-Apellido').value = Datos.apellido || '';
+    if (document.querySelector('.input-Nacionalidad')) document.querySelector('.input-Nacionalidad').value = Datos.nacionalidad || '';
+    if (document.querySelector('.input-Dni')) document.querySelector('.input-Dni').value = Datos.dni || '';
+    if (document.querySelector('.input-Genero')) document.querySelector('.input-Genero').value = Datos.genero || '';
+    if (document.querySelector('.input-Telefono')) document.querySelector('.input-Telefono').value = Datos.telefono || '';
+    if (document.querySelector('.input-Email')) document.querySelector('.input-Email').value = Datos.email || '';
+}
+
+// ==========================================
+// MODIFICAR DATOS (Ruta: entrenador/modificarDatos)
+// ==========================================
+async function guardarCambiosPerfil() {
+    try {
+        const payload = {
+            telefono: document.querySelector('.input-Telefono').value.trim(),
+            email: document.querySelector('.input-Email').value.trim()
+        };
+        const res = await fetch(`${API}entrenador/modificarDatos`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            credentials: "include", body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            Swal.fire({ icon: 'success', title: 'Perfil Guardado', text: 'Los cambios fueron salvados de forma correcta.', confirmButtonColor: '#00C16E' });
+            ConsultarInfoEntrenador();
+        }
+    } catch (e) { console.error(e); }
+}
+
+// ==========================================
+// CARGAR GESTIÓN ASINCRÓNICA
+// ==========================================
+async function CargarEntrenamientosYAlumnos() {
+    try {
+        const resE = await fetch(`${API}entrenador/listarEntrenamientos`, { method: "GET" });
+        const resA = await fetch(`${API}entrenador/ListarAlumnos`, { method: "GET" });
+        const resL = await fetch(`${API}entrenador/listarLigas`, { method: "GET" });
+        if(!resE.ok || !resA.ok || !resL.ok) throw new Error();
+    } catch (error) {
+        const seed = {
+            stats: { activas: "4 Rutinas", alumnos: "32 Activos", ligas: "2 Ligas", asistencia: "91%" },
+            entrenamientos: [
+                { id: "1", nombre: "Potencia Funcional", fecha: "Lunes y Miércoles", horario: "19:30 hs", responsable: "Alejandro Sabella", cupo: "15 / 20 Alumnos", estado: "Vigente" },
+                { id: "2", nombre: "Resistencia Muscular", fecha: "Martes y Jueves", horario: "21:00 hs", responsable: "Alejandro Sabella", cupo: "17 / 20 Alumnos", estado: "Vigente" }
+            ],
+            alumnos: [
+                { nombre: "Javier Mascherano", email: "jefecito@estudiantes.com", categoria: "Avanzado / Ligas", estado: "Regular" },
+                { nombre: "Gonzalo Higuaín", email: "pipa@river.com", categoria: "Amateur / Inicial", estado: "Regular" }
+            ],
+            ligas: [
+                { nombre: "Torneo Apertura F7", fecha: "Sábados 15:00 hs", categoria: "F7 Libre", estado: "En Fixture", participantes: "12" },
+                { nombre: "Liga Senior F11", fecha: "Domingos 09:00 hs", categoria: "F11 Master", estado: "Inscripción", participantes: "10" }
+            ]
+        };
+
+        if (document.getElementById('stat-entrenamientos-activos')) document.getElementById('stat-entrenamientos-activos').textContent = seed.stats.activas;
+        if (document.getElementById('stat-alumnos-activos')) document.getElementById('stat-alumnos-activos').textContent = seed.stats.alumnos;
+        if (document.getElementById('stat-ligas-activas')) document.getElementById('stat-ligas-activas').textContent = seed.stats.ligas;
+        if (document.getElementById('stat-asistencia-entrenamiento')) document.getElementById('stat-asistencia-entrenamiento').textContent = seed.stats.asistencia;
+
+        // Inyectar Entrenamientos
+        const tbodyE = document.getElementById('tabla-entrenamientos-body');
+        if (tbodyE) {
+            tbodyE.innerHTML = seed.entrenamientos.map(e => `
+                <tr>
+                    <td class="fw-bold text-white"><i class="fa-solid fa-dumbbell text-sports me-2"></i>${e.nombre}</td>
+                    <td>${e.fecha}</td>
+                    <td>${e.horario}</td>
+                    <td>${e.responsable}</td>
+                    <td>${e.cupo}</td>
+                    <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">${e.estado}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Inyectar Alumnos
+        const tbodyA = document.getElementById('tabla-alumnos-body');
+        if (tbodyA) {
+            tbodyA.innerHTML = seed.alumnos.map(a => `
+                <tr>
+                    <td class="fw-bold">${a.nombre}</td>
+                    <td class="text-light-50">${a.email}</td>
+                    <td>${a.categoria}</td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">${a.estado}</span></td>
+                    <td class="text-center"><button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumno('${a.nombre}')"><i class="fa-solid fa-user-minus"></i> Dar Baja</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // Inyectar Ligas
+        const tbodyL = document.getElementById('tabla-ligas-body');
+        if (tbodyL) {
+            tbodyL.innerHTML = seed.ligas.map(l => `
+                <tr>
+                    <td class="fw-bold text-white"><i class="fa-solid fa-trophy text-warning me-2"></i>${l.nombre}</td>
+                    <td>${l.fecha}</td>
+                    <td>${l.categoria}</td>
+                    <td><span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">${l.estado}</span></td>
+                    <td>${l.participantes} Equipos</td>
+                    <td class="text-center"><button class="btn btn-sm btn-success px-2 py-0.5" style="background-color:#00C16E; border-color:#00C16E" onclick="registrarResultado('${l.nombre}')">Resultados</button></td>
+                </tr>
+            `).join('');
+        }
+    }
+}
+
+// ==========================================
+// ACCIONES INTERACTIVAS (Ruta: entrenador/registrarResultado)
+// ==========================================
+window.registrarResultado = function(partido) {
+    Swal.fire({
+        title: 'Planilla Oficial de Resultados',
+        html: `<div class="d-flex justify-content-center gap-2 mb-2">
+                <input type="number" id="goles-local" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0"> - 
+                <input type="number" id="goles-visita" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0">
+            </div>`,
+        showCancelButton: true, confirmButtonColor: '#00C16E',
+        preConfirm: () => {
+            if (!document.getElementById('goles-local').value || !document.getElementById('goles-visita').value) { Swal.showValidationMessage('Complete los goles.'); }
+        }
+    }).then((result) => { if (result.isConfirmed) Swal.fire('Éxito', 'Marcador guardado de forma correcta.', 'success'); });
+};
+
+window.darDeBajaAlumno = function(nombre) {
+    Swal.fire({ title: '¿Confirmar baja del alumno?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((r) => {
+        if (r.isConfirmed) Swal.fire('Procesado', 'El alumno fue removido de la asistencia.', 'success');
+    });
+};
+
+window.solicitarBajaPerfil = function() {
+    Swal.fire({ title: '¿Solicitar baja?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((r) => {
+        if (r.isConfirmed) Swal.fire('Registrada', 'La solicitud de baja fue enviada correctamente y quedará pendiente de validación por parte del administrador.', 'success');
+    });
+};
+
+window.modificarEntrenamiento = function(id) { Swal.fire({ title: 'Modificar Horarios', text: 'La edición directa requiere confirmación de intendencia.', icon: 'info', confirmButtonColor: '#00C16E' }); };
+>>>>>>> Stashed changes

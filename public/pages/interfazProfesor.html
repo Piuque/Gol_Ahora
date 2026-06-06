@@ -3,43 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gol Ahora - Panel de Control Profesor</title>
-    <!-- Google Fonts (Poppins) -->
+    <title>Gol Ahora - Panel Profesor</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome para Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Estilos específicos del Dashboard -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-football-dark text-light">
 
     <div class="d-flex" id="wrapper">
-        <!-- SIDEBAR LATERAL -->
         <div class="bg-navy border-end border-secondary border-opacity-25" id="sidebar-wrapper">
             <div class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25">
                 <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
             </div>
             
-            <!-- Contenedor del perfil de usuario en el menú -->
             <div id="user-profile-summary" class="p-3 border-bottom border-secondary border-opacity-25 bg-dark-navy">
                 <div class="d-flex align-items-center">
                     <div class="avatar-box bg-success bg-opacity-25 text-sports rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                         <i class="fa-solid fa-user-tie"></i>
                     </div>
                     <div class="overflow-hidden">
-                        <div class="fw-bold text-white text-truncate lh-1 small" id="sidebar-user-fullname">Carlos Bilardo</div>
+                        <div class="fw-bold text-white text-truncate lh-1 small" id="sidebar-user-fullname">Cargando...</div>
                         <small class="text-sports text-uppercase fw-bold tracking-wider" style="font-size: 0.65rem;">Profesor</small>
                     </div>
                 </div>
             </div>
 
-            <!-- Lista de navegación dinámica -->
             <ul class="nav flex-column mt-2" id="sidebar-menu-items">
-                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link active" href="#"><i class="fa-solid fa-clipboard-user me-3"></i>Gestión de Clases</a></li>
-                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="#"><i class="fa-solid fa-trophy me-3"></i>Torneos y Ligas</a></li>
-                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="#"><i class="fa-solid fa-user-gear me-3"></i>Mi Perfil Técnico</a></li>
+                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="perfilProfesor.html"><i class="fa-solid fa-user-gear me-3"></i>Mi Perfil Técnico</a></li>
+                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link active" href="interfazProfesor.html"><i class="fa-solid fa-clipboard-user me-3"></i>Gestión de Clases</a></li>
+                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="gestionTorneos.html"><i class="fa-solid fa-trophy me-3"></i>Gestión de Torneos</a></li>
                 <li class="nav-item mt-4">
                     <a class="nav-link text-danger d-flex align-items-center py-2.5 px-3 sidebar-link" href="#" id="btn-logout-action">
                         <i class="fa-solid fa-right-from-bracket me-3"></i><span>Cerrar Sesión</span>
@@ -48,77 +41,72 @@
             </ul>
         </div>
 
-        <!-- CONTENIDO PRINCIPAL DE LA PÁGINA -->
         <div id="page-content-wrapper" class="w-100 d-flex flex-column">
-            <!-- Barra superior de control -->
             <nav class="navbar navbar-expand-lg navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
-                <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
+                <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle"><i class="fa-solid fa-bars"></i></button>
                 <div class="ms-auto d-flex align-items-center gap-3">
-                    <span class="text-light-50 position-relative cursor-pointer">
-                        <i class="fa-regular fa-bell fa-lg"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-                    </span>
                     <div class="border-start border-secondary border-opacity-50 ps-3">
-                        <span class="small text-light-75 fw-medium" id="top-navbar-user-name">Carlos Bilardo</span>
+                        <span class="small text-light-75 fw-medium" id="top-navbar-user-name">Cargando...</span>
                     </div>
                 </div>
             </nav>
 
-            <!-- Zona de Paneles e Información Dinámica -->
             <div class="container-fluid px-4 py-4 flex-grow-1">
-                <!-- Breadcrumbs -->
-                <nav aria-label="breadcrumb" class="mb-4">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#" class="text-sports text-decoration-none">Inicio</a></li>
-                        <li class="breadcrumb-item active text-light-50" aria-current="page" id="breadcrumb-current">Panel Profesor</li>
-                    </ol>
-                </nav>
-
-                <!-- CONTENEDOR DE MÉTRICAS -->
-                <div class="row g-3 mb-4" id="metrics-container">
-                    <div class="col-md-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-sm-6">
                         <div class="card-metric p-3 border-start border-success border-4 shadow-sm">
-                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.72rem;">Clases Asignadas</small>
-                            <h3 class="fw-bold mt-1 mb-0 text-white">6 Semanales</h3>
+                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-chalkboard-user me-1"></i> Clases Activas</small>
+                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-clases">-</h4>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3 col-sm-6">
                         <div class="card-metric p-3 border-start border-primary border-4 shadow-sm">
-                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.72rem;">Total Alumnos</small>
-                            <h3 class="fw-bold mt-1 mb-0 text-white">28 Activos</h3>
+                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-users me-1"></i> Alumnos Asignados</small>
+                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-alumnos">-</h4>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3 col-sm-6">
                         <div class="card-metric p-3 border-start border-warning border-4 shadow-sm">
-                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.72rem;">Próxima Actividad</small>
-                            <h3 class="fw-bold mt-1 mb-0 text-white" style="font-size: 1.4rem;">Hoy 19:00 hs</h3>
+                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-trophy me-1"></i> Torneos Activos</small>
+                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-torneos">-</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card-metric p-3 border-start border-info border-4 shadow-sm">
+                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-calendar-day me-1"></i> Próximos Eventos</small>
+                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-actividad" style="font-size: 1.1rem; line-height: 1.6;">Cargando...</h4>
                         </div>
                     </div>
                 </div>
 
-                <!-- CONTENEDOR DE TRABAJO PRINCIPAL -->
                 <div class="card bg-navy border-0 shadow-lg p-4" id="main-workspace-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="fw-bold mb-0 text-white text-uppercase tracking-wide" id="workspace-title">Panel Técnico de Control - Profesor</h4>
-                        <div id="workspace-actions"></div>
+                        <h4 class="fw-bold mb-0 text-white text-uppercase tracking-wide">Gestión de Clases</h4>
                     </div>
                     <hr class="border-secondary border-opacity-50 my-3">
                     
                     <div id="workspace-content">
-                        <ul class="nav nav-tabs border-secondary border-opacity-25 mb-4" id="tecnicoTabs" role="tablist">
-                            <li class="nav-item">
-                                <button class="nav-link text-white active bg-transparent border-0 border-bottom border-3 border-transparent px-3 py-2 small text-uppercase" id="actividades-tab" data-bs-toggle="tab" data-bs-target="#panel-actividades" type="button">Planificación y Alumnos</button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link text-white bg-transparent border-0 border-bottom border-3 border-transparent px-3 py-2 small text-uppercase" id="competencias-tab" data-bs-toggle="tab" data-bs-target="#panel-competencias" type="button">Torneos y Ligas</button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link text-white bg-transparent border-0 border-bottom border-3 border-transparent px-3 py-2 small text-uppercase" id="perfil-tab" data-bs-toggle="tab" data-bs-target="#panel-perfil" type="button">Datos de Perfil</button>
-                            </li>
-                        </ul>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-sports fw-bold mb-0 text-uppercase"><i class="fa-solid fa-list me-2"></i>Cronograma y Horarios Asignados</h6>
+                        </div>
+                        
+                        <div class="table-responsive mb-4">
+                            <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                                <thead>
+                                    <tr>
+                                        <th>Módulo</th>
+                                        <th>Días / Horarios (Informativo)</th> <th>Cancha</th>
+                                        <th>Nivel</th>
+                                        <th>Cupo</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-cronograma-body">
+                                    </tbody>
+                            </table>
+                        </div>
 
+<<<<<<< Updated upstream
                         <div class="tab-content" id="tecnicoTabsContent">
                             <!-- PESTAÑA 1 -->
                             <div class="tab-pane fade show active" id="panel-actividades" role="tabpanel">
@@ -254,18 +242,39 @@
                                     </div>
                                 </div>
                             </div>
+=======
+                        <h6 class="text-sports fw-bold mb-3 text-uppercase mt-4"><i class="fa-solid fa-users me-2"></i>Nómina Oficial y Gestión de Asistencia</h6>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                                <thead>
+                                    <tr>
+                                        <th>Alumno</th>
+                                        <th>DNI</th>
+                                        <th>Contacto</th>
+                                        <th>Condición</th>
+                                        <th class="text-center">Asistencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-alumnos-body">
+                                    </tbody>
+                            </table>
+>>>>>>> Stashed changes
                         </div>
                     </div>
-
                 </div>
+
             </div>
         </div>
     </div>
 
-    <!-- SweetAlert2 y Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<<<<<<< Updated upstream
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bundle.min.js"></script>
     <!-- Tu archivo JS -->
     <script src="js/datosPersonalesProfesor.js"></script>
+=======
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="js/datosPersonalesProfesores.js"></script>
+>>>>>>> Stashed changes
 </body>
 </html>

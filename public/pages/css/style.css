@@ -9407,4 +9407,166 @@ body.bg-football-dark::before {
 .bg-football-dark {
     background-color: #07111e !important;
 }
+/* ==========================================================================
+   ESTILOS INSTITUCIONALES PARA EL HOME PRINCIPAL (GOL AHORA)
+   ========================================================================== */
 
+/* Variables de Color Oficiales del Predio */
+:root {
+    --sports-green: #00C16E;      /* Verde Deportivo */
+    --bg-football-dark: #071524;  /* Fondo Oscuro Base */
+    --bg-navy: #0A2540;           /* Azul de Tarjetas y Navbar */
+    --text-light-50: rgba(255, 255, 255, 0.5);
+    --text-light-75: rgba(255, 255, 255, 0.75);
+}
+
+/* Forzar fondos oscuros en el cuerpo de la página */
+body.bg-football-dark {
+    background-color: #071524 !important;
+    color: #ffffff !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+.bg-football-card-dark {
+    background-color: #05101b !important;
+}
+
+.bg-navy {
+    background-color: #0A2540 !important;
+}
+
+.text-sports {
+    color: #00C16E !important;
+}
+
+.border-sports {
+    border-color: #00C16E !important;
+}
+
+/* Navbar de Navegación Compacta */
+.custom-navbar {
+    background-color: rgba(10, 37, 64, 0.9) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.navbar-scrolled {
+    background-color: #0A2540 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.custom-navbar .nav-link {
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.custom-navbar .nav-link:hover {
+    color: #00C16E !important;
+}
+
+/* Botones con Colores del Sistema */
+.btn-sports {
+    background-color: #00C16E !important;
+    border-color: #00C16E !important;
+    color: #071524 !important;
+    font-weight: 600;
+}
+
+.btn-sports:hover {
+    background-color: #00a85f !important;
+    box-shadow: 0 4px 12px rgba(0, 193, 110, 0.2);
+}
+
+.dynamic-btn {
+    transition: transform 0.2s ease;
+}
+
+.dynamic-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Sección de Encabezado Hero */
+.hero-section {
+    min-height: 75vh;
+    background: linear-gradient(180deg, rgba(7, 21, 36, 0.5) 0%, #071524 100%), 
+                url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1920') no-repeat center center;
+    background-size: cover;
+}
+
+.style-sub {
+    max-width: 650px;
+}
+
+.text-light-75 { color: rgba(255, 255, 255, 0.75) !important; }
+.text-light-50 { color: rgba(255, 255, 255, 0.5) !important; }
+
+/* Tarjetas de Módulos Deportivos (Cards) */
+.card-sport {
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    transition: all 0.3s ease;
+}
+
+.card-sport:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+    border-color: rgba(0, 193, 110, 0.2) !important;
+}
+
+.card-img-container {
+    height: 160px;
+    overflow: hidden;
+    background-color: #05101b;
+}
+
+.card-sport .card-img-top {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.card-sport:hover .card-img-top {
+    transform: scale(1.04);
+}
+
+/* Contenedores de Iconos en Ventajas */
+.icon-box-feature {
+    width: 48px;
+    height: 48px;
+    background-color: rgba(0, 193, 110, 0.06);
+    border: 1px solid rgba(0, 193, 110, 0.15);
+    border-radius: 6px;
+}
+
+/* Enlaces del Footer */
+.hover-link:hover {
+    color: #00C16E !important;
+}
+
+/* Bloqueo anti-recortes para textos institucionales */
+.card-sport .text-sports {
+    white-space: nowrap !important; /* Evita que el tag superior se quiebre en dos líneas */
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+.card-sport .card-title {
+    font-size: 1.2rem !important;
+    white-space: normal !important;
+}
+
+.card-sport .card-text {
+    overflow: visible !important;
+    display: block !important;
+    text-overflow: clip !important;
+    white-space: normal !important; /* Permite que el párrafo se acomode de forma natural en varias líneas sin cortarse */
+}
+
+/* Ajuste responsivo de la grilla del menú superior */
+@media (min-width: 992px) {
+    .custom-navbar .navbar-nav {
+        margin-right: 2rem !important;
+    }
+}
