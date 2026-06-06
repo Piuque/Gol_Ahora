@@ -45,6 +45,11 @@ router.get('/reportes/ingresos', adminController.reporteFinanciero);
 
 //Administradores
 router.get('/administradores', adminController.listarAdministradores);
-
+router.get('/profesores/:id', adminController.obtenerProfesor);
+router.put('/profesores/:id', adminController.modificarProfesor);
+router.delete('/profesores/:id', adminController.eliminarProfesor);
+router.get('/entrenadores/:id', adminController.obtenerEntrenador);
+router.put('/entrenadores/:id', adminController.modificarEntrenador);
+router.delete('/entrenadores/:id', adminController.eliminarEntrenador);
 
 module.exports = router;
