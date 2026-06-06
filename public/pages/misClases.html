@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora - Mis Clases</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .scroll-horizontal {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding-bottom: 2rem;
+            padding-top: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: #ffc107 #0A2540;
+        }
+        .scroll-horizontal::-webkit-scrollbar { height: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-track { background: rgba(10, 37, 64, 0.5); border-radius: 10px; }
+        .scroll-horizontal::-webkit-scrollbar-thumb { background: #ffc107; border-radius: 10px; }
+
+        .clase-card {
+            background-color: var(--bg-navy, #0A2540);
+            border: 1px solid rgba(255, 193, 7, 0.1);
+            border-radius: 12px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 24px 20px;
+            min-width: 270px;
+            max-width: 290px;
+            min-height: 360px;
+            flex: 0 0 auto;
+        }
+        .clase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.15) !important;
+            border-color: rgba(255, 193, 7, 0.4);
+        }
+
+        .icon-wrapper {
+            width: 65px;
+            height: 65px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin: 0 auto 1rem auto;
+        }
+
+        .hover-catalogo {
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .hover-catalogo:hover {
+            background-color: rgba(255, 193, 7, 0.05) !important;
+            border-color: #ffc107 !important;
+        }
+    </style>
+</head>
+<body class="bg-football-dark py-5 px-3">
+
+<div class="container mx-auto" style="max-width: 950px; min-height: 75vh; display: flex; flex-direction: column; justify-content: center;">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <a href="interfazCliente.html" class="fw-bold text-decoration-none text-warning mb-3 mb-md-0">
+            <i class="fa-solid fa-arrow-left me-2"></i> Volver al panel
+        </a>
+
+        <div class="text-center">
+            <h3 class="fw-bold text-white text-uppercase mb-0">
+                <i class="fa-solid fa-graduation-cap me-2 text-warning"></i>Academia
+            </h3>
+        </div>
+
+        <button onclick="explorarClases()" class="btn btn-warning fw-bold px-4 py-2 mt-3 mt-md-0 text-dark shadow-sm">
+            <i class="fa-solid fa-magnifying-glass me-2"></i>Explorar Clases
+        </button>
+    </div>
+
+    <p class="text-light-50 small mb-2 text-center text-md-start">
+        <i class="fa-solid fa-arrows-left-right me-2 text-warning"></i>Tus inscripciones activas:
+    </p>
+
+    <div id="contenedor-clases" class="scroll-horizontal">
+        <div class="w-100 text-center py-5">
+            <div class="spinner-border text-warning" role="status"></div>
+            <p class="text-light-50 mt-2 small">Cargando tus clases...</p>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/misClases.js"></script>
+</body>
+</html>
