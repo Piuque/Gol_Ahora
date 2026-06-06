@@ -560,5 +560,6 @@ module.exports = {
   listarReservasPendientes,
   confirmarPagoEfectivo,
   listarCanchas,
-  eliminarCancha
+  eliminarCancha,
+  listarAdministradores
 };
