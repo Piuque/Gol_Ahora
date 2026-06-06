@@ -16,6 +16,9 @@ const PORT = process.env.PORT || 3000;
 // Configurar Middlewares globales
 app.use(cors());
 app.use(express.json());
+app.use('/css', express.static(path.join(__dirname, 'public/pages/css')));
+app.use('/js', express.static(path.join(__dirname, 'public/pages/js')));
+app.use('/img', express.static(path.join(__dirname, 'public/pages/img')));
 
 // Primero las rutas HTML (sin autenticación)
 app.get(['/admin', '/Admin'], (req, res) => {
