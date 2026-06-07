@@ -50,8 +50,8 @@ function renderizarTarjetasInscriptas(lista) {
         contenedor.innerHTML = `
             <div class="w-100 text-center text-light-50 py-5">
                 <i class="fa-solid fa-dumbbell fa-3x mb-3 opacity-50"></i>
-                <p>No tenés prácticas agendadas actualmente.</p>
-                <button onclick="explorarEntrenamientos()" class="btn btn-sm btn-outline-danger mt-2">Explorar Oferta Física</button>
+                <p>No tenés entrenamientos agendados actualmente.</p>
+                <button onclick="explorarEntrenamientos()" class="btn btn-sm btn-outline-danger mt-2">Explorar Catálogo</button>
             </div>`;
         return;
     }
@@ -81,7 +81,7 @@ function renderizarTarjetasInscriptas(lista) {
                         <i class="fa-solid fa-circle-info me-1"></i> Ver Info
                     </button>
                     <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-2" onclick="darseDeBaja(${et.id_inscripcion})">
-                        <i class="fa-solid fa-xmark me-1"></i> Cancelar Turno
+                        <i class="fa-solid fa-xmark me-1"></i> Cancelar Inscripción
                     </button>
                 </div>
             </div>
@@ -123,13 +123,13 @@ function verInfoInscripta(idEntrenamiento) {
 // =========================================================
 async function darseDeBaja(idInscripcion) {
     const result = await Swal.fire({
-        title: '¿Cancelar tu vacante?',
+        title: '¿Cancelar tu inscripción?',
         text: "Liberarás tu lugar en este grupo de entrenamiento.",
         icon: 'warning',
         background: '#071524', color: '#fff',
         showCancelButton: true,
         confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, cancelar turno', cancelButtonText: 'Volver'
+        confirmButtonText: 'Sí, cancelar inscripción', cancelButtonText: 'Volver'
     });
 
     if (result.isConfirmed) {
@@ -217,7 +217,7 @@ async function explorarEntrenamientos() {
         htmlCatalogo += '</div>';
 
         Swal.fire({
-            title: '<h4 class="text-danger fw-bold mb-0 text-start border-bottom border-secondary pb-3"><i class="fa-solid fa-magnifying-glass me-2"></i>Explorar Prácticas</h4>',
+            title: '<h4 class="text-danger fw-bold mb-0 text-start border-bottom border-secondary pb-3"><i class="fa-solid fa-magnifying-glass me-2"></i>Explorar Entrenamientos</h4>',
             html: htmlCatalogo,
             background: '#071524', color: '#fff',
             showConfirmButton: false, showCloseButton: true,
@@ -246,8 +246,8 @@ window.toggleDetallesEntrenamiento = function(idEntrenamiento) {
 // =========================================================
 function registrarInscripcionAPI(idEntrenamiento, nombreEntrenamiento) {
     Swal.fire({
-        title: '¿Confirmar Turno?',
-        text: `Vas a reservar una vacante en "${nombreEntrenamiento}".`,
+        title: '¿Confirmar Inscripción?',
+        text: `Vas a reservar una vacante para "${nombreEntrenamiento}".`,
         icon: 'question',
         background: '#0A2540', color: '#fff',
         showCancelButton: true,
@@ -264,7 +264,7 @@ function registrarInscripcionAPI(idEntrenamiento, nombreEntrenamiento) {
                 });
 
                 if (res.ok) {
-                    await Swal.fire({ icon: 'success', title: '¡Asignado!', text: 'Tu turno fue guardado en el sistema.', background: '#071524', color: '#fff', confirmButtonColor: '#00C16E' });
+                    await Swal.fire({ icon: 'success', title: '¡Asignado!', text: 'Tu inscripción fue guardada en el sistema.', background: '#071524', color: '#fff', confirmButtonColor: '#00C16E' });
                     cargarMisEntrenamientos();
                 } else {
                     const errorData = await res.json();

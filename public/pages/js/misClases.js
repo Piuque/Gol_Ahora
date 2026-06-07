@@ -124,7 +124,7 @@ function verInfoInscripta(idClase) {
 async function darseDeBaja(idInscripcion) {
     const result = await Swal.fire({
         title: '¿Cancelar tu inscripción?',
-        text: "Esta acción informará al backend para liberar tu lugar.",
+        text: "Liberarás tu lugar en esta clase permanentemente.",
         icon: 'warning',
         background: '#071524', color: '#fff',
         showCancelButton: true,
