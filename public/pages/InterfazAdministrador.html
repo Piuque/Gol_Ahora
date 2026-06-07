@@ -1,278 +1,286 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
-    <meta charset="utf-8">
-    <title>Acceso - Panel Admin</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-    <link href="img/favicon.ico" rel="icon">
-
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">  
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-
-    <link href="lib/animate/animate.min.css" rel="stylesheet">
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-
-    <link href="/pages/css/style.css" rel="stylesheet">
-    
-    <style>
-        .bg-dark-subtle {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            margin-top: 2px;
-            margin-bottom: 5px;
-        }
-        .collapse .nav-link {
-            transition: all 0.2s ease;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-        .collapse .nav-link:hover {
-            color: #ffffff !important;
-            background-color: rgba(255, 255, 255, 0.08) !important;
-            padding-left: 1.25rem !important;
-        }
-        a[data-toggle="collapse"] {
-            cursor: pointer;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora — Panel Administrador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
+<body class="bg-football-dark text-light">
 
-<body>
-    <div class="col-lg-12 px-0">
-        <nav class="navbar navbar-expand-lg navbar-dark py-0 px-0 nav-diagonal">
-            
-            <div class="brand-section d-flex align-items-center">
-                <a href="/admin/interfazAdministrador" class="text-decoration-none d-flex align-items-center">
-                    <img src="img/icono1.png" alt="Logo GA" class="logo-img">
-                    <div class="d-flex align-items-center text-nowrap">
-                        <span class="h1 text-uppercase mb-0 brand-club">CLUB</span>
-                        <span class="h1 text-uppercase text-white mb-0 brand-gol">GOL AHORA</span>
-                    </div>
+<div class="d-flex" id="wrapper">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <div id="sidebar-wrapper">
+
+        <!-- Logo -->
+        <a href="/admin/interfazAdministrador"
+           class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
+           style="transition:opacity 0.2s;"
+           onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+            <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
+        </a>
+
+        <!-- Avatar admin -->
+        <div class="p-3 border-bottom border-secondary border-opacity-25" style="background:rgba(0,0,0,0.15);">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:40px;height:40px;flex-shrink:0;">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <div class="fw-bold text-white lh-1 small">Panel Admin</div>
+                    <span class="text-sports text-uppercase fw-bold" style="font-size:0.63rem;letter-spacing:0.8px;">Administrador</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú con acordeón Bootstrap 5 -->
+        <div class="flex-grow-1 py-2" style="overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,193,110,0.3) transparent;">
+
+            <!-- Usuarios -->
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sub-usuarios" aria-expanded="false">
+                    <span><i class="fa-solid fa-users me-2" style="width:16px;"></i>Usuarios</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-usuarios">
+                    <a href="/admin/RegistrarCliente" class="sidebar-sub-link">
+                        <i class="fa-solid fa-plus" style="width:14px;"></i>Registrar usuario
+                    </a>
+                    <a href="/admin/ConsultaClientes" class="sidebar-sub-link">
+                        <i class="fa-solid fa-magnifying-glass" style="width:14px;"></i>Listar / Modificar / Eliminar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profesionales -->
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sub-profesionales" aria-expanded="false">
+                    <span><i class="fa-solid fa-chalkboard-user me-2" style="width:16px;"></i>Profesionales</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-profesionales">
+                    <a href="/admin/RegistrarProfesional" class="sidebar-sub-link">
+                        <i class="fa-solid fa-plus" style="width:14px;"></i>Registrar profesional
+                    </a>
+                    <a href="/admin/ListarProfesionales" class="sidebar-sub-link">
+                        <i class="fa-solid fa-magnifying-glass" style="width:14px;"></i>Listar / Modificar / Eliminar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reservas -->
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sub-reservas" aria-expanded="false">
+                    <span><i class="fa-solid fa-calendar-alt me-2" style="width:16px;"></i>Reservas</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-reservas">
+                    <a href="/admin/RegistrarReserva" class="sidebar-sub-link">
+                        <i class="fa-solid fa-marker" style="width:14px;"></i>Registrar reserva
+                    </a>
+                    <a href="/admin/ListarReservas" class="sidebar-sub-link">
+                        <i class="fa-solid fa-list-ul" style="width:14px;"></i>Listar / Modificar / Cancelar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Canchas -->
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sub-canchas" aria-expanded="false">
+                    <span><i class="fa-solid fa-futbol me-2" style="width:16px;"></i>Canchas</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-canchas">
+                    <a href="/admin/RegistrarTipoDeCancha" class="sidebar-sub-link">
+                        <i class="fa-solid fa-layer-group" style="width:14px;"></i>Registrar tipo de cancha
+                    </a>
+                    <a href="/admin/RegistrarCancha" class="sidebar-sub-link">
+                        <i class="fa-solid fa-plus-circle" style="width:14px;"></i>Registrar nueva cancha
+                    </a>
+                    <a href="/admin/VerCanchas" class="sidebar-sub-link">
+                        <i class="fa-solid fa-eye" style="width:14px;"></i>Listar / Modificar / Eliminar
+                    </a>
+                    <a href="/admin/ListarTiposCanchas" class="sidebar-sub-link">
+                        <i class="fa-solid fa-layer-group" style="width:14px;"></i>Tipos de canchas
+                    </a>
+                </div>
+            </div>
+
+            <!-- Descuentos — directo -->
+            <div class="mb-1">
+                <a href="/admin/Descuentos" class="sidebar-direct-link">
+                    <i class="fa-solid fa-tags me-2" style="width:16px;"></i>Descuentos
                 </a>
             </div>
 
-            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
-            </div>
-        </nav>
-    </div>
-    <div class="container-fluid">
-        <div class="row">
-            
-            <nav class="col-md-3 col-lg-2 bg-sidebar sidebar min-vh-100 d-flex flex-column justify-content-between p-0">
-                <div class="p-3 w-100">
-                    <div class="d-flex align-items-center mb-4 mt-2 px-2 text-white">
-                        <i class="fas fa-user-shield fs-4 mr-2 text-success"></i>
-                        <span class="fs-5 fw-bold">Panel Admin</span>
-                    </div>
-
-                    <ul class="nav nav-pills flex-column mb-auto gap-1">
-                        <li class="nav-item mb-1">
-                            <a href="#submenuClientes" data-toggle="collapse" aria-expanded="false" class="nav-link py-2.5 px-3 text-white d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-users mr-2"></i> Usuarios</span>
-                                <i class="fas fa-chevron-down fa-sm"></i>
-                            </a>
-                            <div class="collapse pl-3 bg-dark-subtle rounded" id="submenuClientes">
-                                <a href="/admin/RegistrarCliente" class="nav-link py-2 text-white-50 small"><i class="fas fa-plus mr-2"></i> Registrar usuario</a>
-                                <a href="/admin/ConsultaClientes" class="nav-link py-2 text-white-50 small"><i class="fas fa-search mr-2"></i> Listar/Modificar/Eliminar usuarios</a>
-                            </div>
-                        </li>
-
-                        <li class="nav-item mb-1">
-                            <a href="#submenuProfesores" data-toggle="collapse" aria-expanded="false" class="nav-link py-2.5 px-3 text-white d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-chalkboard-teacher mr-2"></i> Profesionales</span>
-                                <i class="fas fa-chevron-down fa-sm"></i>
-                            </a>
-                            <div class="collapse pl-3 bg-dark-subtle rounded" id="submenuProfesores">
-                                <a href="/admin/RegistrarProfesional" class="nav-link py-2 text-white-50 small"><i class="fas fa-plus mr-2"></i> Registrar profesional</a>
-                                <a href="/admin/ListarProfesionales" class="nav-link py-2 text-white-50 small"><i class="fas fa-search mr-2"></i> Listar/Modificar/Eliminar profesional</a>
-                            </div>
-                        </li>
-                        <li class="nav-item mb-1">
-                            <a href="#submenuReservas" data-toggle="collapse" aria-expanded="false" class="nav-link py-2.5 px-3 text-white d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-calendar-alt mr-2"></i> Reservas</span>
-                                <i class="fas fa-chevron-down fa-sm"></i>
-                            </a>
-                            <div class="collapse pl-3 bg-dark-subtle rounded" id="submenuReservas">
-                                <a href="/admin/RegistrarReserva" class="nav-link py-2 text-white-50 small"><i class="fas fa-marker mr-2"></i> Registrar Reserva</a>
-                                <a href="/admin/ListarReservas" class="nav-link py-2 text-white-50 small"><i class="fas fa-list-ul mr-2"></i> Listar/Modificar/Cancelar Reservas</a>
-                            </div>
-                        </li>
-
-                        <li class="nav-item mb-1">
-                            <a href="#submenuCanchas" data-toggle="collapse" aria-expanded="false" class="nav-link py-2.5 px-3 text-white d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-futbol mr-2"></i> Canchas</span>
-                                <i class="fas fa-chevron-down fa-sm"></i>
-                            </a>
-                            <div class="collapse pl-3 bg-dark-subtle rounded" id="submenuCanchas">
-                                <a href="/admin/RegistrarTipoDeCancha" class="nav-link py-2 text-white-50 small"><i class="fas fa-layer-group mr-2"></i> Registrar tipo de cancha</a>
-                                <a href="/admin/RegistrarCancha" class="nav-link py-2 text-white-50 small"><i class="fas fa-plus-circle mr-2"></i> Registrar nueva cancha</a>
-                                <a href="/admin/VerCanchas" class="nav-link py-2 text-white-50 small"><i class="fas fa-plus-circle mr-2"></i> Listar/Modificar/Eliminar canchas </a>
-                                <a href="/admin/ListarTiposCanchas" class="nav-link py-2 text-white-50 small"><i class="fas fa-layer-group mr-2"></i> Listar/Modificar/Eliminar tipos de canchas </a>
-                            </div>
-                        </li>
-
-
-
-                        <li class="nav-item mb-1">
-                            <a href="/admin/Descuentos" class="nav-link py-2.5 px-3 text-white">
-                                <i class="fas fa-tags mr-2"></i> Descuentos
-                            </a>
-                        </li>
-
-                        <li class="nav-item mb-1">
-                            <a href="#submenuCompetencias" data-toggle="collapse" aria-expanded="false" class="nav-link py-2.5 px-3 text-white d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-trophy mr-2"></i> Competencias</span>
-                                <i class="fas fa-chevron-down fa-sm"></i>
-                            </a>
-                            <div class="collapse pl-3 bg-dark-subtle rounded" id="submenuCompetencias">
-                                <a href="/admin/Ligas" class="nav-link py-2 text-white-50 small"><i class="fas fa-list-ol mr-2"></i> Ligas</a>
-                                <a href="/admin/Torneos" class="nav-link py-2 text-white-50 small"><i class="fas fa-medal mr-2"></i> Torneos</a>
-                            </div>
-                        </li>
-
-                        <li class="nav-item mb-1">
-                            <a href="#submenuCapacitaciones" data-toggle="collapse" aria-expanded="false" class="nav-link py-2.5 px-3 text-white d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-graduation-cap mr-2"></i> Capacitaciones</span>
-                                <i class="fas fa-chevron-down fa-sm"></i>
-                            </a>
-                            <div class="collapse pl-3 bg-dark-subtle rounded" id="submenuCapacitaciones">
-                                <a href="/admin/Clases" class="nav-link py-2 text-white-50 small">
-                                    <i class="fas fa-chalkboard-teacher mr-2"></i> Clases
-                                </a>
-                                <a href="/admin/Entrenamientos" class="nav-link py-2 text-white-50 small">
-                                    <i class="fas fa-dumbbell mr-2"></i> Entrenamientos
-                                </a>
-                            </div>
-                        </li>
-
-                        <li class="nav-item mb-1">
-                            <a href="#submenuFinanzas" data-toggle="collapse" aria-expanded="false" class="nav-link py-2.5 px-3 text-white d-flex justify-content-between align-items-center">
-                                <span><i class="fas fa-dollar-sign mr-2"></i> Finanzas</span>
-                                <i class="fas fa-chevron-down fa-sm"></i>
-                            </a>
-                            <div class="collapse pl-3 bg-dark-subtle rounded" id="submenuFinanzas">
-                                <a href="/admin/Cobros" class="nav-link py-2 text-white-50 small"><i class="fas fa-cash-register mr-2"></i> Cobros</a>
-                                <a href="Recibos.html" class="nav-link py-2 text-white-50 small"><i class="fas fa-receipt mr-2"></i> Recibos</a>
-                            </div>
-                        </li>
-
-                        <li class="nav-item mb-1">
-                            <a href="Reportes.html" class="nav-link py-2.5 px-3 text-white">
-                                <i class="fas fa-chart-bar mr-2"></i> Reportes
-                            </a>
-                        </li>
-
-                    </ul>
-                </div>
-
-                <div class="p-3 w-100 border-top border-dark-subtle">
-                    <a href="/acceder" class="nav-link gap-3 py-2.5 px-3 mb-3 btn-logout rounded text-white">
-                        <i class="fas fa-box-arrow-left mr-2"></i> Cerrar Sesión
+            <!-- Competencias -->
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sub-competencias" aria-expanded="false">
+                    <span><i class="fa-solid fa-trophy me-2" style="width:16px;"></i>Competencias</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-competencias">
+                    <a href="/admin/Ligas" class="sidebar-sub-link">
+                        <i class="fa-solid fa-list-ol" style="width:14px;"></i>Ligas
                     </a>
-                    <div class="d-flex align-items-center gap-2 px-3 text-white">
-                        <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                            <span class="fw-bold text-dark text-uppercase" style="font-size: 11px;">GA</span>
-                        </div>
-                        <div>
-                            <p class="mb-0 fw-semibold" style="font-size: 0.85rem;">Gol Ahora Club</p>
-                        </div>
-                    </div>
+                    <a href="/admin/Torneos" class="sidebar-sub-link">
+                        <i class="fa-solid fa-medal" style="width:14px;"></i>Torneos
+                    </a>
                 </div>
-            </nav>
+            </div>
 
-            <main class="col-md-9 col-lg-10 px-md-4 py-4 bg-panel-derecho min-vh-100">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2 text-white">Datos Personales</h1>
+            <!-- Capacitaciones -->
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sub-capacitaciones" aria-expanded="false">
+                    <span><i class="fa-solid fa-graduation-cap me-2" style="width:16px;"></i>Capacitaciones</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-capacitaciones">
+                    <a href="/admin/Clases" class="sidebar-sub-link">
+                        <i class="fa-solid fa-chalkboard-user" style="width:14px;"></i>Clases
+                    </a>
+                    <a href="/admin/Entrenamientos" class="sidebar-sub-link">
+                        <i class="fa-solid fa-dumbbell" style="width:14px;"></i>Entrenamientos
+                    </a>
                 </div>
+            </div>
 
-                <div class="card p-4 shadow-sm tarjeta-celeste-club">
-                    <form id="form-perfil">
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Nombre</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Nombre" value="" readonly>
-                                <span class="input-group-text edit-icon d-none">✏️</span>
-                            </div>
-                        </div>
-                    
-                        <div class="mb-4">
-                            <label class="form-label">Apellido</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Apellido" value="" readonly>
-                                <span class="input-group-text edit-icon d-none">✏️</span>
-                            </div>
-                        </div>
-                    
-                        <div class="mb-4">
-                            <label class="form-label">DNI</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Dni" value="" readonly>
-                                <span class="input-group-text edit-icon d-none">✏️</span>
-                            </div>
-                        </div>
-                    
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Nacionalidad</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Nacionalidad" value="" readonly>
-                                <span class="input-group-text edit-icon d-none">✏️</span>
-                            </div>
-                        </div>
-                    
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Género</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Genero" value="" readonly>
-                                <span class="input-group-text edit-icon d-none">✏️</span>
-                            </div>
-                        </div>
-                    
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Teléfono</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Telefono" value="" readonly>
-                                <span class="input-group-text edit-icon d-none">✏️</span>
-                            </div>
-                        </div>
-                    
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Email</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control editable-input input-Email" value="" readonly>
-                                <span class="input-group-text edit-icon d-none">✏️</span>
-                            </div>
-                        </div>
-                    
-                        <div class="d-grid gap-2">
-                            <button type="button" id="btn-editar" class="btn btn-outline-primary">Editar Datos</button>
-                            <button type="submit" id="btn-guardar" class="btn btn-success d-none">Guardar Cambios</button>
-                        </div>
-                    </form>
-                </div>     
-            </main>
+            <!-- Finanzas -->
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#sub-finanzas" aria-expanded="false">
+                    <span><i class="fa-solid fa-dollar-sign me-2" style="width:16px;"></i>Finanzas</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-finanzas">
+                    <a href="/admin/Cobros" class="sidebar-sub-link">
+                        <i class="fa-solid fa-cash-register" style="width:14px;"></i>Cobros
+                    </a>
+                    <a href="Recibos.html" class="sidebar-sub-link">
+                        <i class="fa-solid fa-receipt" style="width:14px;"></i>Recibos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reportes — directo -->
+            <div class="mb-1">
+                <a href="Reportes.html" class="sidebar-direct-link">
+                    <i class="fa-solid fa-chart-bar me-2" style="width:16px;"></i>Reportes
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Cerrar sesión + branding -->
+        <div class="p-3 border-top border-secondary border-opacity-25" style="background:rgba(0,0,0,0.15);">
+            <button onclick="cerrarSesionAdmin()"
+                    class="btn sidebar-logout w-100 d-flex align-items-center justify-content-start gap-2 mb-3">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Cerrar sesión</span>
+            </button>
+            <div class="d-flex align-items-center gap-2 px-1">
+                <div class="bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                     style="width:32px;height:32px;font-size:0.7rem;flex-shrink:0;">GA</div>
+                <span class="text-white fw-semibold" style="font-size:0.82rem;">Gol Ahora Club</span>
+            </div>
+        </div>
+
+    </div>
+    <!-- ===================== /SIDEBAR ===================== -->
+
+    <div id="page-content-wrapper" class="w-100 d-flex flex-column">
+
+        <!-- TOPBAR -->
+        <nav class="navbar navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
+            <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="navbar-brand fw-bold text-white mb-0 ms-3 small text-uppercase" style="letter-spacing:1px;">
+                <i class="fa-solid fa-futbol text-sports me-2"></i>Gol Ahora
+            </span>
+            <span class="small fw-medium ms-auto" id="nav-fecha" style="color:var(--text-light-50);"></span>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="container-fluid px-4 py-4 flex-grow-1" style="overflow-y:auto;" id="main-content">
+
+            <!-- Encabezado de sección -->
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+                <div>
+                    <h4 class="fw-bold text-white mb-1">Panel de Administración</h4>
+                    <p class="mb-0 small" style="color:var(--text-light-50);">
+                        Bienvenido al panel de control de Gol Ahora.
+                    </p>
+                </div>
+                <span class="badge px-3 py-2"
+                      style="background:rgba(0,193,110,0.1);border:1px solid rgba(0,193,110,0.3);color:#00C16E;font-size:0.72rem;letter-spacing:0.4px;">
+                    <i class="fa-solid fa-shield-halved me-1"></i>Administrador
+                </span>
+            </div>
 
         </div>
     </div>
+</div>
 
-    <a href="#" class="btn btn-primary back-to-top"><i class="fa fa-angle-double-up"></i></a>
+<!-- Back to top -->
+<a href="#" class="back-to-top" id="back-to-top" title="Volver arriba">
+    <i class="fa-solid fa-angle-up"></i>
+</a>
 
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
-    <script src="lib/easing/easing.min.js"></script>
-    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Sidebar toggle
+    document.getElementById('menu-toggle')?.addEventListener('click', () => {
+        document.getElementById('wrapper').classList.toggle('toggled');
+    });
 
-    <script src="mail/jqBootstrapValidation.min.js"></script>
-    <script src="mail/contact.js"></script>
+    // Fecha en topbar
+    const fechaEl = document.getElementById('nav-fecha');
+    if (fechaEl) {
+        fechaEl.innerHTML = `<i class="fa-regular fa-calendar text-sports me-2"></i>${
+            new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+        }`;
+    }
 
-    <script src="/js/main.js"></script>
-    <script src="/pages/js/datosPersonalesAdmin.js"></script>
+    // Back to top
+    const mainContent = document.getElementById('main-content');
+    const backBtn     = document.getElementById('back-to-top');
+    mainContent?.addEventListener('scroll', () => {
+        backBtn?.classList.toggle('visible', mainContent.scrollTop > 200);
+    });
+    backBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        mainContent?.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Cerrar sesión
+    function cerrarSesionAdmin() {
+        Swal.fire({
+            title: '¿Cerrar sesión?',
+            text: 'Serás redirigido al inicio de la aplicación.',
+            icon: 'question', iconColor: '#00C16E',
+            showCancelButton: true,
+            confirmButtonColor: '#00C16E', cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fa-solid fa-right-from-bracket me-1"></i>Sí, cerrar sesión',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then(result => {
+            if (result.isConfirmed) window.location.href = '/acceder';
+        });
+    }
+</script>
 </body>
-
 </html>
