@@ -66,6 +66,12 @@ async function verDetalle(id) {
         const res = await fetch(`/admin/ligas/${id}`, { credentials: "include", headers: { "x-user-id": userId } });
         const l = await res.json();
 
+        const equiposHTML = l.equipos && l.equipos.length > 0 ? l.equipos.map(e => `
+            <div class="d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
+                <span class="text-white small"><i class="fa-solid fa-shield-halved me-2" style="color:#00C16E"></i>${e.nombre}</span>
+            </div>
+        `).join('') : `<p class="text-light-50 small">Sin equipos inscriptos.</p>`;
+
         const partidosHTML = l.partidos && l.partidos.length > 0 ? l.partidos.map(p => `
             <div class="partido-item">
                 <div class="d-flex justify-content-between align-items-center">
@@ -105,6 +111,8 @@ async function verDetalle(id) {
                     <i class="fa-solid fa-list-ol me-1"></i> Generar Fixture
                 </button>
             </div>
+            <p class="text-light-50 small mt-3 mb-1">Equipos inscriptos</p>
+            ${equiposHTML}
             <p class="text-light-50 small mt-3 mb-2">Partidos</p>
             ${partidosHTML}
         `;

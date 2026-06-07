@@ -1111,17 +1111,24 @@ const obtenerLiga = async (req, res) => {
     
     const partidos = await db.query.all(`
       SELECT p.id_partido AS id, 
-            u1.nombre || ' ' || u1.apellido AS equipo_local,
-            u2.nombre || ' ' || u2.apellido AS equipo_visitante,
-            p.goles_local, p.goles_visitante,
-            to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
+             e1.nombre AS equipo_local,
+             e2.nombre AS equipo_visitante,
+             p.goles_local, p.goles_visitante,
+             to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
       FROM partidos p
-      LEFT JOIN usuarios u1 ON p.id_equipo_local = u1.id_usuario
-      LEFT JOIN usuarios u2 ON p.id_equipo_visitante = u2.id_usuario
+      LEFT JOIN equipos e1 ON p.id_equipo_local = e1.id_equipo
+      LEFT JOIN equipos e2 ON p.id_equipo_visitante = e2.id_equipo
       WHERE p.id_liga = $1
     `, [id]);
+
+    const equipos = await db.query.all(`
+      SELECT e.id_equipo, e.nombre
+      FROM participacion_ligas pl
+      JOIN equipos e ON pl.id_equipo = e.id_equipo
+      WHERE pl.id_liga = $1
+    `, [id]);
     
-    res.json({ ...liga, partidos });
+    res.json({ ...liga, partidos, equipos });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener liga', message: err.message });
   }
