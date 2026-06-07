@@ -406,7 +406,7 @@
             <div class="row g-4">
 
                 <!-- 1. Tipos de Canchas -->
-                <!-- Rutas: GET /admin/tipos-canchas + GET /admin/canchas/listar -->
+                <!-- Ruta: GET /admin/reportes/tipos-cancha -->
                 <div class="col-md-6 col-lg-4">
                     <div class="reporte-card verde">
                         <div class="reporte-icon" style="background:rgba(0,193,110,0.1);color:#00C16E;">
@@ -680,12 +680,9 @@
         canchas: {
             // Combina tipos de cancha + canchas físicas
             fetch: async () => {
-                const [r1, r2] = await Promise.all([
-                    fetch(`${API}/admin/tipos-canchas`,    { credentials:'include' }),
-                    fetch(`${API}/admin/canchas/listar`,   { credentials:'include' })
-                ]);
-                if (!r1.ok || !r2.ok) throw new Error();
-                return { tipos: await r1.json(), canchas: await r2.json() };
+                const r = await fetch(`${API}/admin/reportes/tipos-cancha`, { credentials:'include' });
+                if (!r.ok) throw new Error();
+                return { tipos: await r.json(), canchas: [] };
             },
             render: ({ tipos }) => {
                 const tbody = document.getElementById('tbody-canchas');
@@ -734,7 +731,7 @@
         reservas: {
             // GET /admin/reservas  →  listarReservas()
             fetch: async () => {
-                const r = await fetch(`${API}/admin/reservas`, { credentials:'include' });
+                const r = await fetch(`${API}/admin/reportes/reservas`, { credentials:'include' });
                 if (!r.ok) throw new Error();
                 return await r.json();
             },
@@ -764,7 +761,7 @@
         clases: {
             // GET /admin/clases  →  listarClases()
             fetch: async () => {
-                const r = await fetch(`${API}/admin/clases`, { credentials:'include' });
+                const r = await fetch(`${API}/admin/reportes/clases`, { credentials:'include' });
                 if (!r.ok) throw new Error();
                 return await r.json();
             },
@@ -792,7 +789,7 @@
         entrenamientos: {
             // GET /admin/entrenamientos  →  listarEntrenamientos()
             fetch: async () => {
-                const r = await fetch(`${API}/admin/entrenamientos`, { credentials:'include' });
+                const r = await fetch(`${API}/admin/reportes/entrenamientos`, { credentials:'include' });
                 if (!r.ok) throw new Error();
                 return await r.json();
             },
