@@ -541,6 +541,16 @@ app.get(['/entrenador/gestionLigasTorneos', '/pages/gestionLigasTorneos.html'], 
   res.sendFile(path.join(__dirname, 'public/pages/gestionLigasTorneos.html'));
 });
 
+app.get('/api/superficies', async (req, res) => {
+  try {
+    const db = require('./config/db.js');
+    const rows = await db.query.all('SELECT id_superficie, tipo_superficie FROM superficies ORDER BY id_superficie ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar superficies', message: err.message });
+  }
+});
+
 // Inicializar base de datos y levantar el servidor
 const startServer = async () => {
   await initDatabase();
