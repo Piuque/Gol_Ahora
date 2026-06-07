@@ -490,6 +490,7 @@ function cerrarSesion() {
     }).then(async (result) => {
         if (!result.isConfirmed) return;
 
+        
         try {
             await fetch(`${API}/logout`, { method: 'POST', credentials: 'include' });
         } catch {}
