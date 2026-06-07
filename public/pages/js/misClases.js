@@ -50,7 +50,7 @@ function renderizarTarjetasInscriptas(lista) {
         contenedor.innerHTML = `
             <div class="w-100 text-center text-light-50 py-5">
                 <i class="fa-solid fa-graduation-cap fa-3x mb-3 opacity-50"></i>
-                <p>No tenés inscripciones en la academia actualmente.</p>
+                <p>No tenés inscripciones a clases actualmente.</p>
                 <button onclick="explorarClases()" class="btn btn-sm btn-outline-warning mt-2 text-dark fw-bold">Explorar Catálogo</button>
             </div>`;
         return;
