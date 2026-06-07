@@ -8,6 +8,15 @@ let datosPerfilGlobal = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     verificarSesionYPerfil();
+
+    // Evento del botón hamburguesa para pantallas móviles o colapsar
+    const menuToggle = document.getElementById('menu-toggle');
+    const wrapper = document.getElementById('wrapper');
+    if (menuToggle && wrapper) {
+        menuToggle.addEventListener('click', () => {
+            wrapper.classList.toggle('toggled');
+        });
+    }
 });
 
 /* -----------------------------------------------------------------------
@@ -133,7 +142,6 @@ function abrirGestionPerfil() {
         html: `
         <div style="font-family:'Poppins',sans-serif;text-align:left;padding:4px 6px 0;">
 
-            <!-- Encabezado -->
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
                 <div style="width:46px;height:46px;border-radius:50%;background:rgba(0,193,110,0.12);border:1px solid rgba(0,193,110,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <i class="fa-solid fa-user" style="color:#00C16E;font-size:1.1rem;"></i>
@@ -146,7 +154,6 @@ function abrirGestionPerfil() {
                 </div>
             </div>
 
-            <!-- Datos personales -->
             <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
                 <div style="font-size:0.65rem;font-weight:700;color:#00C16E;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Datos Personales</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;">
@@ -159,7 +166,6 @@ function abrirGestionPerfil() {
                 </div>
             </div>
 
-            <!-- Domicilio -->
             <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
                 <div style="font-size:0.65rem;font-weight:700;color:#00C16E;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Domicilio</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;">
@@ -170,7 +176,6 @@ function abrirGestionPerfil() {
                 </div>
             </div>
 
-            <!-- Cuenta -->
             <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;margin-bottom:18px;">
                 <div style="font-size:0.65rem;font-weight:700;color:#00C16E;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Cuenta</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;">
@@ -179,7 +184,6 @@ function abrirGestionPerfil() {
                 </div>
             </div>
 
-            <!-- Acciones -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button onclick="imprimirPerfil()"
                     style="flex:1;min-width:130px;padding:9px 12px;border-radius:7px;border:1px solid rgba(100,200,120,0.35);background:rgba(0,193,110,0.08);color:#00C16E;font-weight:600;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
@@ -276,9 +280,34 @@ function imprimirPerfil() {
 /* -----------------------------------------------------------------------
    MODIFICAR PERFIL — formulario inline en SweetAlert
 ----------------------------------------------------------------------- */
-function modificarPerfil() {
+async function modificarPerfil() {
     const d = datosPerfilGlobal;
-    const dirObj = d.direccion || { calle: d.calle, numero: d.numero, codigo_postal: d.codigo_postal };
+    const dirObj = d.direccion || { calle: d.calle, numero: d.numero, localidad: d.localidad, provincia: d.provincia, codigo_postal: d.codigo_postal };
+
+    // 1. Obtener la lista dinámica de géneros desde la Base de Datos
+    let opcionesGenerosHTML = `<option value="">Seleccione un género</option>`;
+    try {
+        const resGen = await fetch(`${API}/api/usuario/generos`);
+        if (resGen.ok) {
+            const listaGeneros = await resGen.json();
+            listaGeneros.forEach(gen => {
+                // Marcar como seleccionado si coincide con el del usuario actual
+                const seleccionado = (d.id_genero === gen.id_genero || d.genero === gen.genero) ? 'selected' : '';
+                opcionesGenerosHTML += `<option value="${gen.id_genero}" ${seleccionado}>${gen.genero}</option>`;
+            });
+        }
+    } catch (e) {
+        console.error("No se pudo obtener géneros:", e);
+    }
+
+    const selectGeneroHTML = `
+        <div>
+            <label style="font-size:0.68rem;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;">Género</label>
+            <select id="mod-genero" style="width:100%;background:rgba(7,21,36,0.6);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 10px;border-radius:7px;font-size:0.85rem;">
+                ${opcionesGenerosHTML}
+            </select>
+        </div>
+    `;
 
     Swal.fire({
         background: '#0A2540',
@@ -301,13 +330,16 @@ function modificarPerfil() {
                 ${_inputEdit('mod-dni',        'DNI',                 d.dni           || '', 'text', true)}
                 ${_inputEdit('mod-telefono',   'Teléfono',            d.telefono      || '', 'tel')}
                 ${_inputEdit('mod-nacimiento', 'Fecha de nacimiento', (d.fecha_nacimiento||'').split('T')[0], 'date')}
+                ${selectGeneroHTML}
             </div>
 
             <div style="font-size:0.65rem;font-weight:700;color:#00C16E;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Domicilio</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:18px;">
-                ${_inputEdit('mod-calle',  'Calle',         dirObj.calle          || '')}
-                ${_inputEdit('mod-numero', 'Número',        dirObj.numero         || '')}
-                ${_inputEdit('mod-cp',     'Código postal', dirObj.codigo_postal  || '')}
+                ${_inputEdit('mod-calle',     'Calle',         dirObj.calle          || '')}
+                ${_inputEdit('mod-numero',    'Número',        dirObj.numero         || '')}
+                ${_inputEdit('mod-localidad', 'Localidad',     dirObj.localidad      || '')}
+                ${_inputEdit('mod-provincia', 'Provincia',     dirObj.provincia      || '')}
+                ${_inputEdit('mod-cp',        'Código postal', dirObj.codigo_postal  || '')}
             </div>
 
             <div id="mod-error" style="display:none;color:#f25c54;font-size:0.8rem;margin-bottom:10px;"></div>
@@ -339,6 +371,7 @@ function _inputEdit(id, label, value, type = 'text', readonly = false) {
 }
 
 async function guardarModificacionPerfil() {
+    // 2. Extraemos todos los campos mapeados según requiere tu controlador
     const payload = {
         nombre:           document.getElementById('mod-nombre')?.value.trim(),
         apellido:         document.getElementById('mod-apellido')?.value.trim(),
@@ -347,13 +380,14 @@ async function guardarModificacionPerfil() {
         telefono:         document.getElementById('mod-telefono')?.value.trim(),
         fecha_nacimiento: document.getElementById('mod-nacimiento')?.value || null,
         dni:              datosPerfilGlobal.dni, // readonly — no se modifica
+        id_genero:        document.getElementById('mod-genero')?.value || null,
         calle:            document.getElementById('mod-calle')?.value.trim(),
         numero:           document.getElementById('mod-numero')?.value.trim(),
+        localidad:        document.getElementById('mod-localidad')?.value.trim(),
+        provincia:        document.getElementById('mod-provincia')?.value.trim(),
         codigo_postal:    document.getElementById('mod-cp')?.value.trim(),
         // Conservamos los IDs que no editamos directamente
-        id_genero:        datosPerfilGlobal.id_genero        || null,
-        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad  || null,
-        id_localidad:     datosPerfilGlobal.id_localidad     || null
+        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad  || null
     };
 
     const errorEl = document.getElementById('mod-error');
@@ -381,9 +415,8 @@ async function guardarModificacionPerfil() {
             throw new Error(err.error || `Error ${res.status}`);
         }
 
-        // Actualizar caché local y sidebar
-        Object.assign(datosPerfilGlobal, payload);
-        renderizarSidebar(datosPerfilGlobal);
+        // 3. Volvemos a pedir los datos a la DB para actualizar nombres de géneros y localidades
+        await verificarSesionYPerfil();
 
         Swal.close();
         Swal.fire({ icon: 'success', iconColor: '#00C16E', title: '¡Datos actualizados!',
