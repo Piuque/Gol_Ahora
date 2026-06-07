@@ -92,7 +92,7 @@ function renderizarTarjetas(canchas) {
                     <p class="text-light-50 small mb-4"><i class="fa-solid fa-layer-group text-sports me-2"></i>Formato: ${formatoSeguro}</p>
                     <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex flex-column gap-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-light-50 small">Reserva por turno</span>
+                            <span class="text-light-50 small">Precio por turno</span>
                             <span class="precio-badge">${precioFormateado}</span>
                         </div>
                         <button class="btn btn-sports w-100 fw-bold py-2 shadow-sm">Elegir Cancha <i class="fa-solid fa-arrow-right ms-1"></i></button>
