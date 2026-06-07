@@ -2,7 +2,7 @@
    GOL AHORA — listarTiposCanchaCliente.js (Guardando Imagen en Memoria)
    ========================================================================== */
 
-const API = "https://gol-ahora.onrender.com";
+const API = window.location.origin;
 let tiposGlobales = []; // Variable para guardar los datos
 
 document.addEventListener('DOMContentLoaded', () => {

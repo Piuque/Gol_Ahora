@@ -24,6 +24,12 @@ async function cargarCanchas() {
             credentials: "include",
             headers: { "x-user-id": userId }
         });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/acceder';
+            return;
+        }
+        if (!res.ok) throw new Error("Error del servidor");
+
         canchasData = await res.json();
 
         if (!canchasData || canchasData.length === 0) {

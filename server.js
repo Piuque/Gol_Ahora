@@ -9,6 +9,24 @@ const clienteRoutes = require('./routes/clienteRoutes.js');
 const adminRoutes = require('./routes/adminRoutes.js');
 const { authMiddleware, requireRole } = require('./middlewares/auth.js');
 const usuarioController = require('./controllers/usuarioController.js');
+const multer = require('multer');
+const fs = require('fs');
+
+// Configuración de almacenamiento para certificaciones de profesores/entrenadores
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = './public/uploads';
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -218,6 +236,124 @@ app.delete('/entrenador/entrenamientos/:id_entrenamiento/alumnos/:id_alumno', au
   }
 });
 
+// --- ENDPOINTS DE API ADICIONALES PARA PROFESORES ---
+app.post('/profesor/modificarPerfil', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  const { telefono, email } = req.body;
+  const idUsuario = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    await db.query.run('UPDATE usuarios SET telefono = $1, email = $2 WHERE id_usuario = $3', [telefono, email, idUsuario]);
+    res.json({ message: 'Perfil actualizado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar perfil', message: err.message });
+  }
+});
+
+app.get('/profesor/certificaciones', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT id_certificacion, matricula, to_char(fecha_caducidad, 'YYYY-MM-DD') AS fecha_caducidad, link_archivo, validada 
+      FROM certificaciones 
+      WHERE id_usuario = $1 AND tipo_certificacion = true
+      ORDER BY id_certificacion DESC
+    `;
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows.map(r => ({
+      nombre: r.matricula,
+      institucion: 'Establecimiento',
+      fecha_emision: r.fecha_caducidad,
+      archivo_url: r.link_archivo,
+      validada: r.validada
+    })));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener certificaciones', message: err.message });
+  }
+});
+
+app.post('/profesor/certificaciones/alta', authMiddleware, requireRole(['profesor', 'admin']), upload.single('archivo'), async (req, res) => {
+  const { nombre, institucion, fecha_emision } = req.body;
+  const idUsuario = req.user.id_usuario;
+  const link_archivo = req.file ? `/uploads/${req.file.filename}` : '';
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      INSERT INTO certificaciones (tipo_certificacion, matricula, fecha_caducidad, link_archivo, id_usuario, validada)
+      VALUES (true, $1, $2, $3, $4, false)
+      RETURNING id_certificacion
+    `;
+    const matricula = `${nombre} (${institucion})`;
+    const result = await db.query.run(sql, [matricula, fecha_emision, link_archivo, idUsuario]);
+    res.status(201).json({ message: 'Certificación registrada con éxito', id: result.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar certificación', message: err.message });
+  }
+});
+
+app.post('/profesor/baja', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  res.json({ message: 'Solicitud de baja registrada correctamente' });
+});
+
+// --- ENDPOINTS DE API ADICIONALES PARA ENTRENADORES ---
+app.post('/entrenador/modificarPerfil', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  const { telefono, email } = req.body;
+  const idUsuario = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    await db.query.run('UPDATE usuarios SET telefono = $1, email = $2 WHERE id_usuario = $3', [telefono, email, idUsuario]);
+    res.json({ message: 'Perfil actualizado correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al modificar perfil', message: err.message });
+  }
+});
+
+app.get('/entrenador/certificaciones', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      SELECT id_certificacion, matricula, to_char(fecha_caducidad, 'YYYY-MM-DD') AS fecha_caducidad, link_archivo, validada 
+      FROM certificaciones 
+      WHERE id_usuario = $1 AND tipo_certificacion = false
+      ORDER BY id_certificacion DESC
+    `;
+    const rows = await db.query.all(sql, [idUsuario]);
+    res.json(rows.map(r => ({
+      nombre: r.matricula,
+      institucion: 'Establecimiento',
+      fecha_emision: r.fecha_caducidad,
+      archivo_url: r.link_archivo,
+      validada: r.validada
+    })));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener certificaciones', message: err.message });
+  }
+});
+
+app.post('/entrenador/certificaciones/alta', authMiddleware, requireRole(['entrenador', 'admin']), upload.single('archivo'), async (req, res) => {
+  const { nombre, institucion, fecha_emision } = req.body;
+  const idUsuario = req.user.id_usuario;
+  const link_archivo = req.file ? `/uploads/${req.file.filename}` : '';
+  try {
+    const db = require('./config/db.js');
+    const sql = `
+      INSERT INTO certificaciones (tipo_certificacion, matricula, fecha_caducidad, link_archivo, id_usuario, validada)
+      VALUES (false, $1, $2, $3, $4, false)
+      RETURNING id_certificacion
+    `;
+    const matricula = `${nombre} (${institucion})`;
+    const result = await db.query.run(sql, [matricula, fecha_emision, link_archivo, idUsuario]);
+    res.status(201).json({ message: 'Certificación registrada con éxito', id: result.id });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar certificación', message: err.message });
+  }
+});
+
+app.post('/entrenador/baja', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  res.json({ message: 'Solicitud de baja registrada correctamente' });
+});
+
 // Servir la especificación OpenAPI y la interfaz Swagger UI como archivos estáticos
 // Se configura control de caché estricto para openapi.yaml para evitar errores de renderizado por archivos cacheados
 app.use(express.static(path.join(__dirname), {
@@ -333,6 +469,57 @@ const cleanupExpiredReservations = async () => {
 // Ruta amigable para que el cliente acceda a "mis reservas"
 app.get(['/misReservas', '/misReservas.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/misReservas.html'));
+});
+
+// Rutas amigables adicionales del cliente
+app.get(['/cliente', '/cliente/dashboard', '/pages/interfazCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/interfazCliente.html'));
+});
+app.get(['/cliente/tipos-cancha', '/pages/listarTiposCanchaCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/listarTiposCanchaCliente.html'));
+});
+app.get(['/cliente/canchas', '/pages/listarCanchasCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/listarCanchasCliente.html'));
+});
+app.get(['/cliente/seleccionarFechaHora', '/pages/seleccionarFechaHora.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/seleccionarFechaHora.html'));
+});
+app.get(['/cliente/confirmarReserva', '/pages/confirmarReservaCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/confirmarReservaCliente.html'));
+});
+app.get(['/cliente/misClases', '/pages/misClases.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misClases.html'));
+});
+app.get(['/cliente/misEntrenamientos', '/pages/misEntrenamientos.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misEntrenamientos.html'));
+});
+app.get(['/registro', '/pages/registro.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/registro.html'));
+});
+
+// Rutas amigables adicionales del profesor
+app.get(['/profesor/perfil', '/pages/perfilProfesor.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/perfilProfesor.html'));
+});
+app.get(['/profesor/certificaciones', '/pages/certificacionesProfesor.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/certificacionesProfesor.html'));
+});
+
+// Rutas amigables adicionales del entrenador
+app.get(['/entrenador/perfil', '/pages/perfilEntrenador.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/perfilEntrenador.html'));
+});
+app.get(['/entrenador/certificaciones', '/pages/certificacionesEntrenador.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/certificacionesEntrenador.html'));
+});
+app.get(['/entrenador/gestionEntrenamiento', '/pages/gestionEntrenamiento.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/gestionEntrenamiento.html'));
+});
+app.get(['/entrenador/gestionLigas', '/pages/gestionLigas.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/gestionLigas.html'));
+});
+app.get(['/entrenador/gestionLigasTorneos', '/pages/gestionLigasTorneos.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/gestionLigasTorneos.html'));
 });
 
 // Inicializar base de datos y levantar el servidor

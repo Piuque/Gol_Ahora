@@ -23,6 +23,12 @@ async function cargarEntrenamientos() {
             credentials: "include",
             headers: { "x-user-id": userId }
         });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/acceder';
+            return;
+        }
+        if (!res.ok) throw new Error("Error del servidor");
+
         entrenamientosData = await res.json();
 
         if (!entrenamientosData || entrenamientosData.length === 0) {

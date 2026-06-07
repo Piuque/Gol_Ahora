@@ -2,7 +2,7 @@
    GOL AHORA — listarCanchasCliente.js (Paso 2)
    ========================================================================== */
 
-const API = "https://gol-ahora.onrender.com";
+const API = window.location.origin;
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Obtener el ID del formato elegido desde la URL

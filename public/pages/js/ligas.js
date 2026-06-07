@@ -15,6 +15,12 @@ async function cargarLigas() {
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
     try {
         const res = await fetch("/admin/ligas", { credentials: "include", headers: { "x-user-id": userId } });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/acceder';
+            return;
+        }
+        if (!res.ok) throw new Error("Error del servidor");
+
         ligasData = await res.json();
         if (!ligasData || ligasData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay ligas registradas.</p>`;

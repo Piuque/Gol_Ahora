@@ -15,7 +15,7 @@ const authMiddleware = async (req, res, next) => {
     userId = cookies['x-user-id'] || cookies['userId'];
   }
   
-  if (!userId) {
+  if (!userId || userId === 'null' || userId === 'undefined') {
     // Si no se proporciona ID, por defecto lo tratamos como público/visitante
     req.user = { id_usuario: null, user_level: 0, role: 'usuario' };
     return next();

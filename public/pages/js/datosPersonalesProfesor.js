@@ -7,7 +7,7 @@
      DELETE /profesor/clases/{id_clase}/alumnos/{id_alumno}
    ========================================================================== */
 
-const API = "https://gol-ahora.onrender.com";
+const API = window.location.origin;
 
 /* -----------------------------------------------------------------------
    INIT

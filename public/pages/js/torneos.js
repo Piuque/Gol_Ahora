@@ -15,6 +15,12 @@ async function cargarTorneos() {
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
     try {
         const res = await fetch("/admin/torneos", { credentials: "include", headers: { "x-user-id": userId } });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/acceder';
+            return;
+        }
+        if (!res.ok) throw new Error("Error del servidor");
+
         torneosData = await res.json();
         if (!torneosData || torneosData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay torneos registrados.</p>`;

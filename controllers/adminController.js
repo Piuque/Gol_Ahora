@@ -762,7 +762,7 @@ const eliminarReserva = async (req, res) => {
 const listarCertificaciones = async (req, res) => {
   const { id_usuario } = req.params;
   try {
-    const rows = await db.query.all(`SELECT id_certificacion AS id, matricula, DATE_FORMAT(fecha_caducidad, '%Y-%m-%d') AS fecha_caducidad, link_archivo, validada
+    const rows = await db.query.all(`SELECT id_certificacion AS id, matricula, to_char(fecha_caducidad, 'YYYY-MM-DD') AS fecha_caducidad, link_archivo, validada
                                      FROM certificaciones WHERE id_usuario = $1`, [id_usuario]);
     res.json(rows || []);
   } catch (err) {
