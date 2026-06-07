@@ -152,6 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         try {
+            console.log("Datos reserva:", { idCliente: parseInt(id_usuario), idCancha: parseInt(id_cancha), fecha, horaInicio: hora_inicio, horaFin: hora_fin });
             const res = await fetch("/cliente/reservas", {
                 method: "POST",
                 headers: {
