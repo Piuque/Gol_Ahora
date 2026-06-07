@@ -2472,6 +2472,22 @@ paths:
         '200':
           description: Asistencia guardada
 
+  /admin/clases/{id}/asistencias:
+    get:
+      tags:
+        - Clases y Entrenamientos
+      summary: Consultar reporte detallado de asistencias a una clase
+      operationId: adminObtenerAsistenciasClase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reporte de asistencias de la clase
+
   /admin/entrenamientos:
     post:
       tags:
@@ -2584,6 +2600,22 @@ paths:
         '200':
           description: Asistencia guardada
 
+  /admin/entrenamientos/{id}/asistencias:
+    get:
+      tags:
+        - Clases y Entrenamientos
+      summary: Consultar reporte detallado de asistencias a un entrenamiento
+      operationId: adminObtenerAsistenciasEntrenamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reporte de asistencias del entrenamiento
+
   # --- GENERACIÓN DE REPORTES ---
   /admin/reportes/tipos-cancha:
     get:
@@ -2630,9 +2662,70 @@ paths:
           required: false
           schema:
             type: string
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+          description: Formato del reporte (json por defecto)
       responses:
         '200':
           description: Reporte de reservas generado
+
+  /admin/reportes/canchas:
+    get:
+      tags:
+        - Reportes
+      summary: Descargar reporte de canchas físicas (Neon)
+      operationId: adminReporteCanchas
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+          description: Formato del reporte (json por defecto)
+      responses:
+        '200':
+          description: Reporte de canchas generado exitosamente
+
+  /admin/reportes/clases:
+    get:
+      tags:
+        - Reportes
+      summary: Descargar reporte de clases programadas
+      operationId: adminReporteClases
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+          description: Formato del reporte (json por defecto)
+      responses:
+        '200':
+          description: Reporte de clases generado exitosamente
+
+  /admin/reportes/entrenamientos:
+    get:
+      tags:
+        - Reportes
+      summary: Descargar reporte de entrenamientos programados
+      operationId: adminReporteEntrenamientos
+      parameters:
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [json, csv]
+          description: Formato del reporte (json por defecto)
+      responses:
+        '200':
+          description: Reporte de entrenamientos generado exitosamente
 
   /admin/reportes/asistencia-clases:
     get:
