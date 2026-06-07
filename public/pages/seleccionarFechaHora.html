@@ -47,7 +47,7 @@
         .hora-pill:not(.disabled):hover {
             background-color: rgba(0, 193, 110, 0.08);
             border-color: rgba(0, 193, 110, 0.4);
-            transform: translateX(4px);
+            transform: translateX(4px); /* Sutil efecto de empuje hacia la derecha */
         }
 
         .hora-pill.selected {
@@ -58,18 +58,18 @@
             box-shadow: 0 4px 15px rgba(0, 193, 110, 0.25);
         }
 
-        /* Estilo limpio para turnos deshabilitados: Cursor Normal, sin tachado */
+        /* Estilo limpio para turnos deshabilitados (SIN TACHADO) */
         .hora-pill.disabled {
             background-color: rgba(255, 255, 255, 0.01);
             color: rgba(255, 255, 255, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.04);
-            cursor: default; /* El cursor ahora será una flecha normal, mucho más amigable */
+            cursor: not-allowed;
         }
 
         .hora-texto { font-weight: 600; font-size: 1.05rem; }
         .hora-subtexto { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 6px; }
 
-        /* Colores sutiles de fondo para los estados */
+        /* Colores sutiles de fondo para los estados (Premium y limpios) */
         .hora-pill:not(.disabled) .hora-subtexto { background-color: rgba(0, 193, 110, 0.15); color: #00C16E; }
         .hora-pill.selected .hora-subtexto { background-color: rgba(7, 21, 36, 0.2); color: #071524; }
 
@@ -115,8 +115,11 @@
         </div>
 
         <div class="flex-grow-1">
-            <label class="form-label text-light-50 small fw-bold text-uppercase mb-3 d-block" style="letter-spacing: 1px;">
-                2. Disponibilidad horaria
+            <label class="form-label text-light-50 small fw-bold text-uppercase d-flex justify-content-between align-items-center mb-3" style="letter-spacing: 1px;">
+                <span>2. Disponibilidad horaria</span>
+                <span id="duracion-reserva" class="badge bg-secondary text-white fw-medium py-2 px-3">
+                    <i class="fa-s  olid fa-stopwatch me-1 text-sports"></i>Cargando formato...
+                </span>
             </label>
 
             <div id="contenedor-horarios" class="row g-0 mt-1">
@@ -141,4 +144,4 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="js/seleccionarFechaHora.js"></script>
 </body>
-</html> 
+</html>
