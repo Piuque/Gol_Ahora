@@ -19,7 +19,12 @@ router.get('/clientes', adminController.listarClientes);
 router.get('/clientes/:id', adminController.obtenerCliente);
 router.put('/clientes/:id', adminController.actualizarCliente);
 router.delete('/clientes/:id', adminController.eliminarCliente);
-router.post('/usuarios/registrar', registerSchema.adminController.registrarUsuarioPorAdmin);
+router.post('/usuarios/registrar', 
+    authMiddleware,                 // 1. Primero verifica quién es (¿es admin?)
+    requireRole(['admin']),         // 2. Si es admin, ¿tiene permiso?
+    validate(registerSchema),       // 3. SI TIENE PERMISO, valida que los datos no tengan basura
+    adminController.registrarUsuarioPorAdmin // 4. Finalmente, registra
+);
 
 // Personal y Certificaciones (Profesores y Entrenadores)
 router.post('/profesores', adminController.registrarProfesor);
