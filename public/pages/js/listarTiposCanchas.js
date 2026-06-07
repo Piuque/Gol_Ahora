@@ -17,8 +17,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function cargarTipos() {
     const contenedor = document.getElementById("contenedor-tipos");
+    const userId = localStorage.getItem("userId");
     try {
-        const res = await fetch("/api/tipos_canchas", { credentials: "include" });
+        const res = await fetch("/admin/tipos-cancha", {
+            credentials: "include",
+            headers: { "x-user-id": userId }
+        });
         tiposData = await res.json();
         if (!tiposData || tiposData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay tipos de cancha registrados.</p>`;
@@ -63,7 +67,6 @@ function verDetalle(t) {
         <div class="info-row"><span class="info-label">Duracion min</span><span class="info-value">${t.duracion_min} min</span></div>
         <div class="info-row"><span class="info-label">Duracion max</span><span class="info-value">${t.duracion_max} min</span></div>
         <div class="info-row"><span class="info-label">Medidas</span><span class="info-value">${t.largo}m x ${t.ancho}m</span></div>
-        <div class="info-row"><span class="info-label">Superficie</span><span class="info-value">${t.superficie ? t.superficie.tipo : '-'}</span></div>
         <div class="d-flex gap-2 mt-3">
             <button onclick="abrirModificar(${t.id}, '${t.tipo_cancha}', ${t.duracion_min}, ${t.duracion_max}, ${t.capacidad})"
                 class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #0d6efd;">
@@ -91,15 +94,15 @@ async function abrirModificar(id, tipo_cancha, duracion_min, duracion_max, capac
                 <input id="swal-tipo" class="swal2-input" value="${tipo_cancha}">
             </div>
             <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Duración mínima (minutos)</label>
+                <label style="color:#555; font-size:0.85rem;">Duracion minima (minutos)</label>
                 <input id="swal-duracion-min" type="number" class="swal2-input" value="${duracion_min}">
             </div>
             <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Duración máxima (minutos)</label>
+                <label style="color:#555; font-size:0.85rem;">Duracion maxima (minutos)</label>
                 <input id="swal-duracion-max" type="number" class="swal2-input" value="${duracion_max}">
             </div>
             <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Capacidad máxima (jugadores)</label>
+                <label style="color:#555; font-size:0.85rem;">Capacidad maxima (jugadores)</label>
                 <input id="swal-capacidad" type="number" class="swal2-input" value="${capacidad}">
             </div>
         `,
@@ -118,10 +121,11 @@ async function abrirModificar(id, tipo_cancha, duracion_min, duracion_max, capac
 
     if (!formValues) return;
 
+    const userId = localStorage.getItem("userId");
     try {
-        const res = await fetch(`/api/tipos_cancha/tipo_cancha_id=${id}`, {
+        const res = await fetch(`/admin/tipos-cancha/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
+            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
             credentials: 'include',
             body: JSON.stringify(formValues)
         });
@@ -130,7 +134,7 @@ async function abrirModificar(id, tipo_cancha, duracion_min, duracion_max, capac
             await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Tipo de cancha modificado.', confirmButtonColor: '#00C16E' });
             await cargarTipos();
         } else {
-            await Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#00C16E' });
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
         }
     } catch (e) {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
@@ -153,18 +157,19 @@ async function confirmarEliminar(id, nombre) {
 
     if (!confirm.isConfirmed) return;
 
+    const userId = localStorage.getItem("userId");
     try {
-        const res = await fetch(`/api/tipos_cancha/tipo_cancha_id=${id}`, {
+        const res = await fetch(`/admin/tipos-cancha/${id}`, {
             method: 'DELETE',
             credentials: 'include',
-            headers: { 'plataform': 'web' }
+            headers: { 'x-user-id': userId }
         });
-        const data = await res.json();
         if (res.ok) {
             await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Tipo de cancha eliminado.', confirmButtonColor: '#00C16E' });
             await cargarTipos();
         } else {
-            await Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#00C16E' });
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al eliminar.', confirmButtonColor: '#00C16E' });
         }
     } catch (e) {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });

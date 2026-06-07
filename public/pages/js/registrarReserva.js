@@ -1,12 +1,16 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
+    const userId = localStorage.getItem("userId");
     let clientes = [];
     let tiposCanchas = [];
     let todasCanchas = [];
 
     // Cargar tipos de canchas
     try {
-        const res = await fetch("/api/tipos_canchas", { credentials: "include" });
+        const res = await fetch("/admin/tipos-cancha", {
+            credentials: "include",
+            headers: { "x-user-id": userId }
+        });
         tiposCanchas = await res.json();
         const selectTipo = document.getElementById("tipo_cancha");
         tiposCanchas.forEach(t => {
@@ -19,13 +23,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Cargar todas las canchas
     try {
-        const res = await fetch("/api/canchas", { credentials: "include" });
+        const res = await fetch("/admin/canchas/listar", {
+            credentials: "include",
+            headers: { "x-user-id": userId }
+        });
         todasCanchas = await res.json();
     } catch (e) { console.error("Error cargando canchas:", e); }
 
     // Cargar clientes
     try {
-        const res = await fetch("/api/clientes", { credentials: "include" });
+        const res = await fetch("/admin/clientes", {
+            credentials: "include",
+            headers: { "x-user-id": userId }
+        });
         clientes = await res.json();
     } catch (e) { console.error("Error cargando clientes:", e); }
 
@@ -40,11 +50,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        const filtradas = todasCanchas.filter(c => c.tipo_cancha === tiposCanchas.find(t => t.id == idTipo)?.tipo_cancha);
+        const tipoNombre = tiposCanchas.find(t => t.id == idTipo)?.tipo_cancha;
+        const filtradas = todasCanchas.filter(c => c.categoria === tipoNombre);
         filtradas.forEach(c => {
             const opt = document.createElement("option");
             opt.value = c.id;
-            opt.textContent = `${c.nombre} - $${c.precio_hora_reserva}/hora`;
+            opt.textContent = `${c.nombre} - $${c.precio}/hora`;
             selectCancha.appendChild(opt);
         });
         selectCancha.disabled = false;
@@ -73,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 div.textContent = `${c.nombre} ${c.apellido} - DNI: ${c.dni}`;
                 div.addEventListener("click", () => {
                     clienteInput.value = `${c.nombre} ${c.apellido}`;
-                    idUsuarioHidden.value = c.id;
+                    idUsuarioHidden.value = c.id_usuario;
                     clienteSuggestions.style.display = "none";
                 });
                 clienteSuggestions.appendChild(div);
@@ -100,7 +111,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         calcularPrecio();
     });
 
-    // Calcular precio
     function calcularPrecio() {
         const horaInicio = document.getElementById("hora_inicio").value;
         const horaFin = document.getElementById("hora_fin").value;
@@ -110,7 +120,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const cancha = todasCanchas.find(c => c.id == idCancha);
         if (!cancha) return;
 
-        const monto = parseFloat(cancha.precio_hora_reserva);
+        const monto = parseFloat(cancha.precio);
         document.getElementById("texto-resumen").textContent = `${cancha.nombre} · ${horaInicio} - ${horaFin} · $${monto.toFixed(2)}`;
         document.getElementById("resumen-precio").style.display = "block";
     }
@@ -129,24 +139,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         const id_metodo_pago = document.getElementById("id_metodo_pago").value;
 
         if (!id_usuario) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'Seleccioná un cliente de la lista.', confirmButtonColor: '#00C16E' });
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'Selecciona un cliente de la lista.', confirmButtonColor: '#00C16E' });
             return;
         }
         if (!id_cancha) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'Seleccioná una cancha.', confirmButtonColor: '#00C16E' });
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'Selecciona una cancha.', confirmButtonColor: '#00C16E' });
             return;
         }
         if (!hora_inicio || !hora_fin) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'Seleccioná una hora de inicio.', confirmButtonColor: '#00C16E' });
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'Selecciona una hora de inicio.', confirmButtonColor: '#00C16E' });
             return;
         }
 
         try {
-            const res = await fetch("/api/reservas/agregar", {
+            const res = await fetch("/cliente/reservas", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "plataform": "web" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": id_usuario
+                },
                 credentials: "include",
-                body: JSON.stringify({ id_usuario, id_cancha, fecha, hora_inicio, hora_fin, id_metodo_pago })
+                body: JSON.stringify({ id_cancha, fecha, hora_inicio, hora_fin, id_metodo_pago })
             });
 
             const data = await res.json();
@@ -154,12 +167,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (res.ok) {
                 await Swal.fire({
                     icon: 'success',
-                    title: '¡Reserva registrada!',
-                    html: `<b>Cancha:</b> ${data.reserva.cancha}<br>
-                           <b>Fecha:</b> ${data.reserva.fecha}<br>
-                           <b>Horario:</b> ${data.reserva.hora_inicio} - ${data.reserva.hora_fin}<br>
-                           <b>Monto:</b> $${data.reserva.monto.toFixed(2)}<br>
-                           <b>Estado:</b> ${data.reserva.estado_cobro}`,
+                    title: 'Reserva registrada!',
+                    text: 'La reserva fue creada correctamente.',
                     confirmButtonColor: '#00C16E'
                 });
                 document.getElementById("form-reserva").reset();
@@ -169,7 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 document.getElementById("resumen-precio").style.display = "none";
                 document.getElementById("id_cancha").disabled = true;
             } else {
-                await Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#00C16E' });
+                await Swal.fire({ icon: 'error', title: 'Error', text: data.message || data.error, confirmButtonColor: '#00C16E' });
             }
 
         } catch (error) {

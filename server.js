@@ -25,7 +25,7 @@ app.use('/img', express.static(path.join(__dirname, 'public/pages/img')));
 app.get(['/admin', '/Admin'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/InterfazAdministrador.html'));
 });
-app.get(['/admin/VerCanchas'], (req, res) => {
+app.get(['/admin/verCanchas'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/VerCanchas.html'));
 });
 app.get(['/admin/ListarTiposCanchas'], (req, res) => {
@@ -351,5 +351,27 @@ const startServer = async () => {
     console.log(`=============================================================`);
   });
 };
+
+app.get(['/admin/Clases'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Clases.html'));
+});
+app.get(['/admin/Entrenamientos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Entrenamientos.html'));
+});
+
+app.get(['/admin/Ligas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Ligas.html'));
+});
+app.get(['/admin/Torneos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Torneos.html'));
+});
+
+app.get(['/admin/Descuentos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Descuentos.html'));
+});
+
+app.get(['/admin/Cobros'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Cobros.html'));
+});
 
 startServer();

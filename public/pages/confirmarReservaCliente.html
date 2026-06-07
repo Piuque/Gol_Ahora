@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora - Confirmar Reserva</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #071524 !important; }
+
+        /* Barra de Progreso */
+        .stepper-container { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
+        .step { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; }
+        .step.completed { background-color: rgba(0, 193, 110, 0.2); color: #00C16E; border: 1px solid #00C16E; }
+        .step.active { background-color: #00C16E; color: #071524; box-shadow: 0 0 10px rgba(0, 193, 110, 0.4); }
+        .step-line { height: 2px; width: 30px; background-color: #00C16E; }
+
+        /* Tarjeta de Resumen */
+        .resumen-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .resumen-item:last-child { border-bottom: none; }
+
+        /* Selector Dinámico de Métodos de Pago */
+        .metodo-pago-card {
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 100%;
+            text-align: center;
+        }
+        .metodo-pago-card:hover {
+            background-color: rgba(0, 193, 110, 0.04);
+            border-color: rgba(0, 193, 110, 0.2);
+            transform: translateY(-2px);
+        }
+        .metodo-pago-card.selected {
+            background-color: rgba(0, 193, 110, 0.1);
+            border-color: #00C16E;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 193, 110, 0.15);
+        }
+        .metodo-pago-card i { font-size: 1.5rem; color: rgba(255,255,255,0.4); transition: color 0.2s; }
+        .metodo-pago-card.selected i { color: #00C16E; }
+
+        /* Inputs Premium */
+        .pago-input {
+            background-color: rgba(7, 21, 36, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+        .pago-input:focus {
+            background-color: rgba(7, 21, 36, 0.8);
+            border-color: #00C16E;
+            box-shadow: 0 0 8px rgba(0, 193, 110, 0.2);
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="py-5 px-3">
+
+<div class="container mx-auto" style="max-width: 850px; min-height: 75vh; display: flex; flex-direction: column; justify-content: center;">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-50">
+        <a href="javascript:window.history.back();" class="fw-bold text-decoration-none text-sports mb-3 mb-md-0">
+            <i class="fa-solid fa-arrow-left me-2"></i> Modificar Horario
+        </a>
+
+        <div class="text-center">
+            <h3 class="fw-bold text-white text-uppercase mb-0">
+                <i class="fa-solid fa-receipt me-2 text-sports"></i>Finalizar Reserva
+            </h3>
+        </div>
+
+        <div style="width: 180px;" class="d-none d-md-block"></div>
+    </div>
+
+    <div class="stepper-container">
+        <div class="step completed"><i class="fa-solid fa-check"></i></div>
+        <div class="step-line"></div>
+        <div class="step completed"><i class="fa-solid fa-check"></i></div>
+        <div class="step-line"></div>
+        <div class="step completed"><i class="fa-solid fa-check"></i></div>
+        <div class="step-line"></div>
+        <div class="step active">4</div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="p-4 rounded-4 shadow-sm text-white h-100" style="background-color: #0A2540; border: 1px solid rgba(255,255,255,0.05);">
+                <h5 class="fw-bold text-uppercase small text-sports mb-3" style="letter-spacing: 0.5px;">Resumen del Turno</h5>
+
+                <div class="resumen-item">
+                    <span class="text-light-50 small">Cancha</span>
+                    <span class="fw-semibold" id="resumen-cancha">Cargando...</span>
+                </div>
+                <div class="resumen-item">
+                    <span class="text-light-50 small">Fecha</span>
+                    <span class="fw-semibold" id="resumen-fecha">--/--/----</span>
+                </div>
+                <div class="resumen-item">
+                    <span class="text-light-50 small">Horario</span>
+                    <span class="fw-semibold" id="resumen-hora">--:-- hs</span>
+                </div>
+
+                <div class="mt-4 pt-3 border-top border-secondary d-flex flex-column align-items-end">
+                    <span class="text-light-50 small mb-1">Total a pagar:</span>
+                    <span class="fw-bold text-sports fs-3" id="resumen-total">$ 0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="p-4 rounded-4 shadow-lg d-flex flex-column h-100" style="background-color: #0A2540; border: 1px solid rgba(255,255,255,0.05);">
+                <h5 class="fw-bold text-white small text-uppercase mb-3" style="letter-spacing: 0.5px;">Seleccioná el Método de Pago</h5>
+
+                <div id="contenedor-metodos" class="row g-2 mb-4">
+                    <div class="col-12 text-center">
+                        <div class="spinner-border spinner-border-sm text-sports" role="status"></div>
+                        <span class="text-light-50 small ms-2">Cargando métodos de pago...</span>
+                    </div>
+                </div>
+
+                <div id="feedbacks-pago" class="mb-3">
+
+                    <div id="wrapper-tarjeta" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label text-light-50 small">Número de tarjeta</label>
+                            <input type="text" class="form-control pago-input" placeholder="0000 0000 0000 0000" maxlength="19">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label text-light-50 small">Vencimiento</label>
+                                <input type="text" class="form-control pago-input" placeholder="MM/AA" maxlength="5">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-light-50 small">CVC</label>
+                                <input type="password" class="form-control pago-input" placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wrapper-efectivo" class="d-none p-3 rounded text-light-75 small border border-warning border-opacity-25" style="background-color: rgba(234, 179, 8, 0.05); color: #eab308;">
+                        <i class="fa-solid fa-circle-info me-2"></i> La reserva quedará registrada como <b>Solicitada</b>. Deberás abonarla en efectivo en la recepción del club antes de ingresar a la cancha para confirmarla.
+                    </div>
+
+                    <div id="wrapper-transferencia" class="d-none p-3 rounded text-light-75 small border border-info border-opacity-25" style="background-color: rgba(14, 165, 233, 0.05); color: #38bdf8;">
+                        <div class="fw-bold mb-1"><i class="fa-solid fa-building-columns me-2"></i>Datos para transferir:</div>
+                        CBU: 0000003123456789123456<br>
+                        Alias: EL.BUEN.DEPORTE<br>
+                        <i class="fa-solid fa-triangle-exclamation mt-2 me-1"></i> Una vez confirmada, deberás adjuntar el comprobante en la sección "Mis Reservas".
+                    </div>
+
+                    <div id="wrapper-mp" class="d-none p-3 rounded text-light-75 small border border-primary border-opacity-25" style="background-color: rgba(59, 130, 246, 0.05); color: #60a5fa;">
+                        <i class="fa-solid fa-handshake me-2"></i> Al hacer clic en confirmar, serás redirigido a la pasarela segura de <b>Mercado Pago</b> para completar la transacción.
+                    </div>
+
+                </div>
+
+                <div class="mt-auto pt-2">
+                    <button id="btn-finalizar" class="btn btn-sports w-100 py-3 fw-bold fs-5 shadow" disabled>
+                        Seleccioná un método
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/confirmarReservaCliente.js"></script>
+</body>
+</html>
