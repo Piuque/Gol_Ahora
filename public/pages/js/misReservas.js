@@ -235,7 +235,9 @@ function verDetalles(id) {
 
             <div style="background:rgba(0,193,110,0.04);border:1px solid rgba(0,193,110,0.12);border-radius:8px;padding:10px 14px;font-size:0.78rem;color:rgba(255,255,255,0.55);">
                 <i class="fa-solid fa-circle-info me-2" style="color:#00C16E;"></i>
-                Para consultar el detalle del cobro o el comprobante de pago, dirigite a la sección de pagos o acercate a la recepción del club.
+                Para consultar el detalle del cobro o imprimir tu recibo, visitá
+                <a href="misPagos.html" style="color:#00C16E;font-weight:600;">Mis Pagos</a>
+                o acercate a la recepción del club.
             </div>
         </div>`
     });

@@ -675,13 +675,18 @@ const consultarMiPago = async (req, res) => {
              mp.nombre AS metodo, 
              can.nombre AS cancha_reservada, 
              to_char(oc.fecha, 'DD/MM/YYYY') AS fecha_turno, 
-             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio 
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             rec.id_recibos AS id_recibo,
+             rec.nro_transaccion,
+             to_char(rec.fecha, 'DD/MM/YYYY HH24:MI') AS fecha_recibo,
+             rec.detalles AS detalles_recibo
       FROM cobros cob 
       LEFT JOIN estados_cobro ec ON cob.id_estado_cobro = ec.id_estado_cobro 
       LEFT JOIN metodos_de_pago mp ON cob.id_metodo_de_pago = mp.id_metodo_de_pago 
       LEFT JOIN reservas res ON cob.id_cobro = res.id_cobro 
       LEFT JOIN canchas can ON res.id_cancha = can.id_cancha 
       LEFT JOIN ocupaciones_cancha oc ON res.id_ocupacion_cancha = oc.id_ocupacion_cancha 
+      LEFT JOIN recibos rec ON rec.id_cobro = cob.id_cobro
       WHERE cob.id_cobro = $1 AND cob.id_usuario = $2
     `;
     const details = await db.query.get(sql, [id, idUsuario]);

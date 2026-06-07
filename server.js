@@ -489,6 +489,9 @@ const cleanupExpiredReservations = async () => {
 app.get(['/misReservas', '/misReservas.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/misReservas.html'));
 });
+app.get(['/misPagos', '/misPagos.html', '/cliente/misPagos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misPagos.html'));
+});
 
 // Rutas amigables adicionales del cliente
 app.get(['/cliente', '/cliente/dashboard', '/pages/interfazCliente.html'], (req, res) => {
