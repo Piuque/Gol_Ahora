@@ -1535,6 +1535,209 @@ const crearReserva = async (req, res) => {
   }
 };
 
+// Helper to convert objects to CSV
+const convertToCSV = (objArray) => {
+  if (objArray.length === 0) return '';
+  const array = typeof objArray !== 'object' ? JSON.parse(objArray) : objArray;
+  const headers = Object.keys(array[0]);
+  let str = headers.join(',') + '\r\n';
+
+  for (let i = 0; i < array.length; i++) {
+    let line = '';
+    for (let index in headers) {
+      if (line !== '') line += ',';
+      let val = array[i][headers[index]];
+      if (val === null || val === undefined) {
+        val = '';
+      } else {
+        val = String(val).replace(/"/g, '""');
+        if (val.search(/("|,|\n)/g) >= 0) {
+          val = `"${val}"`;
+        }
+      }
+      line += val;
+    }
+    str += line + '\r\n';
+  }
+  return str;
+};
+
+// Helper to send report data as CSV or JSON
+const sendReport = (res, data, filename) => {
+  const format = String(res.req.query.format || 'json').toLowerCase();
+  if (format === 'csv') {
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}.csv`);
+    return res.send(convertToCSV(data));
+  }
+  res.json(data);
+};
+
+// GET /admin/clases/:id/asistencias
+const obtenerAsistenciasClase = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const claseSql = `
+      SELECT c.id_clase AS id, c.nombre,
+             u_prof.nombre || ' ' || u_prof.apellido AS profesor,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin
+      FROM clases c
+      LEFT JOIN usuarios u_prof ON c.id_profesional = u_prof.id_usuario
+      LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE c.id_clase = $1
+    `;
+    const clase = await db.query.get(claseSql, [id]);
+    if (!clase) {
+      return res.status(404).json({ error: 'Clase no encontrada' });
+    }
+
+    const alumnosSql = `
+      SELECT u.id_usuario AS alumno_id, u.nombre, u.apellido, u.dni, u.email, u.telefono,
+             COALESCE(a.estado, 'Sin registrar') AS asistencia_estado
+      FROM clientes_clases cc
+      INNER JOIN usuarios u ON cc.id_cliente = u.id_usuario
+      LEFT JOIN asistencias a ON cc.id_asistencia = a.id_asistencia
+      WHERE cc.id_clase = $1
+      ORDER BY u.apellido ASC, u.nombre ASC
+    `;
+    const asistencias = await db.query.all(alumnosSql, [id]);
+
+    res.json({ clase, asistencias });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener reporte de asistencias de clase', message: err.message });
+  }
+};
+
+// GET /admin/entrenamientos/:id/asistencias
+const obtenerAsistenciasEntrenamiento = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const entSql = `
+      SELECT e.id_entrenamiento AS id,
+             u_prof.nombre || ' ' || u_prof.apellido AS entrenador,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin
+      FROM entrenamientos e
+      LEFT JOIN usuarios u_prof ON e.id_profesional = u_prof.id_usuario
+      LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      WHERE e.id_entrenamiento = $1
+    `;
+    const entrenamiento = await db.query.get(entSql, [id]);
+    if (!entrenamiento) {
+      return res.status(404).json({ error: 'Entrenamiento no encontrado' });
+    }
+
+    const alumnosSql = `
+      SELECT u.id_usuario AS alumno_id, u.nombre, u.apellido, u.dni, u.email, u.telefono,
+             COALESCE(a.estado, 'Sin registrar') AS asistencia_estado
+      FROM clientes_entrenamientos ce
+      INNER JOIN usuarios u ON ce.id_cliente = u.id_usuario
+      LEFT JOIN asistencias a ON ce.id_asistencia = a.id_asistencia
+      WHERE ce.id_entrenamiento = $1
+      ORDER BY u.apellido ASC, u.nombre ASC
+    `;
+    const asistencias = await db.query.all(alumnosSql, [id]);
+
+    res.json({ entrenamiento, asistencias });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener reporte de asistencias de entrenamiento', message: err.message });
+  }
+};
+
+// GET /admin/reportes/canchas
+const reporteCanchas = async (req, res) => {
+  try {
+    const sql = `
+      SELECT c.id_cancha, c.nombre, c.tiempo_cancelacion, c.precio_hora_reserva,
+             tc.tipo_cancha, tc.capacidad, tc.ancho, tc.largo
+      FROM canchas c
+      LEFT JOIN tipos_de_cancha tc ON c.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      ORDER BY c.id_cancha ASC
+    `;
+    const rows = await db.query.all(sql);
+    sendReport(res, rows, 'reporte_canchas');
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar reporte de canchas', message: err.message });
+  }
+};
+
+// GET /admin/reportes/reservas
+const reporteReservas = async (req, res) => {
+  try {
+    const sql = `
+      SELECT r.id_reserva, can.nombre AS cancha,
+             u.nombre AS cliente_nombre, u.apellido AS cliente_apellido, u.email AS cliente_email, u.dni AS cliente_dni,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
+             c.monto, mp.nombre AS metodo_pago, ec.estado AS estado_cobro
+      FROM reservas r
+      INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
+      INNER JOIN canchas can ON r.id_cancha = can.id_cancha
+      INNER JOIN ocupaciones_cancha oc ON r.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      INNER JOIN cobros c ON r.id_cobro = c.id_cobro
+      INNER JOIN metodos_de_pago mp ON c.id_metodo_de_pago = mp.id_metodo_de_pago
+      INNER JOIN estados_cobro ec ON c.id_estado_cobro = ec.id_estado_cobro
+      ORDER BY r.id_reserva ASC
+    `;
+    const rows = await db.query.all(sql);
+    sendReport(res, rows, 'reporte_reservas');
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar reporte de reservas', message: err.message });
+  }
+};
+
+// GET /admin/reportes/clases
+const reporteClases = async (req, res) => {
+  try {
+    const sql = `
+      SELECT c.id_clase, c.nombre, c.capacidad_max,
+             (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos,
+             u.nombre || ' ' || u.apellido AS profesor,
+             can.nombre AS cancha,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin
+      FROM clases c
+      LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
+      LEFT JOIN canchas can ON c.id_cancha = can.id_cancha
+      LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      ORDER BY c.id_clase ASC
+    `;
+    const rows = await db.query.all(sql);
+    sendReport(res, rows, 'reporte_clases');
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar reporte de clases', message: err.message });
+  }
+};
+
+// GET /admin/reportes/entrenamientos
+const reporteEntrenamientos = async (req, res) => {
+  try {
+    const sql = `
+      SELECT e.id_entrenamiento, e.capacidad_max,
+             (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos,
+             u.nombre || ' ' || u.apellido AS entrenador,
+             can.nombre AS cancha,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin
+      FROM entrenamientos e
+      LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
+      LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+      LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      ORDER BY e.id_entrenamiento ASC
+    `;
+    const rows = await db.query.all(sql);
+    sendReport(res, rows, 'reporte_entrenamientos');
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar reporte de entrenamientos', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -1612,4 +1815,10 @@ module.exports = {
   obtenerCobro,
   modificarCobro,
   crearReserva,
+  obtenerAsistenciasClase,
+  obtenerAsistenciasEntrenamiento,
+  reporteCanchas,
+  reporteReservas,
+  reporteClases,
+  reporteEntrenamientos,
 };
