@@ -1,501 +1,456 @@
-<<<<<<< Updated upstream
-// --- CONFIGURACIÓN DE RUTA ---
-// Validamos que el acceso sea exclusivamente para el rol de profesor
-const userRole = localStorage.getItem("role");
+/* ==========================================================================
+   GOL AHORA — datosPersonalesProfesor.js
+   Rutas reales del backend:
+     GET    /profesor/info
+     GET    /profesor/clases
+     GET    /profesor/clases/{id}/alumnos
+     DELETE /profesor/clases/{id_clase}/alumnos/{id_alumno}
+   ========================================================================== */
 
-if (userRole !== "profesor") {
-    console.warn("Acceso restringido. Redirigiendo...");
-    window.location.href = '/acceder'; // Ajusta según tu ruta de login
-}
+const API = "https://gol-ahora.onrender.com";
 
-const API = "/profesor/info";
-
+/* -----------------------------------------------------------------------
+   INIT
+----------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inicializar controles de UI
-    initInterfaceControls();
-    
-    // 2. Obtener datos específicos del profesor
-    ObtenerDatosPersonales();
-    
-    // 3. Obtener clases del profesor
-    ObtenerClasesProfesor();
-});
+    ConsultarNombreSesion();
+    ActivarMenuToggle();
+    AsignarListenersFormularios();
 
-function initInterfaceControls() {
-    // Sidebar toggle
-=======
-const API = "http://gol-ahora.onrender.com/";
+    const path = window.location.pathname.split("/").pop();
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar menú colapsable hamburguesa
->>>>>>> Stashed changes
-    const menuToggle = document.getElementById('menu-toggle');
-    if (menuToggle) {
-        menuToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('wrapper').classList.toggle('toggled');
-        });
-    }
-
-<<<<<<< Updated upstream
-    // Logout
-    const logoutBtn = document.getElementById('btn-logout-action');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            executeLogout();
-        });
-    }
-
-    // Tabs logic
-    const tabButtons = document.querySelectorAll('#tecnicoTabs button');
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-
-            const panes = document.querySelectorAll('.tab-content .tab-pane');
-            panes.forEach(pane => pane.classList.remove('show', 'active'));
-
-            const targetPaneId = this.getAttribute('data-bs-target');
-            const targetPane = document.querySelector(targetPaneId);
-            if (targetPane) {
-                targetPane.classList.add('show', 'active');
-            }
-        });
-    });
-}
-
-async function ObtenerDatosPersonales() {
-    try {
-        const respuesta = await fetch(API, {
-=======
-    // Carga de información centralizada desde Render
-    ObtenerDatosPersonalesYActividades();
-});
-
-async function ObtenerDatosPersonalesYActividades() {
-    try {
-        const Respuesta = await fetch(`${API}profesor/info`, {
->>>>>>> Stashed changes
-            method: "GET",
-            headers: { "Content-Type": "application/json", "plataform": "web" },
-            credentials: "include"
-        });
-<<<<<<< Updated upstream
-
-        if (!respuesta.ok) throw new Error("Error en la conexión con el servidor");
-
-        const datos = await respuesta.json();
-
-        if (datos) {
-            // Actualización de textos en Navbar y Sidebar
-            if(datos.nombre && datos.apellido) {
-                const nombreCompleto = `${datos.nombre} ${datos.apellido}`;
-                document.getElementById('top-navbar-user-name').textContent = nombreCompleto;
-                document.getElementById('sidebar-user-fullname').textContent = nombreCompleto;
-            }
-            
-            // Rellenado de campos de perfil
-            const campos = {
-                '.input-Nombre': datos.nombre,
-                '.input-Apellido': datos.apellido,
-                '.input-Nacionalidad': datos.nacionalidad,
-                '.input-Dni': datos.dni,
-                '.input-Genero': datos.genero,
-                '.input-Telefono': datos.telefono,
-                '.input-Email': datos.email
-            };
-
-            Object.entries(campos).forEach(([selector, valor]) => {
-                const el = document.querySelector(selector);
-                if (el) el.value = valor || '';
+    if (path === "interfazProfesor.html" || path === "") {
+        ConsultarDashboardOperativo();
+    } else if (path === "certificacionesProfesor.html") {
+        ConsultarCertificacionesLegajo();
+    } else if (path === "perfilProfesor.html") {
+        ConsultarPerfilFicha();
+        const formModalPerfil = document.getElementById('form-modal-perfil');
+        if (formModalPerfil) {
+            formModalPerfil.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const payload = {
+                    telefono: document.getElementById('perfil-input-telefono')?.value.trim(),
+                    email:    document.getElementById('perfil-input-email')?.value.trim()
+                };
+                try {
+                    const res = await fetch(`${API}/profesor/modificarPerfil`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('modalModificarPerfil'))?.hide();
+                        _setText('disp-telefono', payload.telefono || '—');
+                        _setText('disp-email',    payload.email    || '—');
+                        _setText('card-resumen-correo', payload.email || '');
+                        _perfilCache.telefono = payload.telefono;
+                        _perfilCache.email    = payload.email;
+                        Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Datos actualizados', text: 'Tu teléfono y correo fueron guardados correctamente.', confirmButtonColor: '#00C16E' });
+                    } else throw new Error();
+                } catch {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron guardar los cambios.', confirmButtonColor: '#00C16E' });
+                }
             });
         }
-    } catch (error) {
-        console.error("Error al obtener datos del profesor:", error);
     }
+});
+
+/* -----------------------------------------------------------------------
+   SIDEBAR TOGGLE
+----------------------------------------------------------------------- */
+function ActivarMenuToggle() {
+    const btn     = document.getElementById('menu-toggle');
+    const wrapper = document.getElementById('wrapper');
+    if (btn && wrapper) btn.addEventListener('click', () => wrapper.classList.toggle('toggled'));
 }
 
-// --- CONTROLES Y SWEETALERT2 ---
-let claseSeleccionadaId = null;
-
-async function ObtenerClasesProfesor() {
-    const bodyTabla = document.getElementById('tabla-clases-body');
-    if (!bodyTabla) return;
-
+/* -----------------------------------------------------------------------
+   NOMBRE DE SESIÓN  →  GET /profesor/info
+   JSON: { nombre, apellido, username, email, ... }
+----------------------------------------------------------------------- */
+async function ConsultarNombreSesion() {
     try {
-        const userId = localStorage.getItem("userId");
-        const Respuesta = await fetch('/profesor/clases', {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "plataform": "web",
-                "x-user-id": userId
-            },
-            credentials: "include"
-        });
+        const res = await fetch(`${API}/profesor/info`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        const d = await res.json();
 
-        const Clases = await Respuesta.json();
-
-        if (!Respuesta.ok) {
-            bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${Clases.error || 'No se pudieron cargar las clases'}</td></tr>`;
-            return;
-        }
-
-        if (!Clases || Clases.length === 0) {
-            bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">No tienes clases asignadas.</td></tr>`;
-            return;
-        }
-
-        bodyTabla.innerHTML = '';
-        Clases.forEach(clase => {
-            const tr = document.createElement('tr');
-            tr.style.cursor = 'pointer';
-            tr.dataset.idClase = clase.id_clase;
-            
-            // Si es la clase seleccionada actualmente, mantenerla destacada
-            if (claseSeleccionadaId && String(clase.id_clase) === String(claseSeleccionadaId)) {
-                tr.classList.add('table-active', 'bg-dark-navy');
-            }
-
-            tr.innerHTML = `
-                <td class="fw-bold text-white">${clase.nombre}</td>
-                <td>${clase.fecha_turno} ${clase.hora_inicio} - ${clase.hora_fin}</td>
-                <td>${clase.cancha_nombre || 'N/A'}</td>
-                <td><span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50">${clase.nivel || 'Estándar'}</span></td>
-                <td>${clase.inscriptos} / ${clase.capacidad_max}</td>
-            `;
-
-            tr.addEventListener('click', () => {
-                document.querySelectorAll('#tabla-clases-body tr').forEach(row => row.classList.remove('table-active', 'bg-dark-navy'));
-                tr.classList.add('table-active', 'bg-dark-navy');
-
-                claseSeleccionadaId = clase.id_clase;
-                ObtenerAlumnosClase(clase.id_clase);
-            });
-
-            bodyTabla.appendChild(tr);
-        });
-
-    } catch (error) {
-        console.error("Error al obtener clases:", error);
-        bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error de conexión al servidor</td></tr>`;
+        const completo = `${d.nombre || ''} ${d.apellido || ''}`.trim();
+        _setText('top-navbar-user-name',  completo);
+        _setText('sidebar-user-fullname', completo);
+        _setText('card-resumen-nombre',   completo);
+        _setText('card-resumen-username', d.username ? `@${d.username}` : '');
+        _setText('card-resumen-correo',   d.email    || '');
+    } catch {
+        _setText('top-navbar-user-name',  'Profesor');
+        _setText('sidebar-user-fullname', 'Profesor');
     }
 }
 
-async function ObtenerAlumnosClase(idClase) {
-    const bodyAlumnos = document.getElementById('tabla-alumnos-body');
-    if (!bodyAlumnos) return;
-
-    bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">Cargando alumnos...</td></tr>`;
-
+/* -----------------------------------------------------------------------
+   DASHBOARD  →  GET /profesor/clases
+   JSON array: [{ id_clase, nombre, capacidad_max, cancha_nombre, nivel,
+                  hora_inicio, hora_fin, fecha_turno, inscriptos }]
+----------------------------------------------------------------------- */
+async function ConsultarDashboardOperativo() {
     try {
-        const userId = localStorage.getItem("userId");
-        const Respuesta = await fetch(`/profesor/clases/${idClase}/alumnos`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "plataform": "web",
-                "x-user-id": userId
-            },
-            credentials: "include"
-        });
+        const [resClases] = await Promise.all([
+            fetch(`${API}/profesor/clases`, { method: "GET", credentials: "include" })
+        ]);
 
-        const Alumnos = await Respuesta.json();
+        if (resClases.ok) InyectarTablaClases(await resClases.json());
+        else              InyectarTablaClases([]);
 
-        if (!Respuesta.ok) {
-            bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${Alumnos.error || 'No se pudieron cargar los alumnos'}</td></tr>`;
-            return;
-        }
+        // Alumnos: se cargan por clase al hacer click — ver ConsultarAlumnosPorClase()
+        InyectarTablaAlumnos([]);
 
-        if (!Alumnos || Alumnos.length === 0) {
-            bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">No hay alumnos inscritos en esta clase.</td></tr>`;
-            return;
-        }
-
-        bodyAlumnos.innerHTML = '';
-        Alumnos.forEach(alumno => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="fw-bold text-white">${alumno.nombre} ${alumno.apellido}</td>
-                <td class="text-light-50">${alumno.dni}</td>
-                <td>${alumno.telefono || 'Sin teléfono'}</td>
-                <td><span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">${alumno.asistencia}</span></td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumno(${alumno.id_usuario}, '${alumno.nombre} ${alumno.apellido}')">
-                        <i class="fa-solid fa-user-minus"></i> Dar Baja
-                    </button>
-                </td>
-            `;
-            bodyAlumnos.appendChild(tr);
-        });
-
-    } catch (error) {
-        console.error("Error al obtener alumnos:", error);
-        bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error de conexión al servidor</td></tr>`;
+    } catch {
+        InyectarTablaClases([]);
+        InyectarTablaAlumnos([]);
     }
 }
 
-async function executeLogout() {
-    const result = await Swal.fire({
-        title: '¿Cerrar sesión?',
-        text: "Vas a salir del panel de gestión de Gol Ahora",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#00C16E',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, salir',
-        cancelButtonText: 'Cancelar'
-    });
-
-    if (result.isConfirmed) {
-        localStorage.clear();
-        document.cookie.split(";").forEach(c => {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-        
-        await fetch('/logout', { method: 'POST' }).catch(() => {});
-        window.location.href = '/acceder';
-    }
-}
-
-window.modificarBloqueActividad = () => {
-    Swal.fire({
-        title: 'Modificar Módulos Horarios',
-        text: 'La edición directa requiere confirmación de la intendencia.',
-        icon: 'info',
-        confirmButtonColor: '#00C16E'
-    });
-=======
-        const Datos = await Respuesta.json();
-
-        if (Datos) {
-            // Sincronizar perfiles y navbar superiores
-            if (document.getElementById('top-navbar-user-name')) document.getElementById('top-navbar-user-name').textContent = `${Datos.nombre} ${Datos.apellido}`;
-            if (document.getElementById('sidebar-user-fullname')) document.getElementById('sidebar-user-fullname').textContent = `${Datos.nombre} ${Datos.apellido}`;
-            
-            // Cargar indicadores de tarjetas superiores si existen
-            if (document.getElementById('metric-clases')) document.getElementById('metric-clases').textContent = `${Datos.total_clases || 6} Activas`;
-            if (document.getElementById('metric-alumnos')) document.getElementById('metric-alumnos').textContent = `${Datos.total_alumnos || 28} Asignados`;
-            if (document.getElementById('metric-torneos')) document.getElementById('metric-torneos').textContent = `${Datos.total_torneos || 2} Activos`;
-            if (document.getElementById('metric-actividad')) document.getElementById('metric-actividad').textContent = Datos.proxima_actividad || 'Hoy 19:00 hs';
-
-            // Rellenar tablas según el HTML abierto en la pestaña (Evita errores de contenedores nulos)
-            renderizarCronogramaClases(Datos.cronograma);
-            renderizarNominaAlumnos(Datos.alumnos);
-            renderizarGestionTorneos(Datos.torneos);
-        }
-    } catch (error) {
-        console.error("Cold start en Render detectado, aplicando datos semilla dinámicos...");
-        cargarEstructuraSemillaRespaldo();
-    }
-}
-
-// ==========================================
-// RENDERIZADO DE TABLAS COMPLETO SINO ENLACES FALSOS (Requisito 4)
-// ==========================================
-function renderizarCronogramaClases(lista) {
-    const tbody = document.getElementById('tabla-cronograma-body');
+/* — Tabla Clases — */
+function InyectarTablaClases(lista) {
+    const tbody = document.getElementById('tabla-clases-body');
     if (!tbody) return;
 
-    const datos = lista || [
-        { modulo: 'Escuelita F5', horario: 'Lun y Mie - 19:00 hs', cancha: 'Cancha F5 "Sintético 1"', nivel: 'Amateur / Inicial', cupo: '12 / 15 Alumnos' },
-        { modulo: 'Táctica F11', horario: 'Mar y Jue - 20:30 hs', cancha: 'Cancha F11 "Estadio Principal"', nivel: 'Avanzado / Ligas', cupo: '16 / 22 Alumnos' }
-    ];
-
-    tbody.innerHTML = datos.map(c => `
-        <tr>
-            <td class="fw-bold text-white">${c.modulo}</td>
-            <td class="text-light-75">${c.horario}</td> 
-            <td>${c.cancha}</td>
-            <td>${c.nivel}</td>
-            <td>${c.cupo}</td>
-            <td class="text-center">
-                <button class="btn btn-sm btn-sports text-white py-0.5 px-2" style="background-color:#00C16E" onclick="modificarClase('${c.modulo}')">Modificar</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function renderizarNominaAlumnos(lista) {
-    const tbody = document.getElementById('tabla-alumnos-body');
-    if (!tbody) return;
-
-    const datos = lista || [
-        { nombre: 'Juan Sebastián Verón', dni: '30444888', contacto: '11 5566-7788', condicion: 'Regular' },
-        { nombre: 'Ariel Ortega', dni: '28999111', contacto: '11 4433-2211', condicion: 'Regular' }
-    ];
-
-    tbody.innerHTML = datos.map(a => `
-        <tr>
-            <td class="fw-bold">${a.nombre}</td>
-            <td class="text-light-50">${a.dni}</td>
-            <td>${a.contacto}</td>
-            <td><span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">${a.condicion}</span></td>
-            <td class="text-center">
-                <button class="btn btn-sm btn-outline-success px-2 py-0.5 me-1" onclick="registrarAsistencia('${a.nombre}', 'Presente')"><i class="fa-solid fa-calendar-check"></i></button>
-                <button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumno('${a.nombre}')"><i class="fa-solid fa-user-minus"></i></button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function renderizarGestionTorneos(lista) {
-    const tbody = document.getElementById('tabla-torneos-body');
-    if (!tbody) return;
-
-    const datos = lista || [
-        { torneo: 'Liga Comercial F7', cruce: 'Deportivo Varela vs. Real Berazategui', fecha: 'Fecha 3 (Última)', participantes: '14 Equipos', resultado: '3 - 1' },
-        { torneo: 'Copa Campeones F11', cruce: 'Sportivo Solano vs. Atlético Quilmes', fecha: 'Sábado 16:00 hs', participantes: '8 Equipos', resultado: 'Pendiente' }
-    ];
-
-    tbody.innerHTML = datos.map(t => `
-        <tr>
-            <td class="fw-bold text-white">${t.torneo}</td>
-            <td>${t.cruce}</td>
-            <td>${t.fecha}</td>
-            <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10">${t.participantes}</span></td>
-            <td><span class="text-warning fw-bold">${t.resultado}</span></td>
-            <td class="text-center">
-                <button class="btn btn-sm btn-sports px-2 py-0.5 font-xs" style="background-color:#00C16E; border-color:#00C16E" onclick="registrarResultadoTorneo('${t.cruce}')"><i class="fa-solid fa-square-plus me-1"></i> Registrar</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// ==========================================
-// CONTROLADORES INTERACTIVOS (SWEETALERT2)
-// ==========================================
-window.registrarAsistencia = function(alumno, estado) {
-    Swal.fire({ icon: 'success', title: 'Asistencia Guardada', text: `Se registró a ${alumno} como: ${estado}`, confirmButtonColor: '#00C16E' });
-};
-
-window.modificarClase = function(modulo) {
-    Swal.fire({ title: 'Modificar Clase', text: `Abriendo el editor dinámico para la comisión: ${modulo}`, icon: 'info', confirmButtonColor: '#00C16E' });
->>>>>>> Stashed changes
-};
-
-window.darDeBajaAlumno = function(idAlumno, nombreAlumno) {
-    if (!claseSeleccionadaId) {
-        Swal.fire('Error', 'No se ha seleccionado ninguna clase.', 'error');
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-chalkboard fa-lg me-2"></i>No posee clases en su agenda.</td></tr>`;
         return;
     }
 
+    tbody.innerHTML = lista.map(c => {
+        // Horario: "hora_inicio – hora_fin  |  fecha_turno"
+        const horario = `${c.hora_inicio || ''} – ${c.hora_fin || ''}`;
+        const fecha   = c.fecha_turno ? `<br><small class="text-light-50">${c.fecha_turno}</small>` : '';
+        const nivel   = c.nivel       ? `<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 ms-1">${c.nivel}</span>` : '';
+
+        return `<tr>
+            <td class="fw-semibold text-white">
+                <i class="fa-solid fa-chalkboard text-sports me-2"></i>${c.nombre}${nivel}
+            </td>
+            <td class="text-light-75">${horario}${fecha}</td>
+            <td class="text-light-75">${c.cancha_nombre || '—'}</td>
+            <td class="text-light-75">Capacidad: ${c.capacidad_max || '—'}</td>
+            <td><span class="badge bg-success bg-opacity-10 border border-success border-opacity-25 text-success px-2">${c.inscriptos || 0} inscriptos</span></td>
+            <td class="text-center">
+                <button class="btn btn-xs btn-outline-success border-sports text-sports"
+                    onclick="ConsultarAlumnosPorClase('${c.id_clase}', \`${_esc(c.nombre)}\`)">
+                    <i class="fa-solid fa-users me-1"></i>Ver alumnos
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+/* -----------------------------------------------------------------------
+   ALUMNOS POR CLASE  →  GET /profesor/clases/{id}/alumnos
+   JSON array: [{ id_usuario, nombre, apellido, dni, telefono, asistencia }]
+----------------------------------------------------------------------- */
+window.ConsultarAlumnosPorClase = async function(idClase, nombreClase) {
+    // Actualizar encabezado de la tabla
+    const titulo = document.getElementById('titulo-tabla-alumnos');
+    if (titulo) titulo.textContent = `Alumnos — ${nombreClase}`;
+
+    const tbody = document.getElementById('tabla-alumnos-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color:var(--text-light-50);">
+        <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+        Cargando alumnos de la clase...
+    </td></tr>`;
+
+    try {
+        const res = await fetch(`${API}/profesor/clases/${idClase}/alumnos`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        InyectarTablaAlumnos(await res.json(), idClase);
+    } catch {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color:var(--text-light-50);">
+            <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>No se pudieron cargar los alumnos.</td></tr>`;
+    }
+};
+
+/* — Tabla Alumnos — */
+function InyectarTablaAlumnos(lista, idClase) {
+    const tbody = document.getElementById('tabla-alumnos-body');
+    if (!tbody) return;
+
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-users fa-lg me-2"></i>No hay alumnos inscriptos en esta clase.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(a => {
+        // Badge de asistencia según valor del campo
+        const asistenciaBadge = a.asistencia
+            ? `<span class="badge px-2" style="background:rgba(0,193,110,0.1);border:1px solid rgba(0,193,110,0.3);color:#00C16E;">${a.asistencia}</span>`
+            : `<span class="badge px-2" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);">—</span>`;
+
+        return `<tr>
+            <td class="fw-semibold">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                        style="width:30px;height:30px;font-size:0.7rem;flex-shrink:0;">
+                        ${_initials(a.nombre, a.apellido)}
+                    </div>
+                    <span class="text-white">${a.nombre} ${a.apellido}</span>
+                </div>
+            </td>
+            <td class="text-light-50 small">${a.dni || '—'}</td>
+            <td class="text-light-75">${a.telefono || '—'}</td>
+            <td>${asistenciaBadge}</td>
+            <td class="text-center">
+                <button class="btn btn-xs btn-outline-danger font-xs"
+                    onclick="ProcesarBajaAlumno('${idClase}', '${a.id_usuario}', '${_esc(a.nombre)} ${_esc(a.apellido)}')">
+                    <i class="fa-solid fa-user-minus me-1"></i>Dar Baja
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+/* -----------------------------------------------------------------------
+   BAJA DE ALUMNO  →  DELETE /profesor/clases/{id_clase}/alumnos/{id_alumno}
+----------------------------------------------------------------------- */
+window.ProcesarBajaAlumno = function(idClase, idAlumno, nombre) {
     Swal.fire({
-        title: '¿Confirmar baja del alumno?',
-        text: `Se desvinculará a ${nombreAlumno} de la asistencia de forma inmediata.`,
+        title: '¿Dar de baja?',
+        html: `Se dará de baja a <strong>${nombre}</strong> de esta clase.`,
         icon: 'warning',
+        iconColor: '#f25c54',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#0A2540',
-<<<<<<< Updated upstream
-        confirmButtonText: 'Sí, dar de baja',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: '#f25c54',
+        cancelButtonColor:  '#6c757d',
+        confirmButtonText:  'Sí, dar de baja',
+        cancelButtonText:   'Cancelar',
+        reverseButtons: true
     }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const userId = localStorage.getItem("userId");
-                const Respuesta = await fetch(`/profesor/clases/${claseSeleccionadaId}/alumnos/${idAlumno}`, {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "plataform": "web",
-                        "x-user-id": userId
-                    },
-                    credentials: "include"
-                });
-
-                const Res = await Respuesta.json();
-
-                if (Respuesta.ok) {
-                    Swal.fire('Procesado', 'El alumno fue removido de la planilla de asistencia.', 'success');
-                    ObtenerAlumnosClase(claseSeleccionadaId);
-                    ObtenerClasesProfesor();
-                } else {
-                    Swal.fire('Error', Res.error || 'No se pudo procesar la baja.', 'error');
-                }
-            } catch (err) {
-                console.error("Error al procesar la baja:", err);
-                Swal.fire('Error', 'Error de conexión al servidor.', 'error');
-            }
-=======
-        confirmButtonText: 'Sí, dar de baja'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({ icon: 'success', title: 'Baja Exitosa', text: 'El alumno fue removido de la planilla de asistencia.', confirmButtonColor: '#00C16E' });
->>>>>>> Stashed changes
+        if (!result.isConfirmed) return;
+        try {
+            const res = await fetch(`${API}/profesor/clases/${idClase}/alumnos/${idAlumno}`, {
+                method: "DELETE",
+                credentials: "include"
+            });
+            if (res.ok) {
+                Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Baja registrada', text: `${nombre} fue removido de la clase.`, confirmButtonColor: '#00C16E' });
+                ConsultarAlumnosPorClase(idClase, '');
+            } else throw new Error();
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo procesar la baja.', confirmButtonColor: '#00C16E' });
         }
     });
 };
 
-<<<<<<< Updated upstream
-window.cargarResultadoPartido = (partido) => {
-    Swal.fire({
-        title: 'Planilla Oficial de Resultados',
-        html: `<p class="small text-muted">${partido}</p>
-               <div class="d-flex justify-content-center gap-2">
-                   <input type="number" id="goles-local" class="form-control" style="width:60px" placeholder="0">
-                   <input type="number" id="goles-visita" class="form-control" style="width:60px" placeholder="0">
-               </div>`,
-        confirmButtonText: 'Publicar Goles'
-    }).then((result) => {
-        if (result.isConfirmed) Swal.fire('Éxito', 'Marcador guardado.', 'success');
-    });
-};
+/* -----------------------------------------------------------------------
+   CERTIFICACIONES  (certificacionesProfesor.html)
+   — sin endpoint real aún, se deja el hook listo
+----------------------------------------------------------------------- */
+async function ConsultarCertificacionesLegajo() {
+    const container = document.getElementById('contenedor-certificaciones-cards');
+    if (!container) return;
 
-window.guardarDatosPerfil = () => {
-    Swal.fire({ icon: 'success', title: 'Perfil Actualizado', confirmButtonColor: '#00C16E' });
-};
+    container.innerHTML = `<div class="col-12 text-center py-5" style="color:var(--text-light-50)">
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-3 small">Cargando certificaciones...</p>
+    </div>`;
 
-window.imprimirLegajoTecnico = () => window.print();
+    try {
+        const res = await fetch(`${API}/profesor/certificaciones`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        renderizarCardsCertificadosHTML(await res.json());
+    } catch {
+        container.innerHTML = `<div class="col-12 text-center py-5" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-graduation-cap fa-3x mb-3 d-block" style="color:var(--sports-green);opacity:0.3;"></i>
+            <p class="small">No posee certificados cargados en su legajo.<br>
+            <span style="color:var(--text-light-50)">Usá el botón <strong>Agregar Certificación</strong> para iniciar.</span></p>
+        </div>`;
+    }
+}
 
-window.solicitarBajaContrato = () => {
-    Swal.fire({
-        title: 'Solicitud de Cese',
-        input: 'textarea',
-        confirmButtonText: 'Enviar'
-    }).then((result) => {
-        if (result.isConfirmed) Swal.fire('Enviado', 'La administración se contactará.', 'success');
-    });
-};
-=======
-window.registrarResultadoTorneo = function(partido) {
-    Swal.fire({
-        title: 'Registrar Resultados',
-        html: `
-            <p class="small text-muted mb-3">${partido}</p>
-            <div class="d-flex justify-content-center gap-2 mb-2">
-                <input type="number" id="goles-local" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0">
-                <span class="fs-4 text-white">-</span>
-                <input type="number" id="goles-visita" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0">
+function renderizarCardsCertificadosHTML(lista) {
+    const container = document.getElementById('contenedor-certificaciones-cards');
+    if (!container) return;
+
+    if (!lista || lista.length === 0) {
+        container.innerHTML = `<div class="col-12 text-center py-5" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-graduation-cap fa-3x mb-3 d-block" style="color:var(--sports-green);opacity:0.3;"></i>
+            <p class="small">No posee certificados cargados en su legajo.</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = lista.map(c => `
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-sport h-100 p-3 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                        <h6 class="fw-bold text-white mb-0" style="flex:1;min-width:0;word-break:break-word;">${c.nombre}</h6>
+                        <span style="display:inline-block;flex-shrink:0;max-width:140px;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.25);border-radius:4px;padding:3px 8px;font-size:0.7rem;color:#ffc107;text-align:right;line-height:1.4;">Pendiente de evaluación</span>
+                    </div>
+                    <p class="small text-light-75 mb-1">
+                        <i class="fa-solid fa-building-columns text-sports me-1"></i>${c.institucion}
+                    </p>
+                    <small style="color:var(--text-light-50)">
+                        <i class="fa-regular fa-calendar me-1"></i>Emisión: ${c.fecha_emision}
+                    </small>
+                </div>
+                ${c.archivo_url ? `
+                    <div class="mt-3">
+                        <a href="${c.archivo_url}" target="_blank"
+                            class="btn btn-xs btn-outline-success border-sports text-sports w-100">
+                            <i class="fa-solid fa-file-pdf me-1"></i>Ver adjunto
+                        </a>
+                    </div>` : ''}
             </div>
-        `,
+        </div>`).join('');
+}
+
+async function ProcesarAltaCertificacionConAdjunto() {
+    const nom  = document.getElementById('cert-nombre')?.value.trim();
+    const ins  = document.getElementById('cert-institucion')?.value.trim();
+    const fec  = document.getElementById('cert-fecha')?.value;
+    const file = document.getElementById('cert-archivo');
+
+    if (!nom || !ins || !fec || !file?.files[0]) {
+        Swal.fire({ icon: 'warning', title: 'Campos incompletos', text: 'Completá todos los campos y adjuntá el comprobante.', confirmButtonColor: '#00C16E' });
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('nombre',        nom);
+    formData.append('institucion',   ins);
+    formData.append('fecha_emision', fec);
+    formData.append('archivo',       file.files[0]);
+
+    try {
+        const res = await fetch(`${API}/profesor/certificaciones/alta`, {
+            method: "POST", credentials: "include", body: formData
+        });
+        if (res.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('modalAltaCertificacion'))?.hide();
+            Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Certificación enviada', text: 'Quedará pendiente de evaluación por el administrador.', confirmButtonColor: '#00C16E' });
+            document.getElementById('form-alta-certificacion').reset();
+            ConsultarCertificacionesLegajo();
+        } else throw new Error();
+    } catch {
+        Swal.fire({ icon: 'error', title: 'Error al subir', text: 'No se pudo cargar el archivo. Intentá más tarde.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+/* -----------------------------------------------------------------------
+   PERFIL  →  GET /profesor/info
+   JSON: { nombre, apellido, dni, nacionalidad, genero, telefono, email,
+           username, fecha_nacimiento, direccion: { localidad, provincia, ... } }
+----------------------------------------------------------------------- */
+let _perfilCache = {};
+
+async function ConsultarPerfilFicha() {
+    try {
+        const res = await fetch(`${API}/profesor/info`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        const d = await res.json();
+        _perfilCache = d;
+
+        _setText('disp-nombre',       d.nombre       || '—');
+        _setText('disp-apellido',     d.apellido     || '—');
+        _setText('disp-dni',          d.dni          || '—');
+        _setText('disp-nacionalidad', d.nacionalidad || '—');
+        _setText('disp-genero',       d.genero       || '—');
+        _setText('disp-telefono',     d.telefono     || '—');
+        _setText('disp-email',        d.email        || '—');
+
+        const completo = `${d.nombre || ''} ${d.apellido || ''}`.trim();
+        _setText('card-resumen-nombre',   completo);
+        _setText('card-resumen-username', d.username ? `@${d.username}` : '');
+        _setText('card-resumen-correo',   d.email    || '');
+        _setText('card-resumen-especialidad', d.especialidad || '—');
+        _setText('card-resumen-estado',       d.estado       || 'Activo');
+
+    } catch {
+        console.warn("No se pudo cargar el perfil del profesor.");
+    }
+}
+
+window.AbrirModalModificarPerfil = function() {
+    const telInput  = document.getElementById('perfil-input-telefono');
+    const mailInput = document.getElementById('perfil-input-email');
+    if (telInput)  telInput.value  = _perfilCache.telefono || '';
+    if (mailInput) mailInput.value = _perfilCache.email    || '';
+
+    const el = document.getElementById('modalModificarPerfil');
+    let inst = bootstrap.Modal.getInstance(el);
+    if (!inst) inst = new bootstrap.Modal(el, { backdrop: 'static', keyboard: false });
+    inst.show();
+};
+
+/* -----------------------------------------------------------------------
+   SOLICITAR BAJA DE PERFIL
+----------------------------------------------------------------------- */
+window.solicitarBajaPerfil = function() {
+    Swal.fire({
+        title: '¿Solicitar baja del perfil?',
+        html: 'Esta acción iniciará el proceso de desvinculación de sus comisiones de enseñanza. Requiere validación del administrador.',
+        icon: 'warning', iconColor: '#f25c54',
         showCancelButton: true,
-        confirmButtonColor: '#00C16E',
-        confirmButtonText: 'Publicar Goles',
-        preConfirm: () => {
-            const loc = document.getElementById('goles-local').value;
-            const vis = document.getElementById('goles-visita').value;
-            if (!loc || !vis) Swal.showValidationMessage('Por favor complete ambos tableros.');
-            return { local: loc, visita: vis };
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire('Éxito', `Marcador guardado: ${result.value.local} - ${result.value.visita}. Fixture de liga actualizado.`, 'success');
+        confirmButtonColor: '#f25c54', cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, solicitar baja', cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
+        try {
+            const res = await fetch(`${API}/profesor/baja`, { method: "POST", credentials: "include" });
+            if (res.ok) Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Solicitud registrada', text: 'Quedará pendiente de validación.', confirmButtonColor: '#00C16E' });
+            else throw new Error();
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo procesar la solicitud.', confirmButtonColor: '#00C16E' });
         }
     });
 };
 
-function cargarEstructuraSemillaRespaldo() {
-    if (document.getElementById('top-navbar-user-name')) document.getElementById('top-navbar-user-name').textContent = "Profesor Legajado";
-    renderInitializeTables();
+/* -----------------------------------------------------------------------
+   CERRAR SESIÓN
+----------------------------------------------------------------------- */
+window.CerrarSesion = function() {
+    Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: 'Serás redirigido al inicio de la aplicación.',
+        icon: 'question', iconColor: '#00C16E',
+        showCancelButton: true,
+        confirmButtonColor: '#00C16E', cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fa-solid fa-right-from-bracket me-1"></i>Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
+        try { await fetch(`${API}/logout`, { method: "POST", credentials: "include" }); } catch {}
+        window.location.href = "index.html";
+    });
+};
+
+/* -----------------------------------------------------------------------
+   LISTENERS DE FORMULARIOS
+----------------------------------------------------------------------- */
+function AsignarListenersFormularios() {
+    const formCert = document.getElementById("form-alta-certificacion");
+    if (formCert) formCert.addEventListener("submit", (e) => { e.preventDefault(); ProcesarAltaCertificacionConAdjunto(); });
 }
 
-function renderInitializeTables() {
-    renderizerCronogramaClases(null);
-    renderizerNominaAlumnos(null);
-    renderizerGestionTorneos(null);
+/* -----------------------------------------------------------------------
+   HELPERS
+----------------------------------------------------------------------- */
+function _setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
 }
->>>>>>> Stashed changes
+
+function _initials(nombre, apellido) {
+    return `${(nombre||'')[0]||''}${(apellido||'')[0]||''}`.toUpperCase();
+}
+
+function _esc(str) {
+    return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}

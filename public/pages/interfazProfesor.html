@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gol Ahora - Panel Profesor</title>
+    <title>Gol Ahora — Panel Técnico Profesor</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,270 +11,232 @@
 </head>
 <body class="bg-football-dark text-light">
 
-    <div class="d-flex" id="wrapper">
-        <div class="bg-navy border-end border-secondary border-opacity-25" id="sidebar-wrapper">
-            <div class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25">
-                <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
-            </div>
-            
-            <div id="user-profile-summary" class="p-3 border-bottom border-secondary border-opacity-25 bg-dark-navy">
-                <div class="d-flex align-items-center">
-                    <div class="avatar-box bg-success bg-opacity-25 text-sports rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                        <i class="fa-solid fa-user-tie"></i>
-                    </div>
-                    <div class="overflow-hidden">
-                        <div class="fw-bold text-white text-truncate lh-1 small" id="sidebar-user-fullname">Cargando...</div>
-                        <small class="text-sports text-uppercase fw-bold tracking-wider" style="font-size: 0.65rem;">Profesor</small>
-                    </div>
+<div class="d-flex" id="wrapper">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <div id="sidebar-wrapper">
+        <a href="interfazProfesor.html" class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
+            style="transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+            <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
+        </a>
+
+        <div id="user-profile-summary" class="p-3 border-bottom border-secondary border-opacity-25">
+            <div class="d-flex align-items-center">
+                <div class="avatar-box bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center me-2"
+                    style="width:40px;height:40px;flex-shrink:0;">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="fw-bold text-white text-truncate lh-1 small" id="sidebar-user-fullname">Conectando...</div>
+                    <small class="text-sports text-uppercase fw-bold" style="font-size:0.63rem;letter-spacing:0.8px;">Profesor</small>
                 </div>
             </div>
-
-            <ul class="nav flex-column mt-2" id="sidebar-menu-items">
-                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="perfilProfesor.html"><i class="fa-solid fa-user-gear me-3"></i>Mi Perfil Técnico</a></li>
-                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link active" href="interfazProfesor.html"><i class="fa-solid fa-clipboard-user me-3"></i>Gestión de Clases</a></li>
-                <li><a class="nav-link text-white d-flex align-items-center py-2.5 px-3 sidebar-link" href="gestionTorneos.html"><i class="fa-solid fa-trophy me-3"></i>Gestión de Torneos</a></li>
-                <li class="nav-item mt-4">
-                    <a class="nav-link text-danger d-flex align-items-center py-2.5 px-3 sidebar-link" href="#" id="btn-logout-action">
-                        <i class="fa-solid fa-right-from-bracket me-3"></i><span>Cerrar Sesión</span>
-                    </a>
-                </li>
-            </ul>
         </div>
 
-        <div id="page-content-wrapper" class="w-100 d-flex flex-column">
-            <nav class="navbar navbar-expand-lg navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
-                <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle"><i class="fa-solid fa-bars"></i></button>
-                <div class="ms-auto d-flex align-items-center gap-3">
-                    <div class="border-start border-secondary border-opacity-50 ps-3">
-                        <span class="small text-light-75 fw-medium" id="top-navbar-user-name">Cargando...</span>
-                    </div>
-                </div>
-            </nav>
+        <ul class="nav flex-column mt-2 flex-grow-1">
+            <li>
+                <a class="nav-link sidebar-link active d-flex align-items-center" href="interfazProfesor.html">
+                    <i class="fa-solid fa-person-chalkboard me-3"></i>Gestión de Clases
+                </a>
+            </li>
+            <li>
+                <a class="nav-link sidebar-link d-flex align-items-center" href="certificacionesProfesor.html">
+                    <i class="fa-solid fa-graduation-cap me-3"></i>Mis Certificaciones
+                </a>
+            </li>
+            <li>
+                <a class="nav-link sidebar-link d-flex align-items-center" href="perfilProfesor.html">
+                    <i class="fa-solid fa-user-tie me-3"></i>Mi Perfil Técnico
+                </a>
+            </li>
+        </ul>
 
-            <div class="container-fluid px-4 py-4 flex-grow-1">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3 col-sm-6">
-                        <div class="card-metric p-3 border-start border-success border-4 shadow-sm">
-                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-chalkboard-user me-1"></i> Clases Activas</small>
-                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-clases">-</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="card-metric p-3 border-start border-primary border-4 shadow-sm">
-                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-users me-1"></i> Alumnos Asignados</small>
-                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-alumnos">-</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="card-metric p-3 border-start border-warning border-4 shadow-sm">
-                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-trophy me-1"></i> Torneos Activos</small>
-                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-torneos">-</h4>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="card-metric p-3 border-start border-info border-4 shadow-sm">
-                            <small class="text-light-50 text-uppercase fw-bold" style="font-size: 0.68rem;"><i class="fa-solid fa-calendar-day me-1"></i> Próximos Eventos</small>
-                            <h4 class="fw-bold mt-1 mb-0 text-white" id="metric-actividad" style="font-size: 1.1rem; line-height: 1.6;">Cargando...</h4>
-                        </div>
-                    </div>
-                </div>
+        <div class="p-3 border-top border-secondary border-opacity-25 mt-auto">
+            <button class="btn sidebar-logout w-100 d-flex align-items-center gap-2"
+                onclick="CerrarSesion()">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Cerrar sesión</span>
+            </button>
+        </div>
+    </div>
+    <!-- ===================== /SIDEBAR ===================== -->
 
-                <div class="card bg-navy border-0 shadow-lg p-4" id="main-workspace-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="fw-bold mb-0 text-white text-uppercase tracking-wide">Gestión de Clases</h4>
-                    </div>
-                    <hr class="border-secondary border-opacity-50 my-3">
-                    
-                    <div id="workspace-content">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="text-sports fw-bold mb-0 text-uppercase"><i class="fa-solid fa-list me-2"></i>Cronograma y Horarios Asignados</h6>
-                        </div>
-                        
+    <div id="page-content-wrapper" class="w-100 d-flex flex-column">
+
+        <!-- TOPBAR -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
+            <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="ms-auto">
+                <span class="small text-light-75 fw-medium" id="top-navbar-user-name">Conectando...</span>
+            </div>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <div class="container-fluid px-4 py-4 flex-grow-1">
+            <div class="card bg-navy border-0 shadow-lg p-4">
+
+                <!-- TABS -->
+                <ul class="nav nav-tabs mb-4" id="tecnicoTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="clases-tab"
+                            data-bs-toggle="tab" data-bs-target="#panel-clases" type="button">
+                            <i class="fa-solid fa-chalkboard me-1"></i>Planificación y Alumnos
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="torneos-tab"
+                            data-bs-toggle="tab" data-bs-target="#panel-torneos" type="button">
+                            <i class="fa-solid fa-trophy me-1"></i>Torneos y Ligas
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="tecnicoTabsContent">
+
+                    <!-- TAB 1: Clases y Alumnos -->
+                    <div class="tab-pane fade show active" id="panel-clases" role="tabpanel">
+
+                        <h6 class="text-sports fw-bold mb-3 text-uppercase small">
+                            <i class="fa-solid fa-calendar-days me-2"></i>Cronograma de Clases
+                        </h6>
+
                         <div class="table-responsive mb-4">
-                            <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                            <table class="table table-dark table-hover table-striped align-middle mb-0 small">
                                 <thead>
                                     <tr>
-                                        <th>Módulo</th>
-                                        <th>Días / Horarios (Informativo)</th> <th>Cancha</th>
-                                        <th>Nivel</th>
-                                        <th>Cupo</th>
-                                        <th class="text-center">Acción</th>
+                                        <th>Nombre de la Clase</th>
+                                        <th>Horario</th>
+                                        <th>Cancha</th>
+                                        <th>Capacidad</th>
+                                        <th>Inscriptos</th>
+                                        <th class="text-center">Alumnos</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabla-cronograma-body">
-                                    </tbody>
+                                <tbody id="tabla-clases-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4" style="color:var(--text-light-50);">
+                                            <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                                            Cargando clases...
+                                        </td>
+                                    </tr>
+                                </tbody>
                             </table>
                         </div>
 
-<<<<<<< Updated upstream
-                        <div class="tab-content" id="tecnicoTabsContent">
-                            <!-- PESTAÑA 1 -->
-                            <div class="tab-pane fade show active" id="panel-actividades" role="tabpanel">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="text-sports fw-bold mb-0 text-uppercase"><i class="fa-solid fa-list me-2"></i>Cronograma de Clases</h6>
-                                    <button class="btn btn-sm btn-outline-success border-sports text-white px-3" onclick="modificarBloqueActividad()"><i class="fa-regular fa-pen-to-square me-1"></i> Modificar Horarios</button>
-                                </div>
-                                <div class="table-responsive mb-4">
-                                    <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
-                                        <thead>
-                                            <tr>
-                                                <th>Módulo</th>
-                                                <th>Días / Horarios</th>
-                                                <th>Cancha</th>
-                                                <th>Nivel</th>
-                                                <th>Cupo</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tabla-clases-body">
-                                             <tr>
-                                                 <td colspan="5" class="text-center text-light-50">Cargando cronograma de clases...</td>
-                                             </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                        <h6 class="text-sports fw-bold mb-3 text-uppercase small mt-4">
+                            <i class="fa-solid fa-users me-2"></i>
+                            <span id="titulo-tabla-alumnos">Nómina Oficial de Alumnos</span>
+                            <small class="text-light-50 ms-2 fw-normal text-lowercase normal-case" style="font-size:0.7rem;">
+                                — hacé clic en "Ver alumnos" de una clase para cargarlos
+                            </small>
+                        </h6>
 
-                                <h6 class="text-sports fw-bold mb-3 text-uppercase mt-4"><i class="fa-solid fa-users me-2"></i>Nómina Oficial de Alumnos Inscriptos</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
-                                        <thead>
-                                            <tr>
-                                                <th>Alumno</th>
-                                                <th>DNI</th>
-                                                <th>Contacto</th>
-                                                <th>Condición</th>
-                                                <th class="text-center">Acción</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tabla-alumnos-body">
-                                            <tr>
-                                                <td colspan="5" class="text-center text-light-50">Selecciona una clase del cronograma arriba para listar los alumnos inscritos.</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- PESTAÑA 2 -->
-                            <div class="tab-pane fade" id="panel-competencias" role="tabpanel">
-                                <h6 class="text-sports fw-bold mb-3 text-uppercase"><i class="fa-solid fa-trophy me-2"></i>Fixture de Torneos Vigentes</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
-                                        <thead>
-                                            <tr>
-                                                <th>Torneo</th>
-                                                <th>Partido / Cruce</th>
-                                                <th>Fecha</th>
-                                                <th>Resultado Registrado</th>
-                                                <th class="text-center">Planilla</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="fw-bold text-white">Liga Comercial F7</td>
-                                                <td>Deportivo Varela vs. Real Berazategui</td>
-                                                <td>Fecha 3 (Última)</td>
-                                                <td><span class="text-warning fw-bold">3 - 1</span></td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-success px-2 py-0.5 font-xs" style="background-color:#00C16E; border-color:#00C16E" onclick="cargarResultadoPartido('Deportivo Varela vs. Real Berazategui')"><i class="fa-solid fa-square-plus me-1"></i>Editar Goles</button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- PESTAÑA 3 -->
-                            <div class="tab-pane fade" id="panel-perfil" role="tabpanel">
-                                <div class="row g-3">
-                                    <div class="col-md-8">
-                                        <div class="p-3 rounded bg-dark-navy border border-secondary border-opacity-25">
-                                            <h6 class="text-sports fw-bold mb-3 text-uppercase"><i class="fa-regular fa-id-card me-2"></i>Ficha del Profesional Matriculado</h6>
-                                            <form id="form-perfil-tecnico" onsubmit="event.preventDefault(); guardarDatosPerfil();">
-                                                <div class="row g-2 mb-3">
-                                                    <div class="col-6">
-                                                        <label class="form-label small text-light-75 fw-medium">Nombre</label>
-                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Nombre" value="" readonly>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label small text-light-75 fw-medium">Apellido</label>
-                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Apellido" value="" readonly>
-                                                    </div>
-                                                </div>
-                                                <div class="row g-2 mb-3">
-                                                    <div class="col-6">
-                                                        <label class="form-label small text-light-75 fw-medium">DNI</label>
-                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Dni" value="" readonly>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label small text-light-75 fw-medium">Nacionalidad</label>
-                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Nacionalidad" value="" readonly>
-                                                    </div>
-                                                </div>
-                                                <div class="row g-2 mb-3">
-                                                    <div class="col-6">
-                                                        <label class="form-label small text-light-75 fw-medium">Género</label>
-                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Genero" value="" readonly>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label small text-light-75 fw-medium">Teléfono</label>
-                                                        <input type="text" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Telefono" value="" readonly>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label small text-light-75 fw-medium">Correo Institucional</label>
-                                                    <input type="email" class="form-control form-control-sm bg-football-dark border-secondary text-white input-Email" value="" readonly>
-                                                </div>
-                                                <div class="d-flex gap-2">
-                                                    <button type="submit" class="btn btn-sm btn-success px-3 fw-bold"><i class="fa-solid fa-floppy-disk me-1"></i> Guardar Cambios</button>
-                                                    <button type="button" class="btn btn-sm btn-outline-light px-3" onclick="imprimirLegajoTecnico()"><i class="fa-solid fa-print me-1"></i> Imprimir Ficha</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="p-3 rounded border border-danger border-opacity-25 bg-dark-navy h-100 d-flex flex-column justify-content-between">
-                                            <div>
-                                                <h6 class="text-danger fw-bold text-uppercase mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i>Cese de Actividades</h6>
-                                                <p class="text-light-50 small">Solicitá la baja temporal o definitiva de tus comisiones asignadas en el predio mediante una notificación formal a la administración.</p>
-                                            </div>
-                                            <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-2 mt-2" onclick="solicitarBajaContrato()"><i class="fa-solid fa-user-xmark me-1"></i> Solicitar Baja de Legajo</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-=======
-                        <h6 class="text-sports fw-bold mb-3 text-uppercase mt-4"><i class="fa-solid fa-users me-2"></i>Nómina Oficial y Gestión de Asistencia</h6>
                         <div class="table-responsive">
-                            <table class="table table-dark table-hover table-striped align-middle mb-0 small border border-secondary border-opacity-10">
+                            <table class="table table-dark table-hover table-striped align-middle mb-0 small">
                                 <thead>
                                     <tr>
-                                        <th>Alumno</th>
+                                        <th>Nombre y Apellido</th>
                                         <th>DNI</th>
-                                        <th>Contacto</th>
-                                        <th>Condición</th>
-                                        <th class="text-center">Asistencia</th>
+                                        <th>Teléfono</th>
+                                        <th>Asistencia</th>
+                                        <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabla-alumnos-body">
-                                    </tbody>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4" style="color:var(--text-light-50);">
+                                            <i class="fa-solid fa-hand-pointer me-2"></i>Seleccioná una clase para ver sus alumnos.
+                                        </td>
+                                    </tr>
+                                </tbody>
                             </table>
->>>>>>> Stashed changes
                         </div>
-                    </div>
-                </div>
 
+                    </div>
+
+                    <!-- TAB 2: Torneos y Ligas -->
+                    <div class="tab-pane fade" id="panel-torneos" role="tabpanel">
+
+                        <h6 class="text-sports fw-bold mb-3 text-uppercase small">
+                            <i class="fa-solid fa-trophy me-2"></i>Fixture y Ligas Activas
+                        </h6>
+
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover table-striped align-middle mb-0 small">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre del Torneo</th>
+                                        <th>Fecha Encuentro</th>
+                                        <th>Categoría</th>
+                                        <th>Estado Actual</th>
+                                        <th>Participantes</th>
+                                        <th class="text-center">Planilla</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-ligas-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4" style="color:var(--text-light-50);">
+                                            <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                                            Cargando ligas...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<<<<<<< Updated upstream
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bundle.min.js"></script>
-    <!-- Tu archivo JS -->
-    <script src="js/datosPersonalesProfesor.js"></script>
-=======
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="js/datosPersonalesProfesores.js"></script>
->>>>>>> Stashed changes
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL — MODIFICAR CLASE / ALUMNO (BLANCO RECTANGULAR)
+     ============================================================ -->
+<div class="modal fade" id="modalModificarUsuario" tabindex="-1" aria-labelledby="modalModificarTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
+        <div class="modal-content bg-white text-dark p-4" style="border-radius:6px;border:none;box-shadow:0 12px 48px rgba(0,0,0,0.45);">
+            <div class="text-center mb-4">
+                <h4 class="fw-normal" id="modalModificarTitle"
+                    style="color:#5f6368;font-family:'Poppins',sans-serif;font-size:1.25rem;">
+                    Modificar
+                </h4>
+            </div>
+            <form id="form-modal-modificar" novalidate>
+                <div id="modalModificarBody"></div>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button type="submit" class="btn btn-guardar-modal px-4 py-2">Guardar</button>
+                    <button type="button" class="btn btn-cancelar-modal px-4 py-2" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL — FICHA DETALLADA DE ALUMNO (OSCURO)
+     ============================================================ -->
+<div class="modal fade" id="modalFichaUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:460px;">
+        <div class="modal-content bg-navy border border-secondary border-opacity-25 text-white p-3 shadow-lg"
+            style="border-radius:8px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-white" id="fichaUserTitle">Ficha de Alumno</h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-3" id="modalFichaUserBody"></div>
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/datosPersonalesProfesor.js"></script>
 </body>
 </html>

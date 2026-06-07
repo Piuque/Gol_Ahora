@@ -1,475 +1,440 @@
-<<<<<<< Updated upstream
-const userRole = localStorage.getItem("role") || "entrenador";
-const API = "/entrenador/info";
+/* ==========================================================================
+   GOL AHORA — datosPersonalesEntrenador.js
+   Rutas reales del backend:
+     GET    /entrenador/info
+     GET    /entrenador/entrenamientos
+     GET    /entrenador/entrenamientos/{id}/alumnos
+     DELETE /entrenador/entrenamientos/{id_entrenamiento}/alumnos/{id_alumno}
+   ========================================================================== */
 
+const API = "https://gol-ahora.onrender.com";
+
+/* -----------------------------------------------------------------------
+   INIT
+----------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inicializar navegación del sidebar
-    initNavigation();
-    
-    // 2. Obtener datos de perfil
-    ObtenerDatosPersonales();
+    ConsultarNombreSesion();
+    ActivarMenuToggle();
+    AsignarListenersFormularios();
+
+    const path = window.location.pathname.split("/").pop();
+
+    if (path === "interfazEntrenador.html" || path === "") {
+        ConsultarDashboardOperativo();
+    } else if (path === "certificacionesEntrenador.html") {
+        ConsultarCertificacionesLegajo();
+    } else if (path === "perfilEntrenador.html") {
+        ConsultarPerfilFicha();
+        const formModalPerfil = document.getElementById('form-modal-perfil');
+        if (formModalPerfil) {
+            formModalPerfil.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const payload = {
+                    telefono: document.getElementById('perfil-input-telefono')?.value.trim(),
+                    email:    document.getElementById('perfil-input-email')?.value.trim()
+                };
+                try {
+                    const res = await fetch(`${API}/entrenador/modificarPerfil`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('modalModificarPerfil'))?.hide();
+                        _setText('disp-telefono', payload.telefono || '—');
+                        _setText('disp-email',    payload.email    || '—');
+                        _setText('card-resumen-correo', payload.email || '');
+                        _perfilCache.telefono = payload.telefono;
+                        _perfilCache.email    = payload.email;
+                        Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Datos actualizados', text: 'Tu teléfono y correo fueron guardados correctamente.', confirmButtonColor: '#00C16E' });
+                    } else throw new Error();
+                } catch {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron guardar los cambios.', confirmButtonColor: '#00C16E' });
+                }
+            });
+        }
+    }
 });
 
-function initNavigation() {
-    const btnPerfil = document.getElementById("btn-mi-perfil");
-    const btnEntrenamientos = document.getElementById("btn-mis-entrenamientos");
-    const btnCertificaciones = document.getElementById("btn-certificaciones");
-    const btnConfiguracion = document.getElementById("btn-configuracion");
-
-    const seccionPerfil = document.getElementById("seccion-perfil");
-    const seccionEntrenamientos = document.getElementById("seccion-entrenamientos");
-
-    if (btnPerfil && btnEntrenamientos) {
-        btnPerfil.addEventListener("click", (e) => {
-            e.preventDefault();
-            btnPerfil.classList.add("active");
-            btnEntrenamientos.classList.remove("active");
-            seccionPerfil.classList.remove("d-none");
-            seccionEntrenamientos.classList.add("d-none");
-        });
-
-        btnEntrenamientos.addEventListener("click", (e) => {
-            e.preventDefault();
-            btnEntrenamientos.classList.add("active");
-            btnPerfil.classList.remove("active");
-            seccionEntrenamientos.classList.remove("d-none");
-            seccionPerfil.classList.add("d-none");
-            ObtenerEntrenamientos();
-        });
-    }
-
-    if (btnCertificaciones) {
-        btnCertificaciones.addEventListener("click", (e) => {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Mis Certificaciones',
-                text: 'Las certificaciones del entrenador están en proceso de verificación por la intendencia deportiva del club.',
-                icon: 'info',
-                confirmButtonColor: '#00C16E'
-            });
-        });
-    }
-
-    if (btnConfiguracion) {
-        btnConfiguracion.addEventListener("click", (e) => {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Configuración del Sistema',
-                text: 'La edición de los parámetros de la cuenta está temporalmente inhabilitada en el entorno de desarrollo.',
-                icon: 'info',
-                confirmButtonColor: '#00C16E'
-            });
-        });
-    }
+/* -----------------------------------------------------------------------
+   SIDEBAR TOGGLE
+----------------------------------------------------------------------- */
+function ActivarMenuToggle() {
+    const btn     = document.getElementById('menu-toggle');
+    const wrapper = document.getElementById('wrapper');
+    if (btn && wrapper) btn.addEventListener('click', () => wrapper.classList.toggle('toggled'));
 }
 
-async function ObtenerDatosPersonales() {
+/* -----------------------------------------------------------------------
+   NOMBRE DE SESIÓN  →  GET /entrenador/info
+----------------------------------------------------------------------- */
+async function ConsultarNombreSesion() {
     try {
-        const userId = localStorage.getItem("userId");
-        const Respuesta = await fetch(API, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "plataform": "web",
-                "x-user-id": userId
-            },
-            credentials: "include"
-        });
+        const res = await fetch(`${API}/entrenador/info`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        const d = await res.json();
 
-        const Datos = await Respuesta.json();
-
-        if (Datos) {
-            const CampoNombre = document.querySelector('.input-Nombre');
-            const CampoApellido = document.querySelector('.input-Apellido');
-            const CampoDni = document.querySelector('.input-Dni');
-            const CampoNacionalidad = document.querySelector('.input-Nacionalidad');
-            const CampoGenero = document.querySelector('.input-Genero');
-            const CampoFecha = document.querySelector('.input-Fecha');
-            const CampoEmail = document.querySelector('.input-Email');
-            const CampoTelefono = document.querySelector('.input-Telefono');
-            const CampoDireccion = document.querySelector('.input-Direccion');
-
-            if (CampoNombre) CampoNombre.value = Datos.nombre || '';
-            if (CampoApellido) CampoApellido.value = Datos.apellido || '';
-            if (CampoDni) CampoDni.value = Datos.dni || '';
-            if (CampoNacionalidad) CampoNacionalidad.value = Datos.nacionalidad || '';
-            if (CampoGenero) CampoGenero.value = Datos.genero || '';
-            if (CampoFecha) CampoFecha.value = Datos.fecha_nacimiento || '';
-            if (CampoEmail) CampoEmail.value = Datos.email || '';
-            if (CampoTelefono) CampoTelefono.value = Datos.telefono || '';
-            
-            if (CampoDireccion && Datos.direccion) {
-                const calle = Datos.direccion.calle || '';
-                const numero = Datos.direccion.numero || '';
-                const localidad = Datos.direccion.localidad || '';
-                const pais = Datos.direccion.pais || '';
-                CampoDireccion.value = `${calle} ${numero}, ${localidad}, ${pais}`.trim().replace(/^,\s*|,\s*$/g, '');
-            }
-        }
-    } catch (error) {
-        console.error("Error al obtener datos personales:", error);
+        const completo = `${d.nombre || ''} ${d.apellido || ''}`.trim();
+        _setText('top-navbar-user-name',  completo);
+        _setText('sidebar-user-fullname', completo);
+        _setText('card-resumen-nombre',   completo);
+        _setText('card-resumen-username', d.username ? `@${d.username}` : '');
+        _setText('card-resumen-correo',   d.email    || '');
+    } catch {
+        _setText('top-navbar-user-name',  'Entrenador');
+        _setText('sidebar-user-fullname', 'Entrenador');
     }
 }
 
-let entrenamientoSeleccionadoId = null;
-
-async function ObtenerEntrenamientos() {
-    const bodyTabla = document.getElementById('tabla-entrenamientos-body');
-    if (!bodyTabla) return;
-
+/* -----------------------------------------------------------------------
+   DASHBOARD  →  GET /entrenador/entrenamientos
+   JSON array: [{ id_entrenamiento, nombre, capacidad_max, cancha_nombre,
+                  nivel, hora_inicio, hora_fin, fecha_turno, inscriptos }]
+----------------------------------------------------------------------- */
+async function ConsultarDashboardOperativo() {
     try {
-        const userId = localStorage.getItem("userId");
-        const Respuesta = await fetch('/entrenador/entrenamientos', {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "plataform": "web",
-                "x-user-id": userId
-            },
-            credentials: "include"
-        });
-
-        const Entrenamientos = await Respuesta.json();
-
-        if (!Respuesta.ok) {
-            bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${Entrenamientos.error || 'No se pudieron cargar los entrenamientos'}</td></tr>`;
-            return;
-        }
-
-        if (!Entrenamientos || Entrenamientos.length === 0) {
-            bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">No tienes entrenamientos asignados.</td></tr>`;
-            return;
-        }
-
-        bodyTabla.innerHTML = '';
-        Entrenamientos.forEach(ent => {
-            const tr = document.createElement('tr');
-            tr.style.cursor = 'pointer';
-            tr.dataset.idEntrenamiento = ent.id_entrenamiento;
-            
-            if (entrenamientoSeleccionadoId && String(ent.id_entrenamiento) === String(entrenamientoSeleccionadoId)) {
-                tr.classList.add('table-active', 'bg-dark-navy');
-            }
-
-            tr.innerHTML = `
-                <td class="fw-bold text-white">${ent.nombre}</td>
-                <td>${ent.fecha_turno} ${ent.hora_inicio} - ${ent.hora_fin}</td>
-                <td>${ent.cancha_nombre || 'N/A'}</td>
-                <td><span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50">${ent.nivel || 'Estándar'}</span></td>
-                <td>${ent.inscriptos} / ${ent.capacidad_max}</td>
-            `;
-
-            tr.addEventListener('click', () => {
-                document.querySelectorAll('#tabla-entrenamientos-body tr').forEach(row => row.classList.remove('table-active', 'bg-dark-navy'));
-                tr.classList.add('table-active', 'bg-dark-navy');
-
-                entrenamientoSeleccionadoId = ent.id_entrenamiento;
-                ObtenerAlumnosEntrenamiento(ent.id_entrenamiento);
-            });
-
-            bodyTabla.appendChild(tr);
-        });
-
-    } catch (error) {
-        console.error("Error al obtener entrenamientos:", error);
-        bodyTabla.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error de conexión al servidor</td></tr>`;
+        const res = await fetch(`${API}/entrenador/entrenamientos`, { method: "GET", credentials: "include" });
+        if (res.ok) InyectarTablaEntrenamientos(await res.json());
+        else        InyectarTablaEntrenamientos([]);
+        InyectarTablaAlumnos([]);
+    } catch {
+        InyectarTablaEntrenamientos([]);
+        InyectarTablaAlumnos([]);
     }
 }
 
-async function ObtenerAlumnosEntrenamiento(idEntrenamiento) {
-    const bodyAlumnos = document.getElementById('tabla-alumnos-body');
-    if (!bodyAlumnos) return;
+/* — Tabla Entrenamientos — */
+function InyectarTablaEntrenamientos(lista) {
+    const tbody = document.getElementById('tabla-entrenamientos-body');
+    if (!tbody) return;
 
-    bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">Cargando alumnos...</td></tr>`;
-
-    try {
-        const userId = localStorage.getItem("userId");
-        const Respuesta = await fetch(`/entrenador/entrenamientos/${idEntrenamiento}/alumnos`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "plataform": "web",
-                "x-user-id": userId
-            },
-            credentials: "include"
-        });
-
-        const Alumnos = await Respuesta.json();
-
-        if (!Respuesta.ok) {
-            bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${Alumnos.error || 'No se pudieron cargar los alumnos'}</td></tr>`;
-            return;
-        }
-
-        if (!Alumnos || Alumnos.length === 0) {
-            bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-light-50">No hay alumnos inscritos en este entrenamiento.</td></tr>`;
-            return;
-        }
-
-        bodyAlumnos.innerHTML = '';
-        Alumnos.forEach(alumno => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="fw-bold text-white">${alumno.nombre} ${alumno.apellido}</td>
-                <td class="text-light-50">${alumno.dni}</td>
-                <td>${alumno.telefono || 'Sin teléfono'}</td>
-                <td><span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">${alumno.asistencia}</span></td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumnoEntrenamiento(${alumno.id_usuario}, '${alumno.nombre} ${alumno.apellido}')">
-                        <i class="bi bi-person-x"></i> Dar Baja
-                    </button>
-                </td>
-            `;
-            bodyAlumnos.appendChild(tr);
-        });
-
-    } catch (error) {
-        console.error("Error al obtener alumnos de entrenamiento:", error);
-        bodyAlumnos.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error de conexión al servidor</td></tr>`;
-    }
-}
-
-window.darDeBajaAlumnoEntrenamiento = function(idAlumno, nombreAlumno) {
-    if (!entrenamientoSeleccionadoId) {
-        Swal.fire('Error', 'No se ha seleccionado ningún entrenamiento.', 'error');
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-dumbbell fa-lg me-2"></i>No posee entrenamientos en su agenda.</td></tr>`;
         return;
     }
 
+    tbody.innerHTML = lista.map(e => {
+        const horario = `${e.hora_inicio || ''} – ${e.hora_fin || ''}`;
+        const fecha   = e.fecha_turno ? `<br><small class="text-light-50">${e.fecha_turno}</small>` : '';
+        const nivel   = e.nivel ? `<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 ms-1">${e.nivel}</span>` : '';
+
+        return `<tr>
+            <td class="fw-semibold text-white">
+                <i class="fa-solid fa-dumbbell text-sports me-2"></i>${e.nombre}${nivel}
+            </td>
+            <td class="text-light-75">${horario}${fecha}</td>
+            <td class="text-light-75">${e.cancha_nombre || '—'}</td>
+            <td class="text-light-75">Capacidad: ${e.capacidad_max || '—'}</td>
+            <td><span class="badge bg-success bg-opacity-10 border border-success border-opacity-25 text-success px-2">${e.inscriptos || 0} inscriptos</span></td>
+            <td class="text-center">
+                <button class="btn btn-xs btn-outline-success border-sports text-sports"
+                    onclick="ConsultarAlumnosPorEntrenamiento('${e.id_entrenamiento}', \`${_esc(e.nombre)}\`)">
+                    <i class="fa-solid fa-users me-1"></i>Ver alumnos
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+/* -----------------------------------------------------------------------
+   ALUMNOS POR ENTRENAMIENTO  →  GET /entrenador/entrenamientos/{id}/alumnos
+   JSON array: [{ id_usuario, nombre, apellido, dni, telefono, asistencia }]
+----------------------------------------------------------------------- */
+window.ConsultarAlumnosPorEntrenamiento = async function(idEntrenamiento, nombreEntrenamiento) {
+    const titulo = document.getElementById('titulo-tabla-alumnos');
+    if (titulo) titulo.textContent = `Alumnos — ${nombreEntrenamiento}`;
+
+    const tbody = document.getElementById('tabla-alumnos-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color:var(--text-light-50);">
+        <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+        Cargando alumnos del entrenamiento...
+    </td></tr>`;
+
+    try {
+        const res = await fetch(`${API}/entrenador/entrenamientos/${idEntrenamiento}/alumnos`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        InyectarTablaAlumnos(await res.json(), idEntrenamiento);
+    } catch {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3" style="color:var(--text-light-50);">
+            <i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>No se pudieron cargar los alumnos.</td></tr>`;
+    }
+};
+
+/* — Tabla Alumnos — */
+function InyectarTablaAlumnos(lista, idEntrenamiento) {
+    const tbody = document.getElementById('tabla-alumnos-body');
+    if (!tbody) return;
+
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-users fa-lg me-2"></i>No hay alumnos inscriptos en este entrenamiento.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = lista.map(a => {
+        const asistenciaBadge = a.asistencia
+            ? `<span class="badge px-2" style="background:rgba(0,193,110,0.1);border:1px solid rgba(0,193,110,0.3);color:#00C16E;">${a.asistencia}</span>`
+            : `<span class="badge px-2" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);">—</span>`;
+
+        return `<tr>
+            <td class="fw-semibold">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                        style="width:30px;height:30px;font-size:0.7rem;flex-shrink:0;">
+                        ${_initials(a.nombre, a.apellido)}
+                    </div>
+                    <span class="text-white">${a.nombre} ${a.apellido}</span>
+                </div>
+            </td>
+            <td class="text-light-50 small">${a.dni || '—'}</td>
+            <td class="text-light-75">${a.telefono || '—'}</td>
+            <td>${asistenciaBadge}</td>
+            <td class="text-center">
+                <button class="btn btn-xs btn-outline-danger font-xs"
+                    onclick="ProcesarBajaAlumno('${idEntrenamiento}', '${a.id_usuario}', '${_esc(a.nombre)} ${_esc(a.apellido)}')">
+                    <i class="fa-solid fa-user-minus me-1"></i>Dar Baja
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+/* -----------------------------------------------------------------------
+   BAJA DE ALUMNO  →  DELETE /entrenador/entrenamientos/{id_entrenamiento}/alumnos/{id_alumno}
+----------------------------------------------------------------------- */
+window.ProcesarBajaAlumno = function(idEntrenamiento, idAlumno, nombre) {
     Swal.fire({
-        title: '¿Confirmar baja del alumno?',
-        text: `Se desvinculará a ${nombreAlumno} del entrenamiento y el cupo quedará libre inmediatamente.`,
-        icon: 'warning',
+        title: '¿Dar de baja?',
+        html: `Se dará de baja a <strong>${nombre}</strong> de este entrenamiento.`,
+        icon: 'warning', iconColor: '#f25c54',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#0A2540',
-        confirmButtonText: 'Sí, dar de baja',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: '#f25c54', cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, dar de baja', cancelButtonText: 'Cancelar',
+        reverseButtons: true
     }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const userId = localStorage.getItem("userId");
-                const Respuesta = await fetch(`/entrenador/entrenamientos/${entrenamientoSeleccionadoId}/alumnos/${idAlumno}`, {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "plataform": "web",
-                        "x-user-id": userId
-                    },
-                    credentials: "include"
-                });
-
-                const Res = await Respuesta.json();
-
-                if (Respuesta.ok) {
-                    Swal.fire('Procesado', 'El alumno fue removido de la planilla del entrenamiento.', 'success');
-                    ObtenerAlumnosEntrenamiento(entrenamientoSeleccionadoId);
-                    ObtenerEntrenamientos();
-                } else {
-                    Swal.fire('Error', Res.error || 'No se pudo procesar la baja.', 'error');
-                }
-            } catch (err) {
-                console.error("Error al procesar la baja:", err);
-                Swal.fire('Error', 'Error de conexión al servidor.', 'error');
-            }
+        if (!result.isConfirmed) return;
+        try {
+            const res = await fetch(`${API}/entrenador/entrenamientos/${idEntrenamiento}/alumnos/${idAlumno}`, {
+                method: "DELETE",
+                credentials: "include"
+            });
+            if (res.ok) {
+                Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Baja registrada', text: `${nombre} fue removido del entrenamiento.`, confirmButtonColor: '#00C16E' });
+                ConsultarAlumnosPorEntrenamiento(idEntrenamiento, '');
+            } else throw new Error();
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo procesar la baja.', confirmButtonColor: '#00C16E' });
         }
     });
 };
-=======
-const API = "http://gol-ahora.onrender.com/";
 
-document.addEventListener('DOMContentLoaded', () => {
-    const menuToggle = document.getElementById('menu-toggle');
-    if (menuToggle) {
-        menuToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('wrapper').classList.toggle('toggled');
-        });
-    }
+/* -----------------------------------------------------------------------
+   CERTIFICACIONES
+----------------------------------------------------------------------- */
+async function ConsultarCertificacionesLegajo() {
+    const container = document.getElementById('contenedor-certificaciones-cards');
+    if (!container) return;
 
-    ConsultarInfoEntrenador();
-    CargarEntrenamientosYAlumnos();
+    container.innerHTML = `<div class="col-12 text-center py-5" style="color:var(--text-light-50)">
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-3 small">Cargando certificaciones...</p>
+    </div>`;
 
-    // Listener de pestañas dinámicas con Bootstrap 5
-    const tabButtons = document.querySelectorAll('#tecnicoTabs button');
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-
-            const panes = document.querySelectorAll('.tab-content .tab-pane');
-            panes.forEach(pane => pane.classList.remove('show', 'active'));
-
-            const targetPaneId = this.getAttribute('data-bs-target');
-            const targetPane = document.querySelector(targetPaneId);
-            if (targetPane) targetPane.classList.add('show', 'active');
-        });
-    });
-
-    const formPerfil = document.getElementById("form-perfil-tecnico");
-    if (formPerfil) {
-        formPerfil.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            await guardarCambiosPerfil();
-        });
-    }
-});
-
-// ==========================================
-// CONSULTAR DATOS (Ruta: entrenador/info)
-// ==========================================
-async function ConsultarInfoEntrenador() {
     try {
-        const res = await fetch(`${API}entrenador/info`, { method: "GET", credentials: "include" });
+        const res = await fetch(`${API}/entrenador/certificaciones`, { method: "GET", credentials: "include" });
         if (!res.ok) throw new Error();
-        const Datos = await res.json();
-        if (Datos) inyectarCamposFicha(Datos);
-    } catch (error) {
-        inyectarCamposFicha({
-            nombre: "Alejandro", apellido: "Sabella", email: "sabella@golahora.com",
-            dni: "25888999", nacionalidad: "Argentina", genero: "Masculino", telefono: "11 5544-3322"
-        });
+        renderizarCardsCertificadosHTML(await res.json());
+    } catch {
+        container.innerHTML = `<div class="col-12 text-center py-5" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-graduation-cap fa-3x mb-3 d-block" style="color:var(--sports-green);opacity:0.3;"></i>
+            <p class="small">No posee certificados cargados en su legajo.<br>
+            <span style="color:var(--text-light-50)">Usá el botón <strong>Agregar Certificación</strong> para iniciar.</span></p>
+        </div>`;
     }
 }
 
-function inyectarCamposFicha(Datos) {
-    if (document.getElementById('top-navbar-user-name')) document.getElementById('top-navbar-user-name').textContent = `${Datos.nombre} ${Datos.apellido}`;
-    if (document.getElementById('sidebar-user-fullname')) document.getElementById('sidebar-user-fullname').textContent = `${Datos.nombre} ${Datos.apellido}`;
+function renderizarCardsCertificadosHTML(lista) {
+    const container = document.getElementById('contenedor-certificaciones-cards');
+    if (!container) return;
 
-    if (document.querySelector('.input-Nombre')) document.querySelector('.input-Nombre').value = Datos.nombre || '';
-    if (document.querySelector('.input-Apellido')) document.querySelector('.input-Apellido').value = Datos.apellido || '';
-    if (document.querySelector('.input-Nacionalidad')) document.querySelector('.input-Nacionalidad').value = Datos.nacionalidad || '';
-    if (document.querySelector('.input-Dni')) document.querySelector('.input-Dni').value = Datos.dni || '';
-    if (document.querySelector('.input-Genero')) document.querySelector('.input-Genero').value = Datos.genero || '';
-    if (document.querySelector('.input-Telefono')) document.querySelector('.input-Telefono').value = Datos.telefono || '';
-    if (document.querySelector('.input-Email')) document.querySelector('.input-Email').value = Datos.email || '';
+    if (!lista || lista.length === 0) {
+        container.innerHTML = `<div class="col-12 text-center py-5" style="color:var(--text-light-50)">
+            <i class="fa-solid fa-graduation-cap fa-3x mb-3 d-block" style="color:var(--sports-green);opacity:0.3;"></i>
+            <p class="small">No posee certificados cargados en su legajo.</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = lista.map(c => `
+        <div class="col-md-6 col-xl-4">
+            <div class="card card-sport h-100 p-3 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                        <h6 class="fw-bold text-white mb-0" style="flex:1;min-width:0;word-break:break-word;">${c.nombre}</h6>
+                        <span style="display:inline-block;flex-shrink:0;max-width:140px;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.25);border-radius:4px;padding:3px 8px;font-size:0.7rem;color:#ffc107;text-align:right;line-height:1.4;">Pendiente de evaluación</span>
+                    </div>
+                    <p class="small text-light-75 mb-1">
+                        <i class="fa-solid fa-building-columns text-sports me-1"></i>${c.institucion}
+                    </p>
+                    <small style="color:var(--text-light-50)">
+                        <i class="fa-regular fa-calendar me-1"></i>Emisión: ${c.fecha_emision}
+                    </small>
+                </div>
+                ${c.archivo_url ? `
+                    <div class="mt-3">
+                        <a href="${c.archivo_url}" target="_blank"
+                            class="btn btn-xs btn-outline-success border-sports text-sports w-100">
+                            <i class="fa-solid fa-file-pdf me-1"></i>Ver adjunto
+                        </a>
+                    </div>` : ''}
+            </div>
+        </div>`).join('');
 }
 
-// ==========================================
-// MODIFICAR DATOS (Ruta: entrenador/modificarDatos)
-// ==========================================
-async function guardarCambiosPerfil() {
+async function ProcesarAltaCertificacionConAdjunto() {
+    const nom  = document.getElementById('cert-nombre')?.value.trim();
+    const ins  = document.getElementById('cert-institucion')?.value.trim();
+    const fec  = document.getElementById('cert-fecha')?.value;
+    const file = document.getElementById('cert-archivo');
+
+    if (!nom || !ins || !fec || !file?.files[0]) {
+        Swal.fire({ icon: 'warning', title: 'Campos incompletos', text: 'Completá todos los campos y adjuntá el comprobante.', confirmButtonColor: '#00C16E' });
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('nombre',        nom);
+    formData.append('institucion',   ins);
+    formData.append('fecha_emision', fec);
+    formData.append('archivo',       file.files[0]);
+
     try {
-        const payload = {
-            telefono: document.querySelector('.input-Telefono').value.trim(),
-            email: document.querySelector('.input-Email').value.trim()
-        };
-        const res = await fetch(`${API}entrenador/modificarDatos`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            credentials: "include", body: JSON.stringify(payload)
+        const res = await fetch(`${API}/entrenador/certificaciones/alta`, {
+            method: "POST", credentials: "include", body: formData
         });
         if (res.ok) {
-            Swal.fire({ icon: 'success', title: 'Perfil Guardado', text: 'Los cambios fueron salvados de forma correcta.', confirmButtonColor: '#00C16E' });
-            ConsultarInfoEntrenador();
-        }
-    } catch (e) { console.error(e); }
-}
-
-// ==========================================
-// CARGAR GESTIÓN ASINCRÓNICA
-// ==========================================
-async function CargarEntrenamientosYAlumnos() {
-    try {
-        const resE = await fetch(`${API}entrenador/listarEntrenamientos`, { method: "GET" });
-        const resA = await fetch(`${API}entrenador/ListarAlumnos`, { method: "GET" });
-        const resL = await fetch(`${API}entrenador/listarLigas`, { method: "GET" });
-        if(!resE.ok || !resA.ok || !resL.ok) throw new Error();
-    } catch (error) {
-        const seed = {
-            stats: { activas: "4 Rutinas", alumnos: "32 Activos", ligas: "2 Ligas", asistencia: "91%" },
-            entrenamientos: [
-                { id: "1", nombre: "Potencia Funcional", fecha: "Lunes y Miércoles", horario: "19:30 hs", responsable: "Alejandro Sabella", cupo: "15 / 20 Alumnos", estado: "Vigente" },
-                { id: "2", nombre: "Resistencia Muscular", fecha: "Martes y Jueves", horario: "21:00 hs", responsable: "Alejandro Sabella", cupo: "17 / 20 Alumnos", estado: "Vigente" }
-            ],
-            alumnos: [
-                { nombre: "Javier Mascherano", email: "jefecito@estudiantes.com", categoria: "Avanzado / Ligas", estado: "Regular" },
-                { nombre: "Gonzalo Higuaín", email: "pipa@river.com", categoria: "Amateur / Inicial", estado: "Regular" }
-            ],
-            ligas: [
-                { nombre: "Torneo Apertura F7", fecha: "Sábados 15:00 hs", categoria: "F7 Libre", estado: "En Fixture", participantes: "12" },
-                { nombre: "Liga Senior F11", fecha: "Domingos 09:00 hs", categoria: "F11 Master", estado: "Inscripción", participantes: "10" }
-            ]
-        };
-
-        if (document.getElementById('stat-entrenamientos-activos')) document.getElementById('stat-entrenamientos-activos').textContent = seed.stats.activas;
-        if (document.getElementById('stat-alumnos-activos')) document.getElementById('stat-alumnos-activos').textContent = seed.stats.alumnos;
-        if (document.getElementById('stat-ligas-activas')) document.getElementById('stat-ligas-activas').textContent = seed.stats.ligas;
-        if (document.getElementById('stat-asistencia-entrenamiento')) document.getElementById('stat-asistencia-entrenamiento').textContent = seed.stats.asistencia;
-
-        // Inyectar Entrenamientos
-        const tbodyE = document.getElementById('tabla-entrenamientos-body');
-        if (tbodyE) {
-            tbodyE.innerHTML = seed.entrenamientos.map(e => `
-                <tr>
-                    <td class="fw-bold text-white"><i class="fa-solid fa-dumbbell text-sports me-2"></i>${e.nombre}</td>
-                    <td>${e.fecha}</td>
-                    <td>${e.horario}</td>
-                    <td>${e.responsable}</td>
-                    <td>${e.cupo}</td>
-                    <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">${e.estado}</span></td>
-                </tr>
-            `).join('');
-        }
-
-        // Inyectar Alumnos
-        const tbodyA = document.getElementById('tabla-alumnos-body');
-        if (tbodyA) {
-            tbodyA.innerHTML = seed.alumnos.map(a => `
-                <tr>
-                    <td class="fw-bold">${a.nombre}</td>
-                    <td class="text-light-50">${a.email}</td>
-                    <td>${a.categoria}</td>
-                    <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">${a.estado}</span></td>
-                    <td class="text-center"><button class="btn btn-sm btn-outline-danger px-2 py-0.5" onclick="darDeBajaAlumno('${a.nombre}')"><i class="fa-solid fa-user-minus"></i> Dar Baja</button></td>
-                </tr>
-            `).join('');
-        }
-
-        // Inyectar Ligas
-        const tbodyL = document.getElementById('tabla-ligas-body');
-        if (tbodyL) {
-            tbodyL.innerHTML = seed.ligas.map(l => `
-                <tr>
-                    <td class="fw-bold text-white"><i class="fa-solid fa-trophy text-warning me-2"></i>${l.nombre}</td>
-                    <td>${l.fecha}</td>
-                    <td>${l.categoria}</td>
-                    <td><span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">${l.estado}</span></td>
-                    <td>${l.participantes} Equipos</td>
-                    <td class="text-center"><button class="btn btn-sm btn-success px-2 py-0.5" style="background-color:#00C16E; border-color:#00C16E" onclick="registrarResultado('${l.nombre}')">Resultados</button></td>
-                </tr>
-            `).join('');
-        }
+            bootstrap.Modal.getInstance(document.getElementById('modalAltaCertificacion'))?.hide();
+            Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Certificación enviada', text: 'Quedará pendiente de evaluación por el administrador.', confirmButtonColor: '#00C16E' });
+            document.getElementById('form-alta-certificacion').reset();
+            ConsultarCertificacionesLegajo();
+        } else throw new Error();
+    } catch {
+        Swal.fire({ icon: 'error', title: 'Error al subir', text: 'No se pudo cargar el archivo. Intentá más tarde.', confirmButtonColor: '#00C16E' });
     }
 }
 
-// ==========================================
-// ACCIONES INTERACTIVAS (Ruta: entrenador/registrarResultado)
-// ==========================================
-window.registrarResultado = function(partido) {
-    Swal.fire({
-        title: 'Planilla Oficial de Resultados',
-        html: `<div class="d-flex justify-content-center gap-2 mb-2">
-                <input type="number" id="goles-local" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0"> - 
-                <input type="number" id="goles-visita" class="form-control text-center bg-dark text-white fw-bold" style="width:60px" placeholder="0">
-            </div>`,
-        showCancelButton: true, confirmButtonColor: '#00C16E',
-        preConfirm: () => {
-            if (!document.getElementById('goles-local').value || !document.getElementById('goles-visita').value) { Swal.showValidationMessage('Complete los goles.'); }
-        }
-    }).then((result) => { if (result.isConfirmed) Swal.fire('Éxito', 'Marcador guardado de forma correcta.', 'success'); });
+/* -----------------------------------------------------------------------
+   PERFIL  →  GET /entrenador/info
+----------------------------------------------------------------------- */
+let _perfilCache = {};
+
+async function ConsultarPerfilFicha() {
+    try {
+        const res = await fetch(`${API}/entrenador/info`, { method: "GET", credentials: "include" });
+        if (!res.ok) throw new Error();
+        const d = await res.json();
+        _perfilCache = d;
+
+        _setText('disp-nombre',       d.nombre       || '—');
+        _setText('disp-apellido',     d.apellido     || '—');
+        _setText('disp-dni',          d.dni          || '—');
+        _setText('disp-nacionalidad', d.nacionalidad || '—');
+        _setText('disp-genero',       d.genero       || '—');
+        _setText('disp-telefono',     d.telefono     || '—');
+        _setText('disp-email',        d.email        || '—');
+
+        const completo = `${d.nombre || ''} ${d.apellido || ''}`.trim();
+        _setText('card-resumen-nombre',       completo);
+        _setText('card-resumen-username',     d.username     ? `@${d.username}` : '');
+        _setText('card-resumen-correo',       d.email        || '');
+        _setText('card-resumen-especialidad', d.especialidad || '—');
+        _setText('card-resumen-estado',       d.estado       || 'Activo');
+
+    } catch {
+        console.warn("No se pudo cargar el perfil del entrenador.");
+    }
+}
+
+window.AbrirModalModificarPerfil = function() {
+    const telInput  = document.getElementById('perfil-input-telefono');
+    const mailInput = document.getElementById('perfil-input-email');
+    if (telInput)  telInput.value  = _perfilCache.telefono || '';
+    if (mailInput) mailInput.value = _perfilCache.email    || '';
+
+    const el = document.getElementById('modalModificarPerfil');
+    let inst = bootstrap.Modal.getInstance(el);
+    if (!inst) inst = new bootstrap.Modal(el, { backdrop: 'static', keyboard: false });
+    inst.show();
 };
 
-window.darDeBajaAlumno = function(nombre) {
-    Swal.fire({ title: '¿Confirmar baja del alumno?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((r) => {
-        if (r.isConfirmed) Swal.fire('Procesado', 'El alumno fue removido de la asistencia.', 'success');
-    });
-};
-
+/* -----------------------------------------------------------------------
+   SOLICITAR BAJA DE PERFIL
+----------------------------------------------------------------------- */
 window.solicitarBajaPerfil = function() {
-    Swal.fire({ title: '¿Solicitar baja?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((r) => {
-        if (r.isConfirmed) Swal.fire('Registrada', 'La solicitud de baja fue enviada correctamente y quedará pendiente de validación por parte del administrador.', 'success');
+    Swal.fire({
+        title: '¿Solicitar baja del perfil?',
+        html: 'Esta acción iniciará el proceso de desvinculación de sus comisiones de entrenamiento. Requiere validación del administrador.',
+        icon: 'warning', iconColor: '#f25c54',
+        showCancelButton: true,
+        confirmButtonColor: '#f25c54', cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, solicitar baja', cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
+        try {
+            const res = await fetch(`${API}/entrenador/baja`, { method: "POST", credentials: "include" });
+            if (res.ok) Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Solicitud registrada', text: 'Quedará pendiente de validación.', confirmButtonColor: '#00C16E' });
+            else throw new Error();
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo procesar la solicitud.', confirmButtonColor: '#00C16E' });
+        }
     });
 };
 
-window.modificarEntrenamiento = function(id) { Swal.fire({ title: 'Modificar Horarios', text: 'La edición directa requiere confirmación de intendencia.', icon: 'info', confirmButtonColor: '#00C16E' }); };
->>>>>>> Stashed changes
+/* -----------------------------------------------------------------------
+   CERRAR SESIÓN
+----------------------------------------------------------------------- */
+window.CerrarSesion = function() {
+    Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: 'Serás redirigido al inicio de la aplicación.',
+        icon: 'question', iconColor: '#00C16E',
+        showCancelButton: true,
+        confirmButtonColor: '#00C16E', cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fa-solid fa-right-from-bracket me-1"></i>Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
+        try { await fetch(`${API}/logout`, { method: "POST", credentials: "include" }); } catch {}
+        window.location.href = "index.html";
+    });
+};
+
+/* -----------------------------------------------------------------------
+   LISTENERS
+----------------------------------------------------------------------- */
+function AsignarListenersFormularios() {
+    const formCert = document.getElementById("form-alta-certificacion");
+    if (formCert) formCert.addEventListener("submit", (e) => { e.preventDefault(); ProcesarAltaCertificacionConAdjunto(); });
+}
+
+/* -----------------------------------------------------------------------
+   HELPERS
+----------------------------------------------------------------------- */
+function _setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function _initials(nombre, apellido) {
+    return `${(nombre||'')[0]||''}${(apellido||'')[0]||''}`.toUpperCase();
+}
+
+function _esc(str) {
+    return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}

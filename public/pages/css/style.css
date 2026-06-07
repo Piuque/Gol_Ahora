@@ -9346,227 +9346,1523 @@ body.bg-football-dark::before {
 }
 
 /* ==========================================================================
-   AJUSTES EXCLUSIVOS PARA EL PANEL TÉCNICO OSCURÓ (GOL AHORA)
+   GOL AHORA — DESIGN SYSTEM
    ========================================================================== */
 
-/* Corrección para eliminar el fondo blanco o gris claro del espacio de trabajo */
-#main-workspace-card {
-    background-color: #0A2540 !important; /* Fuerza el fondo azul oscuro idéntico a tus métricas */
-    border: 1px solid rgba(255, 255, 255, 0.05) !important; /* Borde sutil para dar relieve */
+/* --- Variables Oficiales --- */
+:root {
+    --sports-green: #00C16E;
+    --sports-green-hover: #00a85f;
+    --bg-football-dark: #071524;
+    --bg-navy: #0a2540;
+    --bg-dark-navy: #0d1b2a;
+    --text-light-50: rgba(255,255,255,0.5);
+    --text-light-75: rgba(255,255,255,0.75);
+}
+
+/* --- Reset y Base --- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body.bg-football-dark {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+}
+
+/* --- Colores Utilitarios --- */
+.bg-navy        { background-color: var(--bg-navy) !important; }
+.bg-dark-navy   { background-color: var(--bg-dark-navy) !important; }
+.bg-football-dark { background-color: var(--bg-football-dark) !important; }
+.text-sports    { color: var(--sports-green) !important; }
+.border-sports  { border-color: var(--sports-green) !important; }
+.text-light-75  { color: var(--text-light-75) !important; }
+.text-light-50  { color: var(--text-light-50) !important; }
+
+/* ==========================================================================
+   LAYOUT — WRAPPER Y SIDEBAR
+   ========================================================================== */
+
+#wrapper {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Sidebar — ancho fijo INMUTABLE */
+#sidebar-wrapper {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+    flex-shrink: 0;
+    background: linear-gradient(185deg, #07192b 0%, #0a2540 100%) !important;
+    border-right: 1px solid rgba(255,255,255,0.05) !important;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* Sidebar — Logo / Heading como enlace */
+a.sidebar-heading {
+    display: flex;
+    align-items: center;
+    color: #fff !important;
+    text-decoration: none !important;
+    letter-spacing: 1.5px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.sidebar-heading {
+    letter-spacing: 1.5px;
+    font-size: 1rem;
+}
+
+/* Sidebar — Links */
+.sidebar-link {
+    padding: 10px 16px;
+    border-radius: 0;
+    transition: background 0.2s ease, border-left 0.1s ease;
+    border-left: 4px solid transparent;
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.75) !important;
+    text-decoration: none;
+}
+
+.sidebar-link:hover {
+    background: rgba(0,193,110,0.08) !important;
+    color: #ffffff !important;
+    border-left-color: rgba(0,193,110,0.5) !important;
+}
+
+.sidebar-link.active {
+    background: linear-gradient(90deg, rgba(0,193,110,0.18) 0%, transparent 100%) !important;
+    border-left: 4px solid var(--sports-green) !important;
     color: #ffffff !important;
 }
 
-/* Forzar que los textos secundarios dentro del panel queden legibles sobre oscuro */
-#main-workspace-card .text-muted, 
-#main-workspace-card p,
-#main-workspace-card label {
-    color: rgba(255, 255, 255, 0.6) !important;
+/* Sidebar — Avatar */
+#user-profile-summary {
+    background-color: rgba(0,0,0,0.15);
 }
 
-/* Estilo para los encabezados de las tablas (Thead) */
-#main-workspace-card .table th {
-    background-color: #061729 !important; /* Tono más oscuro para el encabezado de la columna */
-    color: #00C16E !important; /* Texto verde deportivo oficial */
-    border-bottom: 2px solid rgba(0, 193, 110, 0.3) !important;
+/* ==========================================================================
+   TOPBAR NAVBAR
+   ========================================================================== */
+
+.navbar.bg-navy {
+    background: linear-gradient(90deg, #0a2540 0%, #071524 100%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
 }
 
-/* Estilo para el cuerpo de las tablas dentro del contenedor */
-#main-workspace-card .table td {
-    background-color: #0A2540 !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+/* ==========================================================================
+   CONTENT AREA
+   ========================================================================== */
+
+#page-content-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-x: hidden;
 }
 
-/* Ajuste plano para las pestañas (Tabs) de Bootstrap */
+.card.bg-navy {
+    border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* ==========================================================================
+   TABLAS OPERATIVAS
+   ========================================================================== */
+
+.table.table-dark thead th {
+    background-color: #061729 !important;
+    color: var(--sports-green) !important;
+    border-bottom: 2px solid rgba(0,193,110,0.3) !important;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.table.table-dark tbody td {
+    background-color: var(--bg-navy) !important;
+    color: rgba(255,255,255,0.85) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+    vertical-align: middle;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(6,23,41,0.6) !important;
+}
+
+.table-hover tbody tr:hover td {
+    background-color: rgba(0,193,110,0.06) !important;
+    cursor: pointer;
+}
+
+/* Botones de acción pequeños en tablas */
+.btn-xs {
+    padding: 0.22rem 0.55rem;
+    font-size: 0.74rem;
+    border-radius: 4px;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   TABS DE BOOTSTRAP ADAPTADOS
+   ========================================================================== */
+
 #tecnicoTabs {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
 
 #tecnicoTabs .nav-link {
     border: none !important;
     background: transparent !important;
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: rgba(255,255,255,0.45) !important;
     font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.6px;
+    transition: color 0.2s;
+    border-bottom: 3px solid transparent !important;
+    padding: 8px 14px;
 }
 
 #tecnicoTabs .nav-link:hover {
-    color: #00C16E !important;
+    color: var(--sports-green) !important;
 }
 
 #tecnicoTabs .nav-link.active {
-    background-color: transparent !important;
-    color: #00C16E !important;
-    border-bottom: 3px solid #00C16E !important; /* Línea verde inferior de selección */
+    color: var(--sports-green) !important;
+    border-bottom: 3px solid var(--sports-green) !important;
 }
 
-/* Inputs oscuros para la Ficha del Profesional */
-.bg-dark-navy {
-    background-color: #0d1b2a !important;
-}
-
-.bg-football-dark {
-    background-color: #07111e !important;
-}
 /* ==========================================================================
-   ESTILOS INSTITUCIONALES PARA EL HOME PRINCIPAL (GOL AHORA)
+   MODALES — EDICIÓN (FONDO BLANCO RECTANGULAR ESTRICTO)
    ========================================================================== */
 
-/* Variables de Color Oficiales del Predio */
-:root {
-    --sports-green: #00C16E;      /* Verde Deportivo */
-    --bg-football-dark: #071524;  /* Fondo Oscuro Base */
-    --bg-navy: #0A2540;           /* Azul de Tarjetas y Navbar */
-    --text-light-50: rgba(255, 255, 255, 0.5);
-    --text-light-75: rgba(255, 255, 255, 0.75);
+/* Modal Modificar / Edición — cuerpo blanco */
+#modalModificarUsuario .modal-content {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.45) !important;
 }
 
-/* Forzar fondos oscuros en el cuerpo de la página */
-body.bg-football-dark {
-    background-color: #071524 !important;
-    color: #ffffff !important;
-    font-family: 'Poppins', sans-serif;
+#modalModificarUsuario h4 {
+    color: #5f6368 !important;
+    font-weight: 400 !important;
+    font-size: 1.25rem;
+    letter-spacing: 0.2px;
 }
 
-.bg-football-card-dark {
-    background-color: #05101b !important;
+#modalModificarUsuario .form-control {
+    border-radius: 4px !important;
+    border: 1px solid #dadce0 !important;
+    font-size: 0.95rem !important;
+    color: #202124 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s;
 }
 
-.bg-navy {
-    background-color: #0A2540 !important;
+#modalModificarUsuario .form-control:focus {
+    border-color: var(--sports-green) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.12) !important;
 }
 
-.text-sports {
-    color: #00C16E !important;
+/* Botón Guardar del modal blanco */
+#modalModificarUsuario .btn-guardar-modal {
+    background-color: var(--sports-green) !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+#modalModificarUsuario .btn-guardar-modal:hover {
+    background-color: var(--sports-green-hover) !important;
 }
 
-.border-sports {
-    border-color: #00C16E !important;
+/* Botón Cancelar del modal blanco */
+#modalModificarUsuario .btn-cancelar-modal {
+    background-color: #70757a !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+#modalModificarUsuario .btn-cancelar-modal:hover {
+    background-color: #5f6368 !important;
 }
 
-/* Navbar de Navegación Compacta */
-.custom-navbar {
-    background-color: rgba(10, 37, 64, 0.9) !important;
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.3s ease;
+/* Modal Ficha de Usuario — oscuro */
+#modalFichaUsuario .modal-content {
+    background-color: var(--bg-navy) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
 }
 
-.navbar-scrolled {
-    background-color: #0A2540 !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+/* Modal Certificaciones — oscuro */
+#modalAltaCertificacion .modal-content {
+    background-color: var(--bg-navy) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
 }
 
-.custom-navbar .nav-link {
-    color: rgba(255, 255, 255, 0.75) !important;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
+#modalAltaCertificacion .form-control {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.2) !important;
 }
 
-.custom-navbar .nav-link:hover {
-    color: #00C16E !important;
+#modalAltaCertificacion .form-control:focus {
+    border-color: var(--sports-green) !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.15) !important;
 }
 
-/* Botones con Colores del Sistema */
-.btn-sports {
-    background-color: #00C16E !important;
-    border-color: #00C16E !important;
-    color: #071524 !important;
+/* Botón Guardar verde en modal certificaciones */
+.btn-sports-solid {
+    background-color: var(--sports-green) !important;
+    border-color: var(--sports-green) !important;
+    color: #fff !important;
     font-weight: 600;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.btn-sports-solid:hover {
+    background-color: var(--sports-green-hover) !important;
+    border-color: var(--sports-green-hover) !important;
 }
 
-.btn-sports:hover {
-    background-color: #00a85f !important;
-    box-shadow: 0 4px 12px rgba(0, 193, 110, 0.2);
-}
+/* ==========================================================================
+   CARDS DE CERTIFICACIONES
+   ========================================================================== */
 
-.dynamic-btn {
-    transition: transform 0.2s ease;
-}
-
-.dynamic-btn:hover {
-    transform: translateY(-1px);
-}
-
-/* Sección de Encabezado Hero */
-.hero-section {
-    min-height: 75vh;
-    background: linear-gradient(180deg, rgba(7, 21, 36, 0.5) 0%, #071524 100%), 
-                url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1920') no-repeat center center;
-    background-size: cover;
-}
-
-.style-sub {
-    max-width: 650px;
-}
-
-.text-light-75 { color: rgba(255, 255, 255, 0.75) !important; }
-.text-light-50 { color: rgba(255, 255, 255, 0.5) !important; }
-
-/* Tarjetas de Módulos Deportivos (Cards) */
 .card-sport {
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    transition: all 0.3s ease;
+    background: linear-gradient(145deg, #0a2540 0%, #06192c 100%) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .card-sport:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
-    border-color: rgba(0, 193, 110, 0.2) !important;
+    transform: translateY(-2px);
+    border-color: rgba(0,193,110,0.3) !important;
 }
 
-.card-img-container {
-    height: 160px;
-    overflow: hidden;
-    background-color: #05101b;
-}
+/* ==========================================================================
+   PERFIL — Campos de solo lectura como ficha visual
+   ========================================================================== */
 
-.card-sport .card-img-top {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.card-sport:hover .card-img-top {
-    transform: scale(1.04);
-}
-
-/* Contenedores de Iconos en Ventajas */
-.icon-box-feature {
-    width: 48px;
-    height: 48px;
-    background-color: rgba(0, 193, 110, 0.06);
-    border: 1px solid rgba(0, 193, 110, 0.15);
+#perfil-ficha-datos {
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 6px;
+    overflow: hidden;
 }
 
-/* Enlaces del Footer */
-.hover-link:hover {
-    color: #00C16E !important;
+.perfil-campo {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.05);
 }
 
-/* Bloqueo anti-recortes para textos institucionales */
-.card-sport .text-sports {
-    white-space: nowrap !important; /* Evita que el tag superior se quiebre en dos líneas */
-    overflow: visible !important;
-    text-overflow: clip !important;
+.col-6.perfil-campo:nth-child(even) {
+    border-right: none;
 }
 
-.card-sport .card-title {
-    font-size: 1.2rem !important;
-    white-space: normal !important;
+.col-12.perfil-campo {
+    border-right: none;
 }
 
-.card-sport .card-text {
-    overflow: visible !important;
-    display: block !important;
-    text-overflow: clip !important;
-    white-space: normal !important; /* Permite que el párrafo se acomode de forma natural en varias líneas sin cortarse */
+.perfil-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-light-50);
+    margin-bottom: 3px;
 }
 
-/* Ajuste responsivo de la grilla del menú superior */
-@media (min-width: 992px) {
-    .custom-navbar .navbar-nav {
-        margin-right: 2rem !important;
-    }
+.perfil-valor {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+}
+
+.perfil-campo-editable {
+    background: rgba(0,193,110,0.04);
+}
+
+/* Modal modificar perfil — foco verde en inputs */
+#modalModificarPerfil .form-control:focus {
+    border-color: var(--sports-green) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.12) !important;
+}
+
+/* ==========================================================================
+   INPUTS OSCUROS GENERALES (fuera de modal blanco)
+   ========================================================================== */
+
+.bg-football-dark.form-control,
+.form-control.bg-football-dark {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.2) !important;
+}
+
+/* ==========================================================================
+   SWEETALERT2 — Ajustes de color según tipo
+   ========================================================================== */
+
+/* Forzar que el popup de SweetAlert2 de confirmación crítica muestre colores correctos */
+.swal2-popup {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* ==========================================================================
+   MENU TOGGLE — Sidebar collapsible
+   ========================================================================== */
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+    transition: margin 0.25s ease;
+}
+
+#sidebar-wrapper {
+    transition: margin 0.25s ease;
+}
+
+/* ==========================================================================
+   NOTIFICACIONES DROPDOWN
+   ========================================================================== */
+
+.notifications-dropdown {
+    position: absolute;
+    top: 55px;
+    right: 20px;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1055;
+    background: #0a2540;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.notification-item {
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+/* ==========================================================================
+   UTILIDADES VARIAS
+   ========================================================================== */
+
+.font-xs { font-size: 0.78rem !important; }
+
+.avatar-box { flex-shrink: 0; }
+
+/* Selects con fondo oscuro */
+.form-select.bg-football-dark option {
+    background-color: #1d2c47 !important;
+    color: #fff !important;
+}
+
+/* Inputs tipo file oscuros */
+input[type="file"].form-control {
+    color: rgba(255,255,255,0.7);
+}
+
+/* Botones outline verde del sidebar */
+.btn-outline-success.border-sports {
+    border-color: var(--sports-green) !important;
+    color: var(--sports-green) !important;
+}
+.btn-outline-success.border-sports:hover {
+    background-color: var(--sports-green) !important;
+    color: #071524 !important;
+}
+
+/* Scroll personalizado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #071524; }
+::-webkit-scrollbar-thumb { background: rgba(0,193,110,0.35); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sports-green); }
+
+/* ==========================================================================
+   GOL AHORA — DESIGN SYSTEM
+   ========================================================================== */
+
+/* --- Variables Oficiales --- */
+:root {
+    --sports-green: #00C16E;
+    --sports-green-hover: #00a85f;
+    --bg-football-dark: #071524;
+    --bg-navy: #0a2540;
+    --bg-dark-navy: #0d1b2a;
+    --text-light-50: rgba(255,255,255,0.5);
+    --text-light-75: rgba(255,255,255,0.75);
+}
+
+/* --- Reset y Base --- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body.bg-football-dark {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+}
+
+/* --- Colores Utilitarios --- */
+.bg-navy        { background-color: var(--bg-navy) !important; }
+.bg-dark-navy   { background-color: var(--bg-dark-navy) !important; }
+.bg-football-dark { background-color: var(--bg-football-dark) !important; }
+.text-sports    { color: var(--sports-green) !important; }
+.border-sports  { border-color: var(--sports-green) !important; }
+.text-light-75  { color: var(--text-light-75) !important; }
+.text-light-50  { color: var(--text-light-50) !important; }
+
+/* ==========================================================================
+   LAYOUT — WRAPPER Y SIDEBAR
+   ========================================================================== */
+
+#wrapper {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Sidebar — ancho fijo INMUTABLE */
+#sidebar-wrapper {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+    flex-shrink: 0;
+    background: linear-gradient(185deg, #07192b 0%, #0a2540 100%) !important;
+    border-right: 1px solid rgba(255,255,255,0.05) !important;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* Sidebar — Logo / Heading como enlace */
+a.sidebar-heading {
+    display: flex;
+    align-items: center;
+    color: #fff !important;
+    text-decoration: none !important;
+    letter-spacing: 1.5px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.sidebar-heading {
+    letter-spacing: 1.5px;
+    font-size: 1rem;
+}
+
+/* Sidebar — Links */
+.sidebar-link {
+    padding: 10px 16px;
+    border-radius: 0;
+    transition: background 0.2s ease, border-left 0.1s ease;
+    border-left: 4px solid transparent;
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.75) !important;
+    text-decoration: none;
+}
+
+.sidebar-link:hover {
+    background: rgba(0,193,110,0.08) !important;
+    color: #ffffff !important;
+    border-left-color: rgba(0,193,110,0.5) !important;
+}
+
+.sidebar-link.active {
+    background: linear-gradient(90deg, rgba(0,193,110,0.18) 0%, transparent 100%) !important;
+    border-left: 4px solid var(--sports-green) !important;
+    color: #ffffff !important;
+}
+
+/* Sidebar — Avatar */
+#user-profile-summary {
+    background-color: rgba(0,0,0,0.15);
+}
+
+/* ==========================================================================
+   TOPBAR NAVBAR
+   ========================================================================== */
+
+.navbar.bg-navy {
+    background: linear-gradient(90deg, #0a2540 0%, #071524 100%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* ==========================================================================
+   CONTENT AREA
+   ========================================================================== */
+
+#page-content-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.card.bg-navy {
+    border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* ==========================================================================
+   TABLAS OPERATIVAS
+   ========================================================================== */
+
+.table.table-dark thead th {
+    background-color: #061729 !important;
+    color: var(--sports-green) !important;
+    border-bottom: 2px solid rgba(0,193,110,0.3) !important;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.table.table-dark tbody td {
+    background-color: var(--bg-navy) !important;
+    color: rgba(255,255,255,0.85) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+    vertical-align: middle;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(6,23,41,0.6) !important;
+}
+
+.table-hover tbody tr:hover td {
+    background-color: rgba(0,193,110,0.06) !important;
+    cursor: pointer;
+}
+
+/* Botones de acción pequeños en tablas */
+.btn-xs {
+    padding: 0.22rem 0.55rem;
+    font-size: 0.74rem;
+    border-radius: 4px;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   TABS DE BOOTSTRAP ADAPTADOS
+   ========================================================================== */
+
+#tecnicoTabs {
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+#tecnicoTabs .nav-link {
+    border: none !important;
+    background: transparent !important;
+    color: rgba(255,255,255,0.45) !important;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.6px;
+    transition: color 0.2s;
+    border-bottom: 3px solid transparent !important;
+    padding: 8px 14px;
+}
+
+#tecnicoTabs .nav-link:hover {
+    color: var(--sports-green) !important;
+}
+
+#tecnicoTabs .nav-link.active {
+    color: var(--sports-green) !important;
+    border-bottom: 3px solid var(--sports-green) !important;
+}
+
+/* ==========================================================================
+   MODALES — EDICIÓN (FONDO BLANCO RECTANGULAR ESTRICTO)
+   ========================================================================== */
+
+/* Modal Modificar / Edición — cuerpo blanco */
+#modalModificarUsuario .modal-content {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.45) !important;
+}
+
+#modalModificarUsuario h4 {
+    color: #5f6368 !important;
+    font-weight: 400 !important;
+    font-size: 1.25rem;
+    letter-spacing: 0.2px;
+}
+
+#modalModificarUsuario .form-control {
+    border-radius: 4px !important;
+    border: 1px solid #dadce0 !important;
+    font-size: 0.95rem !important;
+    color: #202124 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s;
+}
+
+#modalModificarUsuario .form-control:focus {
+    border-color: var(--sports-green) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.12) !important;
+}
+
+/* Botón Guardar del modal blanco */
+#modalModificarUsuario .btn-guardar-modal {
+    background-color: var(--sports-green) !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+#modalModificarUsuario .btn-guardar-modal:hover {
+    background-color: var(--sports-green-hover) !important;
+}
+
+/* Botón Cancelar del modal blanco */
+#modalModificarUsuario .btn-cancelar-modal {
+    background-color: #70757a !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+#modalModificarUsuario .btn-cancelar-modal:hover {
+    background-color: #5f6368 !important;
+}
+
+/* Modal Ficha de Usuario — oscuro */
+#modalFichaUsuario .modal-content {
+    background-color: var(--bg-navy) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
+}
+
+/* Modal Certificaciones — oscuro */
+#modalAltaCertificacion .modal-content {
+    background-color: var(--bg-navy) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
+}
+
+#modalAltaCertificacion .form-control {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.2) !important;
+}
+
+#modalAltaCertificacion .form-control:focus {
+    border-color: var(--sports-green) !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.15) !important;
+}
+
+/* Botón Guardar verde en modal certificaciones */
+.btn-sports-solid {
+    background-color: var(--sports-green) !important;
+    border-color: var(--sports-green) !important;
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.btn-sports-solid:hover {
+    background-color: var(--sports-green-hover) !important;
+    border-color: var(--sports-green-hover) !important;
+}
+
+/* ==========================================================================
+   CARDS DE CERTIFICACIONES
+   ========================================================================== */
+
+.card-sport {
+    background: linear-gradient(145deg, #0a2540 0%, #06192c 100%) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card-sport:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0,193,110,0.3) !important;
+}
+
+/* ==========================================================================
+   PERFIL — Campos de solo lectura como ficha visual
+   ========================================================================== */
+
+#perfil-ficha-datos {
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.perfil-campo {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.col-6.perfil-campo:nth-child(even) {
+    border-right: none;
+}
+
+.col-12.perfil-campo {
+    border-right: none;
+}
+
+.perfil-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-light-50);
+    margin-bottom: 3px;
+}
+
+.perfil-valor {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+}
+
+.perfil-campo-editable {
+    background: rgba(0,193,110,0.04);
+}
+
+/* Modal modificar perfil — foco verde en inputs */
+#modalModificarPerfil .form-control:focus {
+    border-color: var(--sports-green) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.12) !important;
+}
+
+/* ==========================================================================
+   INPUTS OSCUROS GENERALES (fuera de modal blanco)
+   ========================================================================== */
+
+.bg-football-dark.form-control,
+.form-control.bg-football-dark {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.2) !important;
+}
+
+/* ==========================================================================
+   SWEETALERT2 — Ajustes de color según tipo
+   ========================================================================== */
+
+/* Forzar que el popup de SweetAlert2 de confirmación crítica muestre colores correctos */
+.swal2-popup {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* ==========================================================================
+   MENU TOGGLE — Sidebar collapsible
+   ========================================================================== */
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+    transition: margin 0.25s ease;
+}
+
+#sidebar-wrapper {
+    transition: margin 0.25s ease;
+}
+
+/* ==========================================================================
+   NOTIFICACIONES DROPDOWN
+   ========================================================================== */
+
+.notifications-dropdown {
+    position: absolute;
+    top: 55px;
+    right: 20px;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1055;
+    background: #0a2540;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.notification-item {
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+/* ==========================================================================
+   UTILIDADES VARIAS
+   ========================================================================== */
+
+.font-xs { font-size: 0.78rem !important; }
+
+.avatar-box { flex-shrink: 0; }
+
+/* Selects con fondo oscuro */
+.form-select.bg-football-dark option {
+    background-color: #1d2c47 !important;
+    color: #fff !important;
+}
+
+/* Inputs tipo file oscuros */
+input[type="file"].form-control {
+    color: rgba(255,255,255,0.7);
+}
+
+/* Botones outline verde del sidebar */
+.btn-outline-success.border-sports {
+    border-color: var(--sports-green) !important;
+    color: var(--sports-green) !important;
+}
+.btn-outline-success.border-sports:hover {
+    background-color: var(--sports-green) !important;
+    color: #071524 !important;
+}
+
+/* Cerrar sesión — botón fijo al fondo del sidebar */
+.btn.sidebar-logout {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 8px 12px;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.btn.sidebar-logout:hover {
+    background: rgba(242, 92, 84, 0.12);
+    border-color: rgba(242, 92, 84, 0.35);
+    color: #f25c54;
+}
+
+.btn.sidebar-logout i {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* Asegurar que el sidebar estire verticalmente para empujar el logout al fondo */
+#sidebar-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Scroll personalizado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #071524; }
+::-webkit-scrollbar-thumb { background: rgba(0,193,110,0.35); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sports-green); }
+
+/* ==========================================================================
+   GOL AHORA — DESIGN SYSTEM
+   ========================================================================== */
+
+/* --- Variables Oficiales --- */
+:root {
+    --sports-green: #00C16E;
+    --sports-green-hover: #00a85f;
+    --bg-football-dark: #071524;
+    --bg-navy: #0a2540;
+    --bg-dark-navy: #0d1b2a;
+    --text-light-50: rgba(255,255,255,0.5);
+    --text-light-75: rgba(255,255,255,0.75);
+}
+
+/* --- Reset y Base --- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body.bg-football-dark {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+}
+
+/* --- Colores Utilitarios --- */
+.bg-navy        { background-color: var(--bg-navy) !important; }
+.bg-dark-navy   { background-color: var(--bg-dark-navy) !important; }
+.bg-football-dark { background-color: var(--bg-football-dark) !important; }
+.text-sports    { color: var(--sports-green) !important; }
+.border-sports  { border-color: var(--sports-green) !important; }
+.text-light-75  { color: var(--text-light-75) !important; }
+.text-light-50  { color: var(--text-light-50) !important; }
+
+/* ==========================================================================
+   LAYOUT — WRAPPER Y SIDEBAR
+   ========================================================================== */
+
+#wrapper {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Sidebar — ancho fijo INMUTABLE */
+#sidebar-wrapper {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+    flex-shrink: 0;
+    background: linear-gradient(185deg, #07192b 0%, #0a2540 100%) !important;
+    border-right: 1px solid rgba(255,255,255,0.05) !important;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* Sidebar — Logo / Heading como enlace */
+a.sidebar-heading {
+    display: flex;
+    align-items: center;
+    color: #fff !important;
+    text-decoration: none !important;
+    letter-spacing: 1.5px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.sidebar-heading {
+    letter-spacing: 1.5px;
+    font-size: 1rem;
+}
+
+/* Sidebar — Links */
+.sidebar-link {
+    padding: 10px 16px;
+    border-radius: 0;
+    transition: background 0.2s ease, border-left 0.1s ease;
+    border-left: 4px solid transparent;
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.75) !important;
+    text-decoration: none;
+}
+
+.sidebar-link:hover {
+    background: rgba(0,193,110,0.08) !important;
+    color: #ffffff !important;
+    border-left-color: rgba(0,193,110,0.5) !important;
+}
+
+.sidebar-link.active {
+    background: linear-gradient(90deg, rgba(0,193,110,0.18) 0%, transparent 100%) !important;
+    border-left: 4px solid var(--sports-green) !important;
+    color: #ffffff !important;
+}
+
+/* Sidebar — Avatar */
+#user-profile-summary {
+    background-color: rgba(0,0,0,0.15);
+}
+
+/* ==========================================================================
+   TOPBAR NAVBAR
+   ========================================================================== */
+
+.navbar.bg-navy {
+    background: linear-gradient(90deg, #0a2540 0%, #071524 100%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* ==========================================================================
+   CONTENT AREA
+   ========================================================================== */
+
+#page-content-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.card.bg-navy {
+    border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+/* ==========================================================================
+   TABLAS OPERATIVAS
+   ========================================================================== */
+
+.table.table-dark thead th {
+    background-color: #061729 !important;
+    color: var(--sports-green) !important;
+    border-bottom: 2px solid rgba(0,193,110,0.3) !important;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.table.table-dark tbody td {
+    background-color: var(--bg-navy) !important;
+    color: rgba(255,255,255,0.85) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+    vertical-align: middle;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(6,23,41,0.6) !important;
+}
+
+.table-hover tbody tr:hover td {
+    background-color: rgba(0,193,110,0.06) !important;
+    cursor: pointer;
+}
+
+/* Botones de acción pequeños en tablas */
+.btn-xs {
+    padding: 0.22rem 0.55rem;
+    font-size: 0.74rem;
+    border-radius: 4px;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   TABS DE BOOTSTRAP ADAPTADOS
+   ========================================================================== */
+
+#tecnicoTabs {
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+#tecnicoTabs .nav-link {
+    border: none !important;
+    background: transparent !important;
+    color: rgba(255,255,255,0.45) !important;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.6px;
+    transition: color 0.2s;
+    border-bottom: 3px solid transparent !important;
+    padding: 8px 14px;
+}
+
+#tecnicoTabs .nav-link:hover {
+    color: var(--sports-green) !important;
+}
+
+#tecnicoTabs .nav-link.active {
+    color: var(--sports-green) !important;
+    border-bottom: 3px solid var(--sports-green) !important;
+}
+
+/* ==========================================================================
+   MODALES — EDICIÓN (FONDO BLANCO RECTANGULAR ESTRICTO)
+   ========================================================================== */
+
+/* Modal Modificar / Edición — cuerpo blanco */
+#modalModificarUsuario .modal-content {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.45) !important;
+}
+
+#modalModificarUsuario h4 {
+    color: #5f6368 !important;
+    font-weight: 400 !important;
+    font-size: 1.25rem;
+    letter-spacing: 0.2px;
+}
+
+#modalModificarUsuario .form-control {
+    border-radius: 4px !important;
+    border: 1px solid #dadce0 !important;
+    font-size: 0.95rem !important;
+    color: #202124 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s;
+}
+
+#modalModificarUsuario .form-control:focus {
+    border-color: var(--sports-green) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.12) !important;
+}
+
+/* Botón Guardar del modal blanco */
+#modalModificarUsuario .btn-guardar-modal {
+    background-color: var(--sports-green) !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+#modalModificarUsuario .btn-guardar-modal:hover {
+    background-color: var(--sports-green-hover) !important;
+}
+
+/* Botón Cancelar del modal blanco */
+#modalModificarUsuario .btn-cancelar-modal {
+    background-color: #70757a !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    font-weight: 500 !important;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+#modalModificarUsuario .btn-cancelar-modal:hover {
+    background-color: #5f6368 !important;
+}
+
+/* Modal Ficha de Usuario — oscuro */
+#modalFichaUsuario .modal-content {
+    background-color: var(--bg-navy) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
+}
+
+/* Modal Certificaciones — oscuro */
+#modalAltaCertificacion .modal-content {
+    background-color: var(--bg-navy) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
+}
+
+#modalAltaCertificacion .form-control {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.2) !important;
+}
+
+#modalAltaCertificacion .form-control:focus {
+    border-color: var(--sports-green) !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.15) !important;
+}
+
+/* Botón Guardar verde en modal certificaciones */
+.btn-sports-solid {
+    background-color: var(--sports-green) !important;
+    border-color: var(--sports-green) !important;
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.btn-sports-solid:hover {
+    background-color: var(--sports-green-hover) !important;
+    border-color: var(--sports-green-hover) !important;
+}
+
+/* ==========================================================================
+   CARDS DE CERTIFICACIONES
+   ========================================================================== */
+
+.card-sport {
+    background: linear-gradient(145deg, #0a2540 0%, #06192c 100%) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card-sport:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0,193,110,0.3) !important;
+}
+
+/* ==========================================================================
+   PERFIL — Campos de solo lectura como ficha visual
+   ========================================================================== */
+
+#perfil-ficha-datos {
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.perfil-campo {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.col-6.perfil-campo:nth-child(even) {
+    border-right: none;
+}
+
+.col-12.perfil-campo {
+    border-right: none;
+}
+
+.perfil-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-light-50);
+    margin-bottom: 3px;
+}
+
+.perfil-valor {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.9);
+    font-weight: 500;
+}
+
+.perfil-campo-editable {
+    background: rgba(0,193,110,0.04);
+}
+
+/* Modal modificar perfil — foco verde en inputs */
+#modalModificarPerfil .form-control:focus {
+    border-color: var(--sports-green) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0,193,110,0.12) !important;
+}
+
+/* ==========================================================================
+   INPUTS OSCUROS GENERALES (fuera de modal blanco)
+   ========================================================================== */
+
+.bg-football-dark.form-control,
+.form-control.bg-football-dark {
+    background-color: var(--bg-football-dark) !important;
+    color: #fff !important;
+    border-color: rgba(255,255,255,0.2) !important;
+}
+
+/* ==========================================================================
+   SWEETALERT2 — Ajustes de color según tipo
+   ========================================================================== */
+
+/* Forzar que el popup de SweetAlert2 de confirmación crítica muestre colores correctos */
+.swal2-popup {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* ==========================================================================
+   MENU TOGGLE — Sidebar collapsible
+   ========================================================================== */
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -250px;
+    transition: margin 0.25s ease;
+}
+
+#sidebar-wrapper {
+    transition: margin 0.25s ease;
+}
+
+/* ==========================================================================
+   NOTIFICACIONES DROPDOWN
+   ========================================================================== */
+
+.notifications-dropdown {
+    position: absolute;
+    top: 55px;
+    right: 20px;
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1055;
+    background: #0a2540;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.notification-item {
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+/* ==========================================================================
+   UTILIDADES VARIAS
+   ========================================================================== */
+
+.font-xs { font-size: 0.78rem !important; }
+
+.avatar-box { flex-shrink: 0; }
+
+/* Selects con fondo oscuro */
+.form-select.bg-football-dark option {
+    background-color: #1d2c47 !important;
+    color: #fff !important;
+}
+
+/* Inputs tipo file oscuros */
+input[type="file"].form-control {
+    color: rgba(255,255,255,0.7);
+}
+
+/* Botones outline verde del sidebar */
+.btn-outline-success.border-sports {
+    border-color: var(--sports-green) !important;
+    color: var(--sports-green) !important;
+}
+.btn-outline-success.border-sports:hover {
+    background-color: var(--sports-green) !important;
+    color: #071524 !important;
+}
+
+/* Cerrar sesión — botón fijo al fondo del sidebar */
+.btn.sidebar-logout {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 8px 12px;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.btn.sidebar-logout:hover {
+    background: rgba(242, 92, 84, 0.12);
+    border-color: rgba(242, 92, 84, 0.35);
+    color: #f25c54;
+}
+
+.btn.sidebar-logout i {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* Asegurar que el sidebar estire verticalmente para empujar el logout al fondo */
+#sidebar-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Scroll personalizado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #071524; }
+::-webkit-scrollbar-thumb { background: rgba(0,193,110,0.35); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sports-green); }
+
+/* ==========================================================================
+   CLIENTE — Cards de módulos (Panel de Control)
+   ========================================================================== */
+
+.modulo-card {
+    background: linear-gradient(145deg, #0a2540 0%, #071d35 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 28px 22px 22px 22px;
+    transition: transform 0.22s cubic-bezier(0.4,0,0.2,1),
+                box-shadow 0.22s ease,
+                border-color 0.22s ease;
+    position: relative;
+    overflow: hidden;
+    color: inherit;
+    min-height: 300px;
+}
+
+.modulo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.55) !important;
+    border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* Ícono grande centrado */
+.modulo-card-icon {
+    width: 76px;
+    height: 76px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    margin: 0 auto 1.25rem auto;
+    transition: transform 0.2s ease;
+}
+
+.modulo-card:hover .modulo-card-icon {
+    transform: scale(1.08);
+}
+
+/* Texto CTA ("Ir a ...") */
+.modulo-card-cta {
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+}
+
+/* Barra de color inferior — aparece en hover */
+.modulo-card-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    border-radius: 0 0 12px 12px;
+}
+
+.modulo-card:hover .modulo-card-bar {
+    opacity: 1;
+}
+
+/* Centrar contenido de las cards */
+.modulo-card {
+    text-align: center;
 }
