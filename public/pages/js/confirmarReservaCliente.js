@@ -2,7 +2,7 @@
    GOL AHORA — confirmarReservaCliente.js (Conectado al Controlador Real)
    ========================================================================== */
 
-const API = "https://gol-ahora.onrender.com";
+const API = window.location.origin;
 
 let idCancha = null;
 let fecha = null;

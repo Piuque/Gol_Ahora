@@ -2,7 +2,7 @@
    GOL AHORA — seleccionarFechaHora.js (PRODUCCIÓN - RENDER)
    ========================================================================== */
 
-const API = "https://gol-ahora.onrender.com";
+const API = window.location.origin;
 
 let idCanchaSeleccionada = null;
 let fechaSeleccionada = null;

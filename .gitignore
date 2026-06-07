@@ -3,3 +3,5 @@ node_modules/
 golahora.db
 *.log
 .DS_Store
+public/uploads/
+

@@ -2,7 +2,7 @@
    GOL AHORA — interfazCliente.js
    ========================================================================== */
 
-const API = "https://gol-ahora.onrender.com";
+const API = window.location.origin;
 
 let datosPerfilGlobal = null;
 
