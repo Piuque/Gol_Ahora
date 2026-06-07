@@ -706,7 +706,7 @@ const modificarCancha = async (req, res) => {
 const listarReservas = async (req, res) => {
   try {
     const sql = `
-      SELECT r.id_reserva AS id, u.nombre AS cliente_nombre, u.apellido AS cliente_apellido,
+      SELECT r.id_reserva AS id, r.id_cobro, u.nombre AS cliente_nombre, u.apellido AS cliente_apellido,
              u.email AS cliente_email, can.nombre AS cancha,
              to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
              to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
@@ -1439,6 +1439,19 @@ const crearReserva = async (req, res) => {
   }
 
   try {
+    // Verificar superposicion
+    const superposicion = await db.query.get(`
+      SELECT id_ocupacion_cancha FROM ocupaciones_cancha
+      WHERE id_cancha = $1 AND fecha = $2
+      AND (
+        (hora_inicio < $4 AND hora_fin > $3)
+      )
+    `, [id_cancha, fecha, hora_inicio, hora_fin]);
+
+    if (superposicion) {
+      return res.status(409).json({ error: 'Ya existe una reserva en ese horario para esa cancha' });
+    }
+
     await db.pool.query('BEGIN');
 
     const cobroSql = `
