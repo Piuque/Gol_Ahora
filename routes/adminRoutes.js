@@ -64,6 +64,7 @@ router.get('/canchas/:id', adminController.obtenerCancha);
 router.put('/canchas/:id', adminController.modificarCancha);
 
 // Reservas admin
+router.post('/reservas', adminController.crearReserva);
 router.get('/reservas', adminController.listarReservas);
 router.put('/reservas/:id', adminController.modificarReserva);
 router.delete('/reservas/:id', adminController.eliminarReserva);
