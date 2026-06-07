@@ -15,12 +15,8 @@ async function cargarLigas() {
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
     try {
         const res = await fetch("/admin/ligas", { credentials: "include", headers: { "x-user-id": userId } });
-        if (res.status === 401 || res.status === 403) {
-            window.location.href = '/acceder';
-            return;
-        }
+        if (res.status === 401 || res.status === 403) { window.location.href = '/acceder'; return; }
         if (!res.ok) throw new Error("Error del servidor");
-
         ligasData = await res.json();
         if (!ligasData || ligasData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay ligas registradas.</p>`;
@@ -79,7 +75,7 @@ async function verDetalle(id) {
             <div class="partido-item">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-white">${p.equipo_local} vs ${p.equipo_visitante}</span>
-                    ${p.goles_local !== null ? 
+                    ${p.goles_local !== null ?
                         `<span class="badge" style="background-color:#00C16E;">${p.goles_local} - ${p.goles_visitante}</span>` :
                         `<button onclick="registrarResultado(${p.id}, 'liga')" class="btn btn-sm text-white py-0" style="background-color:#0d6efd; font-size:0.75rem;">
                             Cargar resultado
@@ -382,6 +378,27 @@ async function registrarResultado(id_partido, tipo) {
         })
     });
 
+    if (!formValues) return;
+
+    try {
+        const url = tipo === 'liga' ? `/admin/ligas/0/partidos/${id_partido}/resultado` : `/admin/torneos/0/partidos/${id_partido}/resultado`;
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+            credentials: 'include',
+            body: JSON.stringify(formValues)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Resultado registrado.', confirmButtonColor: '#00C16E' });
+        } else {
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
 async function eliminarEquipoLiga(id_equipo, id_liga) {
     const userId = localStorage.getItem("userId");
     const confirm = await Swal.fire({
@@ -407,27 +424,6 @@ async function eliminarEquipoLiga(id_equipo, id_liga) {
         } else {
             const data = await res.json().catch(() => ({}));
             await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al eliminar.', confirmButtonColor: '#00C16E' });
-        }
-    } catch (e) {
-        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
-    }
-}
-
-    if (!formValues) return;
-
-    try {
-        const url = tipo === 'liga' ? `/admin/ligas/0/partidos/${id_partido}/resultado` : `/admin/torneos/0/partidos/${id_partido}/resultado`;
-        const res = await fetch(url, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
-            credentials: 'include',
-            body: JSON.stringify(formValues)
-        });
-        const data = await res.json();
-        if (res.ok) {
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Resultado registrado.', confirmButtonColor: '#00C16E' });
-        } else {
-            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
         }
     } catch (e) {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
