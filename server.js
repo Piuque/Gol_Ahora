@@ -556,7 +556,7 @@ const startServer = async () => {
   await initDatabase();
   
   // Ejecutar limpieza cada 60 segundos
-  setInterval(cleanupExpiredReservations, 60000);
+  setInterval(cleanupExpiredReservations, 180000);
   // Ejecutar limpieza inicial
   cleanupExpiredReservations();
 
