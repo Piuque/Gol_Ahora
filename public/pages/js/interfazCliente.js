@@ -283,24 +283,46 @@ async function modificarPerfil() {
     const d = datosPerfilGlobal;
     const dirObj = d.direccion || { calle: d.calle, numero: d.numero, localidad: d.localidad, provincia: d.provincia, codigo_postal: d.codigo_postal };
 
-    // Obtener géneros dinámicos y mapearles un ID lógico
+    // DICCIONARIO EXACTO DE LA BASE DE DATOS
+    const mapaGenerosBD = {
+        "agénero": 0,
+        "agenero": 0,
+        "femenino": 1,
+        "género fluido": 2,
+        "genero fluido": 2,
+        "helicoptero apache": 3,
+        "hombre trans": 4,
+        "masculino": 5,
+        "mujer trans": 6,
+        "no binario": 7,
+        "otro": 8,
+        "prefiero no especificar": 9
+    };
+
     let opcionesGenerosHTML = `<option value="">Seleccione un género</option>`;
+
     try {
         const resGen = await fetch(`${API}/api/generos`);
         if (resGen.ok) {
             const listaGeneros = await resGen.json();
-            listaGeneros.forEach((gen, index) => {
-                let idFicticio = index + 1; // Asignación lógica genérica
-                if(gen.toLowerCase() === 'femenino') idFicticio = 1;
-                else if(gen.toLowerCase() === 'masculino') idFicticio = 2;
 
-                // Si el backend nos mandó el ID real del usuario, lo usamos para no fallar
-                if (d.genero === gen && d.id_genero) {
-                    idFicticio = d.id_genero;
+            listaGeneros.forEach(gen => {
+                let nombreGenero = typeof gen === 'object' ? gen.genero : gen;
+
+                // Mapeo perfecto buscando el nombre del género en nuestro diccionario en minúsculas
+                let idReal = mapaGenerosBD[nombreGenero.toLowerCase()];
+
+                // Si el backend mandó objetos con ID, priorizamos ese ID real
+                if (typeof gen === 'object' && gen.id_genero !== undefined) {
+                    idReal = gen.id_genero;
                 }
 
-                const seleccionado = (d.genero === gen) ? 'selected' : '';
-                opcionesGenerosHTML += `<option value="${idFicticio}" ${seleccionado}>${gen}</option>`;
+                // Aseguramos preseleccionar el actual del usuario
+                const seleccionado = (d.genero === nombreGenero) ? 'selected' : '';
+
+                if (idReal !== undefined) {
+                    opcionesGenerosHTML += `<option value="${idReal}" ${seleccionado}>${nombreGenero}</option>`;
+                }
             });
         }
     } catch (e) {
@@ -379,9 +401,20 @@ function _inputEdit(id, label, value, type = 'text', readonly = false) {
 }
 
 async function guardarModificacionPerfil() {
-    const idGeneroObtenido = parseInt(document.getElementById('mod-genero')?.value);
+    const selectElement = document.getElementById('mod-genero');
+    let idGeneroAEnviar = datosPerfilGlobal.id_genero || null; // Por defecto mantenemos el que ya tiene
 
-    // Payload EXACTO para PostgreSQL (¡Ahora sí mandamos los IDs sin fallar!)
+    // Evaluamos si el usuario tocó el desplegable
+    if (selectElement) {
+        if (selectElement.value !== "") {
+            // Convierte el valor del <option> en un número exacto
+            idGeneroAEnviar = parseInt(selectElement.value);
+        } else {
+            // Si el usuario eligió la opción "Seleccione un género" (limpiar el campo)
+            idGeneroAEnviar = null;
+        }
+    }
+
     const payload = {
         username:         document.getElementById('mod-username')?.value.trim(),
         nombre:           document.getElementById('mod-nombre')?.value.trim(),
@@ -390,12 +423,12 @@ async function guardarModificacionPerfil() {
         fecha_nacimiento: document.getElementById('mod-nacimiento')?.value || null,
         dni:              datosPerfilGlobal.dni,
         telefono:         document.getElementById('mod-telefono')?.value.trim(),
-        id_genero:        isNaN(idGeneroObtenido) ? (datosPerfilGlobal.id_genero || null) : idGeneroObtenido,
-        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad || null, // <- LA CLAVE DEL ÉXITO ESTÁ AQUÍ
+        id_genero:        idGeneroAEnviar,
+        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad || null,
         calle:            document.getElementById('mod-calle')?.value.trim(),
         numero:           document.getElementById('mod-numero')?.value.trim(),
         codigo_postal:    document.getElementById('mod-cp')?.value.trim(),
-        id_localidad:     datosPerfilGlobal.id_localidad || null     // <- Y AQUÍ
+        id_localidad:     datosPerfilGlobal.id_localidad || null
     };
 
     const errorEl = document.getElementById('mod-error');
@@ -423,7 +456,6 @@ async function guardarModificacionPerfil() {
             throw new Error(err.error || `Error ${res.status}`);
         }
 
-        // Recargar perfil instantáneamente tras el guardado exitoso
         await verificarSesionYPerfil();
 
         Swal.close();

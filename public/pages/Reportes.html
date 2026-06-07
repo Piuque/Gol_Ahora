@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gol Ahora — Reportes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* ── Cards de reporte ── */
+        .reporte-card {
+            background: linear-gradient(145deg, #0a2540 0%, #071d35 100%);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 24px 20px 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .reporte-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .reporte-card::before {
+            content:'';
+            position:absolute;
+            top:0;left:0;
+            width:100%;height:3px;
+            border-radius:12px 12px 0 0;
+            opacity:0;
+            transition:opacity 0.2s;
+        }
+        .reporte-card:hover::before { opacity:1; }
+        .reporte-card.verde::before  { background:#00C16E; }
+        .reporte-card.amarillo::before { background:#f0c040; }
+        .reporte-card.azul::before   { background:#6ea8fe; }
+        .reporte-card.rojo::before   { background:#e05c5c; }
+        .reporte-card.cyan::before   { background:#22d3ee; }
+
+        .reporte-icon {
+            width:52px;height:52px;
+            border-radius:13px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.3rem;
+            margin-bottom:14px;
+            flex-shrink:0;
+        }
+        .reporte-card h6 {
+            font-size:0.9rem;font-weight:700;color:#fff;margin-bottom:5px;
+        }
+        .reporte-card p {
+            font-size:0.76rem;color:rgba(255,255,255,0.42);line-height:1.6;flex:1;margin-bottom:0;
+        }
+
+        /* ── Tabla de datos del reporte ── */
+        .reporte-tabla-wrapper {
+            display:none;
+            margin-top:12px;
+            border-radius:8px;
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,0.07);
+            max-height:260px;
+            overflow-y:auto;
+            scrollbar-width:thin;
+            scrollbar-color:rgba(0,193,110,0.3) transparent;
+        }
+        .reporte-tabla-wrapper.visible { display:block; }
+        .reporte-tabla {
+            width:100%;font-size:0.72rem;border-collapse:collapse;
+        }
+        .reporte-tabla thead th {
+            background:#061729;color:#00C16E;
+            padding:7px 10px;text-transform:uppercase;
+            letter-spacing:0.4px;font-size:0.67rem;font-weight:600;
+            border-bottom:1px solid rgba(0,193,110,0.2);
+            position:sticky;top:0;z-index:1;
+        }
+        .reporte-tabla tbody tr {
+            border-bottom:1px solid rgba(255,255,255,0.04);
+            transition:background 0.1s;
+        }
+        .reporte-tabla tbody tr:hover { background:rgba(0,193,110,0.05); }
+        .reporte-tabla tbody td {
+            padding:6px 10px;color:rgba(255,255,255,0.78);
+        }
+
+        /* ── Botones de acción ── */
+        .reporte-actions { display:flex;gap:7px;margin-top:14px;flex-wrap:wrap; }
+        .btn-rp {
+            background:#00C16E;border:none;border-radius:6px;
+            color:#fff;font-size:0.74rem;font-weight:600;
+            padding:6px 13px;cursor:pointer;
+            display:flex;align-items:center;gap:5px;
+            transition:background 0.15s,transform 0.1s;
+        }
+        .btn-rp:hover { background:#00a85f;transform:scale(1.03); }
+        .btn-rp-outline {
+            background:transparent;
+            border:1px solid rgba(255,255,255,0.13);
+            border-radius:6px;color:rgba(255,255,255,0.52);
+            font-size:0.74rem;font-weight:600;
+            padding:6px 13px;cursor:pointer;
+            display:flex;align-items:center;gap:5px;
+            transition:background 0.15s,border-color 0.15s,color 0.15s;
+        }
+        .btn-rp-outline:hover {
+            background:rgba(255,255,255,0.06);
+            border-color:rgba(255,255,255,0.28);color:#fff;
+        }
+
+        /* ── Estado inline ── */
+        .reporte-estado {
+            display:none;margin-top:9px;padding:8px 12px;
+            border-radius:6px;font-size:0.75rem;
+            align-items:center;gap:7px;
+        }
+        .reporte-estado.cargando {
+            display:flex;
+            background:rgba(0,193,110,0.07);
+            border:1px solid rgba(0,193,110,0.18);color:#00C16E;
+        }
+        .reporte-estado.error {
+            display:flex;
+            background:rgba(242,92,84,0.07);
+            border:1px solid rgba(242,92,84,0.18);color:#f25c54;
+        }
+
+        /* ── Filtros ── */
+        .filtros-bar {
+            background:linear-gradient(145deg,#0a2540 0%,#07192e 100%);
+            border:1px solid rgba(255,255,255,0.06);
+            border-radius:10px;padding:14px 18px;
+        }
+        .filtros-bar label {
+            font-size:0.68rem;text-transform:uppercase;
+            letter-spacing:0.5px;color:rgba(255,255,255,0.42);
+            font-weight:600;margin-bottom:4px;display:block;
+        }
+        .filtros-bar .form-control,
+        .filtros-bar .form-select {
+            background:rgba(255,255,255,0.05)!important;
+            border:1px solid rgba(255,255,255,0.1)!important;
+            color:#fff!important;font-size:0.81rem;border-radius:6px;
+        }
+        .filtros-bar .form-control:focus,
+        .filtros-bar .form-select:focus {
+            border-color:rgba(0,193,110,0.45)!important;
+            box-shadow:0 0 0 3px rgba(0,193,110,0.1)!important;
+        }
+        .filtros-bar .form-select option { background:#0a2540; }
+
+        /* ── Botón imprimir ── */
+        .btn-imprimir {
+            background:transparent;
+            border:1px solid rgba(0,193,110,0.4);
+            color:#00C16E;border-radius:7px;
+            font-size:0.81rem;font-weight:600;
+            padding:7px 16px;
+            display:flex;align-items:center;gap:6px;
+            transition:background 0.2s;cursor:pointer;
+        }
+        .btn-imprimir:hover { background:rgba(0,193,110,0.1); }
+
+        /* ── @media print ── */
+        @media print {
+            #sidebar-wrapper, nav.navbar,
+            .filtros-bar, .reporte-actions,
+            .btn-imprimir, .back-to-top,
+            #menu-toggle, .reporte-estado { display:none!important; }
+
+            body,#page-content-wrapper,#main-content {
+                background:#fff!important;color:#111!important;
+            }
+            #wrapper { display:block!important; }
+            .reporte-card {
+                background:#fff!important;border:1px solid #ddd!important;
+                box-shadow:none!important;break-inside:avoid;
+                page-break-inside:avoid;margin-bottom:14px!important;
+                transform:none!important;
+            }
+            .reporte-card h6 { color:#111!important; }
+            .reporte-card p  { color:#555!important; }
+            .reporte-tabla-wrapper { display:block!important;max-height:none!important; }
+            .reporte-tabla thead th { background:#eee!important;color:#111!important; }
+            .reporte-tabla tbody td { color:#111!important; }
+            .row.g-4 { display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important; }
+            @page { size:A4;margin:18mm 14mm; }
+        }
+    </style>
+</head>
+<body class="bg-football-dark text-light">
+
+<div class="d-flex" id="wrapper">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <div id="sidebar-wrapper">
+        <a href="/admin/interfazAdministrador"
+           class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
+           style="transition:opacity 0.2s;"
+           onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+            <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
+        </a>
+
+        <div class="p-3 border-bottom border-secondary border-opacity-25" style="background:rgba(0,0,0,0.15);">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:40px;height:40px;flex-shrink:0;">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <div class="fw-bold text-white lh-1 small">Panel Admin</div>
+                    <span class="text-sports text-uppercase fw-bold" style="font-size:0.63rem;letter-spacing:0.8px;">Administrador</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-grow-1 py-2" style="overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,193,110,0.3) transparent;">
+
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sub-usuarios" aria-expanded="false">
+                    <span><i class="fa-solid fa-users me-2" style="width:16px;"></i>Usuarios</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-usuarios">
+                    <a href="/admin/RegistrarCliente" class="sidebar-sub-link"><i class="fa-solid fa-plus" style="width:14px;"></i>Registrar usuario</a>
+                    <a href="/admin/ConsultaClientes" class="sidebar-sub-link"><i class="fa-solid fa-magnifying-glass" style="width:14px;"></i>Listar / Modificar / Eliminar</a>
+                </div>
+            </div>
+
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sub-profesionales" aria-expanded="false">
+                    <span><i class="fa-solid fa-chalkboard-user me-2" style="width:16px;"></i>Profesionales</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-profesionales">
+                    <a href="/admin/RegistrarProfesional" class="sidebar-sub-link"><i class="fa-solid fa-plus" style="width:14px;"></i>Registrar profesional</a>
+                    <a href="/admin/ListarProfesionales" class="sidebar-sub-link"><i class="fa-solid fa-magnifying-glass" style="width:14px;"></i>Listar / Modificar / Eliminar</a>
+                </div>
+            </div>
+
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sub-reservas" aria-expanded="false">
+                    <span><i class="fa-solid fa-calendar-alt me-2" style="width:16px;"></i>Reservas</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-reservas">
+                    <a href="/admin/RegistrarReserva" class="sidebar-sub-link"><i class="fa-solid fa-marker" style="width:14px;"></i>Registrar reserva</a>
+                    <a href="/admin/ListarReservas" class="sidebar-sub-link"><i class="fa-solid fa-list-ul" style="width:14px;"></i>Listar / Modificar / Cancelar</a>
+                </div>
+            </div>
+
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sub-canchas" aria-expanded="false">
+                    <span><i class="fa-solid fa-futbol me-2" style="width:16px;"></i>Canchas</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-canchas">
+                    <a href="/admin/RegistrarTipoDeCancha" class="sidebar-sub-link"><i class="fa-solid fa-layer-group" style="width:14px;"></i>Registrar tipo de cancha</a>
+                    <a href="/admin/RegistrarCancha" class="sidebar-sub-link"><i class="fa-solid fa-plus-circle" style="width:14px;"></i>Registrar nueva cancha</a>
+                    <a href="/admin/VerCanchas" class="sidebar-sub-link"><i class="fa-solid fa-eye" style="width:14px;"></i>Listar / Modificar / Eliminar</a>
+                    <a href="/admin/ListarTiposCanchas" class="sidebar-sub-link"><i class="fa-solid fa-layer-group" style="width:14px;"></i>Tipos de canchas</a>
+                </div>
+            </div>
+
+            <div class="mb-1">
+                <a href="/admin/Descuentos" class="sidebar-direct-link">
+                    <i class="fa-solid fa-tags me-2" style="width:16px;"></i>Descuentos
+                </a>
+            </div>
+
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sub-competencias" aria-expanded="false">
+                    <span><i class="fa-solid fa-trophy me-2" style="width:16px;"></i>Competencias</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-competencias">
+                    <a href="/admin/Ligas" class="sidebar-sub-link"><i class="fa-solid fa-list-ol" style="width:14px;"></i>Ligas</a>
+                    <a href="/admin/Torneos" class="sidebar-sub-link"><i class="fa-solid fa-medal" style="width:14px;"></i>Torneos</a>
+                </div>
+            </div>
+
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sub-capacitaciones" aria-expanded="false">
+                    <span><i class="fa-solid fa-graduation-cap me-2" style="width:16px;"></i>Capacitaciones</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-capacitaciones">
+                    <a href="/admin/Clases" class="sidebar-sub-link"><i class="fa-solid fa-chalkboard-user" style="width:14px;"></i>Clases</a>
+                    <a href="/admin/Entrenamientos" class="sidebar-sub-link"><i class="fa-solid fa-dumbbell" style="width:14px;"></i>Entrenamientos</a>
+                </div>
+            </div>
+
+            <div class="mb-1">
+                <button class="sidebar-section-btn" type="button" data-bs-toggle="collapse" data-bs-target="#sub-finanzas" aria-expanded="false">
+                    <span><i class="fa-solid fa-dollar-sign me-2" style="width:16px;"></i>Finanzas</span>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </button>
+                <div class="collapse sidebar-submenu" id="sub-finanzas">
+                    <a href="/admin/Cobros" class="sidebar-sub-link"><i class="fa-solid fa-cash-register" style="width:14px;"></i>Cobros</a>
+                    <a href="Recibos.html" class="sidebar-sub-link"><i class="fa-solid fa-receipt" style="width:14px;"></i>Recibos</a>
+                </div>
+            </div>
+
+            <!-- Reportes — ACTIVO -->
+            <div class="mb-1">
+                <a href="Reportes.html" class="sidebar-direct-link active-section">
+                    <i class="fa-solid fa-chart-bar me-2" style="width:16px;"></i>Reportes
+                </a>
+            </div>
+
+        </div>
+
+        <div class="p-3 border-top border-secondary border-opacity-25" style="background:rgba(0,0,0,0.15);">
+            <button onclick="cerrarSesionAdmin()"
+                    class="btn sidebar-logout w-100 d-flex align-items-center justify-content-start gap-2 mb-3">
+                <i class="fa-solid fa-right-from-bracket"></i><span>Cerrar sesión</span>
+            </button>
+            <div class="d-flex align-items-center gap-2 px-1">
+                <div class="bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                     style="width:32px;height:32px;font-size:0.7rem;flex-shrink:0;">GA</div>
+                <span class="text-white fw-semibold" style="font-size:0.82rem;">Gol Ahora Club</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===================== /SIDEBAR ===================== -->
+
+    <div id="page-content-wrapper" class="w-100 d-flex flex-column">
+
+        <!-- TOPBAR -->
+        <nav class="navbar navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
+            <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="navbar-brand fw-bold text-white mb-0 ms-3 small text-uppercase" style="letter-spacing:1px;">
+                <i class="fa-solid fa-futbol text-sports me-2"></i>Gol Ahora
+            </span>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <button class="btn-imprimir" onclick="window.print()">
+                    <i class="fa-solid fa-print"></i> Imprimir Reporte
+                </button>
+                <span class="small fw-medium" id="nav-fecha" style="color:var(--text-light-50);"></span>
+            </div>
+        </nav>
+
+        <!-- CONTENIDO -->
+        <div class="container-fluid px-4 py-4 flex-grow-1" style="overflow-y:auto;" id="main-content">
+
+            <!-- Encabezado -->
+            <div class="d-flex justify-content-between align-items-start mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+                <div>
+                    <h4 class="fw-bold text-white mb-1">
+                        <i class="fa-solid fa-chart-bar text-sports me-2"></i>Reportes del Sistema
+                    </h4>
+                    <p class="mb-0 small" style="color:var(--text-light-50);">
+                        Consultá, visualizá e imprimí los datos operativos del club en tiempo real.
+                    </p>
+                </div>
+                <span class="badge px-3 py-2"
+                      style="background:rgba(0,193,110,0.1);border:1px solid rgba(0,193,110,0.3);color:#00C16E;font-size:0.72rem;">
+                    <i class="fa-solid fa-shield-halved me-1"></i>Administrador
+                </span>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filtros-bar mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-auto">
+                        <label>Período</label>
+                        <select class="form-select form-select-sm" id="filtro-periodo" style="min-width:145px;" onchange="toggleFechas()">
+                            <option value="mes">Este mes</option>
+                            <option value="trimestre">Este trimestre</option>
+                            <option value="anio">Este año</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                    </div>
+                    <div class="col-auto d-none" id="wrap-desde">
+                        <label>Desde</label>
+                        <input type="date" class="form-control form-control-sm" id="filtro-desde">
+                    </div>
+                    <div class="col-auto d-none" id="wrap-hasta">
+                        <label>Hasta</label>
+                        <input type="date" class="form-control form-control-sm" id="filtro-hasta">
+                    </div>
+                    <div class="col-auto ms-auto d-flex align-items-center">
+                        <small style="color:rgba(255,255,255,0.28);font-size:0.68rem;">
+                            Los filtros aplican a todos los reportes
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRILLA DE REPORTES -->
+            <div class="row g-4">
+
+                <!-- 1. Tipos de Canchas -->
+                <!-- Rutas: GET /admin/tipos-canchas + GET /admin/canchas/listar -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="reporte-card verde">
+                        <div class="reporte-icon" style="background:rgba(0,193,110,0.1);color:#00C16E;">
+                            <i class="fa-solid fa-futbol"></i>
+                        </div>
+                        <h6>Tipos de Canchas y Características</h6>
+                        <p>Detalle de cada tipo de cancha: dimensiones, superficie, capacidad y precio por hora.</p>
+                        <div class="reporte-estado" id="estado-canchas"></div>
+                        <div class="reporte-tabla-wrapper" id="tabla-canchas">
+                            <table class="reporte-tabla">
+                                <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Ancho</th>
+                                    <th>Largo</th>
+                                    <th>Capacidad</th>
+                                    <th>Duración</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody-canchas"></tbody>
+                            </table>
+                        </div>
+                        <div class="reporte-actions">
+                            <button class="btn-rp" onclick="cargarReporte('canchas')">
+                                <i class="fa-solid fa-play"></i> Ver datos
+                            </button>
+                            <button class="btn-rp-outline" onclick="ocultarTabla('canchas')">
+                                <i class="fa-solid fa-eye-slash"></i> Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Ingresos -->
+                <!-- Ruta: GET /admin/reportes/ingresos + GET /admin/cobros -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="reporte-card amarillo">
+                        <div class="reporte-icon" style="background:rgba(240,192,64,0.1);color:#f0c040;">
+                            <i class="fa-solid fa-dollar-sign"></i>
+                        </div>
+                        <h6>Ingresos del Complejo</h6>
+                        <p>Resumen financiero agrupado por estado de cobro y total de operaciones del período.</p>
+                        <div class="reporte-estado" id="estado-ingresos"></div>
+                        <div class="reporte-tabla-wrapper" id="tabla-ingresos">
+                            <table class="reporte-tabla">
+                                <thead>
+                                <tr>
+                                    <th>Estado</th>
+                                    <th>Operaciones</th>
+                                    <th>Total ($)</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody-ingresos"></tbody>
+                            </table>
+                        </div>
+                        <div class="reporte-actions">
+                            <button class="btn-rp" onclick="cargarReporte('ingresos')">
+                                <i class="fa-solid fa-play"></i> Ver datos
+                            </button>
+                            <button class="btn-rp-outline" onclick="ocultarTabla('ingresos')">
+                                <i class="fa-solid fa-eye-slash"></i> Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Reservas -->
+                <!-- Ruta: GET /admin/reservas -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="reporte-card azul">
+                        <div class="reporte-icon" style="background:rgba(110,168,254,0.1);color:#6ea8fe;">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <h6>Reservas de Canchas</h6>
+                        <p>Listado de reservas: cancha, cliente, fecha, horario, estado de pago y monto abonado.</p>
+                        <div class="reporte-estado" id="estado-reservas"></div>
+                        <div class="reporte-tabla-wrapper" id="tabla-reservas">
+                            <table class="reporte-tabla">
+                                <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Cancha</th>
+                                    <th>Fecha</th>
+                                    <th>Horario</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody-reservas"></tbody>
+                            </table>
+                        </div>
+                        <div class="reporte-actions">
+                            <button class="btn-rp" onclick="cargarReporte('reservas')">
+                                <i class="fa-solid fa-play"></i> Ver datos
+                            </button>
+                            <button class="btn-rp-outline" onclick="ocultarTabla('reservas')">
+                                <i class="fa-solid fa-eye-slash"></i> Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Asistencias a Clases -->
+                <!-- Ruta: GET /admin/clases + GET /admin/clases/:id/asistencias -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="reporte-card rojo">
+                        <div class="reporte-icon" style="background:rgba(224,92,92,0.1);color:#e05c5c;">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <h6>Asistencias a Clases</h6>
+                        <p>Clases activas con profesor, cancha, fecha, capacidad e inscriptos registrados.</p>
+                        <div class="reporte-estado" id="estado-clases"></div>
+                        <div class="reporte-tabla-wrapper" id="tabla-clases">
+                            <table class="reporte-tabla">
+                                <thead>
+                                <tr>
+                                    <th>Clase</th>
+                                    <th>Profesor</th>
+                                    <th>Cancha</th>
+                                    <th>Fecha</th>
+                                    <th>Horario</th>
+                                    <th>Inscriptos</th>
+                                    <th>Capacidad</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody-clases"></tbody>
+                            </table>
+                        </div>
+                        <div class="reporte-actions">
+                            <button class="btn-rp" onclick="cargarReporte('clases')">
+                                <i class="fa-solid fa-play"></i> Ver datos
+                            </button>
+                            <button class="btn-rp-outline" onclick="ocultarTabla('clases')">
+                                <i class="fa-solid fa-eye-slash"></i> Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Asistencias a Entrenamientos -->
+                <!-- Ruta: GET /admin/entrenamientos + GET /admin/entrenamientos/:id/asistencias -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="reporte-card cyan">
+                        <div class="reporte-icon" style="background:rgba(34,211,238,0.1);color:#22d3ee;">
+                            <i class="fa-solid fa-dumbbell"></i>
+                        </div>
+                        <h6>Asistencias a Entrenamientos</h6>
+                        <p>Entrenamientos con entrenador, cancha, fecha, capacidad e inscriptos en el período.</p>
+                        <div class="reporte-estado" id="estado-entrenamientos"></div>
+                        <div class="reporte-tabla-wrapper" id="tabla-entrenamientos">
+                            <table class="reporte-tabla">
+                                <thead>
+                                <tr>
+                                    <th>Entrenador</th>
+                                    <th>Cancha</th>
+                                    <th>Fecha</th>
+                                    <th>Horario</th>
+                                    <th>Inscriptos</th>
+                                    <th>Capacidad</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tbody-entrenamientos"></tbody>
+                            </table>
+                        </div>
+                        <div class="reporte-actions">
+                            <button class="btn-rp" onclick="cargarReporte('entrenamientos')">
+                                <i class="fa-solid fa-play"></i> Ver datos
+                            </button>
+                            <button class="btn-rp-outline" onclick="ocultarTabla('entrenamientos')">
+                                <i class="fa-solid fa-eye-slash"></i> Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Imprimir -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="reporte-card" style="border:1px solid rgba(0,193,110,0.18);align-items:center;justify-content:center;text-align:center;min-height:220px;">
+                        <div class="reporte-icon mx-auto" style="background:rgba(0,193,110,0.07);color:#00C16E;">
+                            <i class="fa-solid fa-print"></i>
+                        </div>
+                        <h6>Imprimir Pantalla</h6>
+                        <p>Imprimí todos los reportes cargados en formato A4 limpio, sin menús ni botones.</p>
+                        <button class="btn-rp mt-3 mx-auto" onclick="window.print()" style="font-size:0.8rem;padding:8px 18px;">
+                            <i class="fa-solid fa-print"></i> Imprimir ahora
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="#" class="back-to-top" id="back-to-top">
+    <i class="fa-solid fa-angle-up"></i>
+</a>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+    const API = "https://gol-ahora.onrender.com";
+
+    /* ── Init ── */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('menu-toggle')?.addEventListener('click', () =>
+            document.getElementById('wrapper').classList.toggle('toggled'));
+
+        document.getElementById('nav-fecha').innerHTML =
+            `<i class="fa-regular fa-calendar text-sports me-2"></i>${
+                new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long' })
+            }`;
+
+        const main = document.getElementById('main-content');
+        const btn  = document.getElementById('back-to-top');
+        main?.addEventListener('scroll', () => btn?.classList.toggle('visible', main.scrollTop > 200));
+        btn?.addEventListener('click', e => { e.preventDefault(); main?.scrollTo({ top:0, behavior:'smooth' }); });
+
+        // Fechas por defecto (mes actual)
+        const hoy = new Date();
+        document.getElementById('filtro-desde').value =
+            new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+        document.getElementById('filtro-hasta').value =
+            new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).toISOString().split('T')[0];
+    });
+
+    function toggleFechas() {
+        const custom = document.getElementById('filtro-periodo').value === 'custom';
+        document.getElementById('wrap-desde').classList.toggle('d-none', !custom);
+        document.getElementById('wrap-hasta').classList.toggle('d-none', !custom);
+    }
+
+    function getFiltros() {
+        const periodo = document.getElementById('filtro-periodo').value;
+        const hoy = new Date();
+        let desde, hasta;
+        if (periodo === 'mes') {
+            desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+            hasta = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).toISOString().split('T')[0];
+        } else if (periodo === 'trimestre') {
+            const m = Math.floor(hoy.getMonth()/3)*3;
+            desde = new Date(hoy.getFullYear(), m, 1).toISOString().split('T')[0];
+            hasta = new Date(hoy.getFullYear(), m+3, 0).toISOString().split('T')[0];
+        } else if (periodo === 'anio') {
+            desde = ${hoy.getFullYear()}-01-01;
+            hasta = ${hoy.getFullYear()}-12-31;
+        } else {
+            desde = document.getElementById('filtro-desde').value;
+            hasta = document.getElementById('filtro-hasta').value;
+        }
+        return { desde, hasta };
+    }
+
+    /* ── Estado visual ── */
+    function setEstado(tipo, clase, html) {
+        const el = document.getElementById(estado-${tipo});
+        if (!el) return;
+        el.className = reporte-estado ${clase};
+        el.innerHTML = html;
+    }
+
+    function ocultarTabla(tipo) {
+        document.getElementById(tabla-${tipo})?.classList.remove('visible');
+        setEstado(tipo, '', '');
+    }
+
+    /* ── Configuración de cada reporte con su ruta y renderer ── */
+    const REPORTES = {
+
+        canchas: {
+            // Combina tipos de cancha + canchas físicas
+            fetch: async () => {
+                const [r1, r2] = await Promise.all([
+                        fetch(${API}/admin/tipos-canchas,    { credentials:'include' }),
+                    fetch(${API}/admin/canchas/listar,   { credentials:'include' })
+            ]);
+                if (!r1.ok || !r2.ok) throw new Error();
+                return { tipos: await r1.json(), canchas: await r2.json() };
+            },
+            render: ({ tipos }) => {
+                const tbody = document.getElementById('tbody-canchas');
+                if (!tipos.length) { tbody.innerHTML = <tr><td colspan="5" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>; return 0; }
+                tbody.innerHTML = tipos.map(t => `
+                <tr>
+                    <td>${t.tipo_cancha}</td>
+                    <td>${t.ancho ?? '—'} m</td>
+                    <td>${t.largo ?? '—'} m</td>
+                    <td>${t.capacidad ?? '—'}</td>
+                    <td>${t.duracion_min ?? '—'} – ${t.duracion_max ?? '—'} min</td>
+                </tr>`).join('');
+                return tipos.length;
+            }
+        },
+
+        ingresos: {
+            // GET /admin/reportes/ingresos  →  reporteFinanciero()
+            fetch: async () => {
+                const r = await fetch(${API}/admin/reportes/ingresos, { credentials:'include' });
+                if (!r.ok) throw new Error();
+                return await r.json();
+            },
+            render: (rows) => {
+                const tbody = document.getElementById('tbody-ingresos');
+                if (!rows.length) { tbody.innerHTML = <tr><td colspan="3" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>; return 0; }
+                let totalOps = 0, totalMonto = 0;
+                tbody.innerHTML = rows.map(r => {
+                    totalOps   += parseInt(r.total_operaciones || 0);
+                    totalMonto += parseFloat(r.ingresos_totales || 0);
+                    return `<tr>
+                    <td>${r.estado ?? '—'}</td>
+                    <td>${r.total_operaciones ?? 0}</td>
+                    <td>$${parseFloat(r.ingresos_totales || 0).toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
+                </tr>`;
+                }).join('') + `
+                <tr style="border-top:1px solid rgba(0,193,110,0.25);font-weight:700;">
+                    <td style="color:#00C16E;">TOTAL</td>
+                    <td style="color:#00C16E;">${totalOps}</td>
+                    <td style="color:#00C16E;">$${totalMonto.toLocaleString('es-AR', {minimumFractionDigits:2})}</td>
+                </tr>`;
+                return rows.length;
+            }
+        },
+
+        reservas: {
+            // GET /admin/reservas  →  listarReservas()
+            fetch: async () => {
+                const r = await fetch(${API}/admin/reservas, { credentials:'include' });
+                if (!r.ok) throw new Error();
+                return await r.json();
+            },
+            render: (rows) => {
+                const tbody = document.getElementById('tbody-reservas');
+                if (!rows.length) { tbody.innerHTML = <tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin reservas en el período</td></tr>; return 0; }
+                tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td>${r.cliente_nombre ?? ''} ${r.cliente_apellido ?? ''}</td>
+                    <td>${r.cancha ?? '—'}</td>
+                    <td>${r.fecha ?? '—'}</td>
+                    <td>${r.hora_inicio ?? ''} – ${r.hora_fin ?? ''}</td>
+                    <td>$${parseFloat(r.monto || 0).toLocaleString('es-AR')}</td>
+                    <td>
+                        <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.68rem;font-weight:600;
+                            background:${r.estado_cobro === 'Pagado' ? 'rgba(0,193,110,0.12)' : 'rgba(240,192,64,0.12)'};
+                            color:${r.estado_cobro === 'Pagado' ? '#00C16E' : '#f0c040'};
+                            border:1px solid ${r.estado_cobro === 'Pagado' ? 'rgba(0,193,110,0.3)' : 'rgba(240,192,64,0.3)'};">
+                            ${r.estado_cobro ?? '—'}
+                        </span>
+                    </td>
+                </tr>`).join('');
+                return rows.length;
+            }
+        },
+
+        clases: {
+            // GET /admin/clases  →  listarClases()
+            fetch: async () => {
+                const r = await fetch(${API}/admin/clases, { credentials:'include' });
+                if (!r.ok) throw new Error();
+                return await r.json();
+            },
+            render: (rows) => {
+                const tbody = document.getElementById('tbody-clases');
+                if (!rows.length) { tbody.innerHTML = <tr><td colspan="7" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin clases registradas</td></tr>; return 0; }
+                tbody.innerHTML = rows.map(r => {
+                    const pct = r.capacidad_max > 0 ? Math.round((r.inscriptos/r.capacidad_max)*100) : 0;
+                    return `<tr>
+                    <td>${r.nombre ?? '—'}</td>
+                    <td>${r.profesor ?? '—'}</td>
+                    <td>${r.cancha ?? '—'}</td>
+                    <td>${r.fecha ?? '—'}</td>
+                    <td>${r.hora_inicio ?? ''} – ${r.hora_fin ?? ''}</td>
+                    <td>${r.inscriptos ?? 0}</td>
+                    <td>${r.capacidad_max ?? '—'}
+                        <small style="color:${pct>=80?'#f25c54':'#00C16E'};margin-left:4px;">(${pct}%)</small>
+                    </td>
+                </tr>`;
+                }).join('');
+                return rows.length;
+            }
+        },
+
+        entrenamientos: {
+            // GET /admin/entrenamientos  →  listarEntrenamientos()
+            fetch: async () => {
+                const r = await fetch(${API}/admin/entrenamientos, { credentials:'include' });
+                if (!r.ok) throw new Error();
+                return await r.json();
+            },
+            render: (rows) => {
+                const tbody = document.getElementById('tbody-entrenamientos');
+                if (!rows.length) { tbody.innerHTML = <tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin entrenamientos registrados</td></tr>; return 0; }
+                tbody.innerHTML = rows.map(r => {
+                    const pct = r.capacidad_max > 0 ? Math.round((r.inscriptos/r.capacidad_max)*100) : 0;
+                    return `<tr>
+                    <td>${r.entrenador ?? '—'}</td>
+                    <td>${r.cancha ?? '—'}</td>
+                    <td>${r.fecha ?? '—'}</td>
+                    <td>${r.hora_inicio ?? ''} – ${r.hora_fin ?? ''}</td>
+                    <td>${r.inscriptos ?? 0}</td>
+                    <td>${r.capacidad_max ?? '—'}
+                        <small style="color:${pct>=80?'#f25c54':'#22d3ee'};margin-left:4px;">(${pct}%)</small>
+                    </td>
+                </tr>`;
+                }).join('');
+                return rows.length;
+            }
+        }
+    };
+
+    /* ── Cargar reporte ── */
+    async function cargarReporte(tipo) {
+        const cfg = REPORTES[tipo];
+        setEstado(tipo, 'cargando',
+            <div class="spinner-border spinner-border-sm" role="status"></div><span>Consultando datos...</span>);
+        document.getElementById(tabla-${tipo})?.classList.remove('visible');
+
+        try {
+            const data = await cfg.fetch();
+            const total = cfg.render(data);
+            document.getElementById(tabla-${tipo})?.classList.add('visible');
+            setEstado(tipo, 'cargando',
+                <i class="fa-solid fa-circle-check"></i><span>${total} registros cargados correctamente.</span>);
+            setTimeout(() => setEstado(tipo,'',''), 3500);
+        } catch {
+            setEstado(tipo, 'error',
+                <i class="fa-solid fa-triangle-exclamation"></i><span>No se pudieron obtener los datos. Verificá la conexión.</span>);
+            setTimeout(() => setEstado(tipo,'',''), 5000);
+        }
+    }
+
+    /* ── Cerrar sesión ── */
+    function cerrarSesionAdmin() {
+        Swal.fire({
+            title:'¿Cerrar sesión?', text:'Serás redirigido al inicio.',
+            icon:'question', iconColor:'#00C16E',
+            showCancelButton:true,
+            confirmButtonColor:'#00C16E', cancelButtonColor:'#6c757d',
+            confirmButtonText:'<i class="fa-solid fa-right-from-bracket me-1"></i>Sí, cerrar sesión',
+            cancelButtonText:'Cancelar', reverseButtons:true
+        }).then(async r => {
+            if (!r.isConfirmed) return;
+            try { await fetch(${API}/logout, { method:'POST', credentials:'include' }); } catch {}
+                window.location.href = '/acceder';
+            });
+        }
+
+</script>
+</body>
+</html>
