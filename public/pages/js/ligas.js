@@ -272,16 +272,13 @@ async function inscribirEquipo(id_liga) {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const userId = localStorage.getItem("userId");
-    const res = await fetch("/admin/clientes", { credentials: "include", headers: { "x-user-id": userId } });
-    const clientes = await res.json();
-    const options = clientes.map(c => `<option value="${c.id_usuario}">${c.nombre} ${c.apellido}</option>`).join('');
 
     const { value: formValues } = await Swal.fire({
         title: 'Inscribir Equipo',
         html: `
             <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Seleccionar usuario</label>
-                <select id="swal-usuario" class="swal2-input">${options}</select>
+                <label style="color:#555; font-size:0.85rem;">Nombre del equipo</label>
+                <input id="swal-equipo" class="swal2-input" placeholder="Ej: Los Leones">
             </div>
         `,
         confirmButtonText: 'Inscribir',
@@ -289,7 +286,11 @@ async function inscribirEquipo(id_liga) {
         cancelButtonText: 'Cancelar',
         showCancelButton: true,
         focusConfirm: false,
-        preConfirm: () => ({ id_usuario: parseInt(document.getElementById('swal-usuario').value) })
+        preConfirm: () => {
+            const nombre = document.getElementById('swal-equipo').value;
+            if (!nombre) { Swal.showValidationMessage('El nombre es obligatorio'); return false; }
+            return { nombre };
+        }
     });
 
     if (!formValues) return;

@@ -1186,11 +1186,18 @@ const generarFixture = async (req, res) => {
 
 const inscribirEnLiga = async (req, res) => {
   const { id } = req.params;
-  const { id_usuario } = req.body;
+  const { nombre } = req.body;
   try {
-    await db.query.run('INSERT INTO participacion_ligas (id_liga, id_equipo) VALUES ($1, $2)', [id, id_usuario]);
-    res.status(201).json({ message: 'Usuario inscripto en la liga' });
+    await db.pool.query('BEGIN');
+    const equipo = await db.pool.query(
+      'INSERT INTO equipos (nombre) VALUES ($1) RETURNING id_equipo', [nombre]
+    );
+    const id_equipo = equipo.rows[0].id_equipo;
+    await db.pool.query('INSERT INTO participacion_ligas (id_liga, id_equipo) VALUES ($1, $2)', [id, id_equipo]);
+    await db.pool.query('COMMIT');
+    res.status(201).json({ message: 'Equipo inscripto en la liga' });
   } catch (err) {
+    await db.pool.query('ROLLBACK');
     res.status(500).json({ error: 'Error al inscribir en liga', message: err.message });
   }
 };
