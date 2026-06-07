@@ -285,24 +285,23 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor', message: err.message });
 });
 
-// Función para limpiar reservas pendientes de pago en efectivo expiradas (más de 5 minutos)
+// Función para limpiar reservas pendientes de pago expiradas (más de 1 minuto)
 const cleanupExpiredReservations = async () => {
   try {
     const db = require('./config/db.js');
     
-    // Buscar reservas en efectivo (id_metodo_de_pago = 1) pendientes (id_estado_cobro = 1) expiradas
+    // Buscar reservas pendientes (id_estado_cobro = 1) expiradas
     const sqlGetExpired = `
       SELECT r.id_reserva, r.id_ocupacion_cancha, r.id_cobro
       FROM reservas r
       INNER JOIN cobros c ON r.id_cobro = c.id_cobro
       WHERE c.id_estado_cobro = 1
-        AND c.id_metodo_de_pago = 1
-        AND c.fecha < NOW() - INTERVAL '5 minutes'
+        AND c.fecha < NOW() - INTERVAL '1 minute'
     `;
     const expired = await db.query.all(sqlGetExpired);
     
     if (expired.length > 0) {
-      console.log(`[Limpieza] Se encontraron ${expired.length} reservas en efectivo vencidas. Cancelando...`);
+      console.log(`[Limpieza] Se encontraron ${expired.length} reservas vencidas. Cancelando...`);
       
       for (const res of expired) {
         await db.pool.query('BEGIN');
@@ -317,7 +316,7 @@ const cleanupExpiredReservations = async () => {
         await db.pool.query(`
           UPDATE cobros 
           SET id_estado_cobro = 3, 
-              detalles = detalles || ' (Cancelado automáticamente por falta de pago tras 5 minutos)' 
+              detalles = detalles || ' (Cancelado automáticamente por falta de pago tras 1 minuto)' 
           WHERE id_cobro = $1
         `, [res.id_cobro]);
         
