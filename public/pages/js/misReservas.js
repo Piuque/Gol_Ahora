@@ -14,38 +14,46 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // FILTROS
 // ==========================================
+// Estilos de cada filtro en estado inactivo y activo
+const FILTRO_STYLES = {
+    'todas':      { bg: 'rgba(0,193,110,0.08)',   border: 'rgba(0,193,110,0.2)',   color: '#00C16E',  bgActive: 'rgba(0,193,110,0.18)',  borderActive: 'rgba(0,193,110,0.5)'  },
+    'Pendiente':  { bg: 'rgba(255,193,7,0.08)',   border: 'rgba(255,193,7,0.25)',  color: '#ffc107',  bgActive: 'rgba(255,193,7,0.22)',   borderActive: 'rgba(255,193,7,0.6)'  },
+    'Confirmada': { bg: 'rgba(25,135,84,0.08)',   border: 'rgba(25,135,84,0.25)', color: '#198754',  bgActive: 'rgba(25,135,84,0.22)',   borderActive: 'rgba(25,135,84,0.6)'  },
+    'futuras':    { bg: 'rgba(99,179,237,0.08)',  border: 'rgba(99,179,237,0.2)', color: '#63b3ed',  bgActive: 'rgba(99,179,237,0.2)',   borderActive: 'rgba(99,179,237,0.55)' },
+    'pasadas':    { bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)',color: '#94a3b8',  bgActive: 'rgba(148,163,184,0.2)',  borderActive: 'rgba(148,163,184,0.5)' },
+};
+
 function inicializarFiltros() {
     document.querySelectorAll('.filtro-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.filtro-btn').forEach(b => {
-                b.style.background = b.dataset.filtro === 'Pendiente'
-                    ? 'rgba(255,193,7,0.08)' : b.dataset.filtro === 'Confirmada'
-                        ? 'rgba(25,135,84,0.08)' : 'rgba(0,193,110,0.05)';
-                b.style.borderColor = b.dataset.filtro === 'Pendiente'
-                    ? 'rgba(255,193,7,0.25)' : b.dataset.filtro === 'Confirmada'
-                        ? 'rgba(25,135,84,0.25)' : 'rgba(0,193,110,0.15)';
+                const s = FILTRO_STYLES[b.dataset.filtro] || FILTRO_STYLES['todas'];
+                b.style.background   = s.bg;
+                b.style.borderColor  = s.border;
+                b.style.color        = s.color;
                 b.classList.remove('active');
             });
+            const s = FILTRO_STYLES[btn.dataset.filtro] || FILTRO_STYLES['todas'];
+            btn.style.background  = s.bgActive;
+            btn.style.borderColor = s.borderActive;
+            btn.style.color       = s.color;
             btn.classList.add('active');
-            if (btn.dataset.filtro === 'todas') {
-                btn.style.background = 'rgba(0,193,110,0.15)';
-                btn.style.borderColor = 'rgba(0,193,110,0.4)';
-            } else if (btn.dataset.filtro === 'Pendiente') {
-                btn.style.background = 'rgba(255,193,7,0.2)';
-                btn.style.borderColor = 'rgba(255,193,7,0.5)';
-            } else {
-                btn.style.background = 'rgba(25,135,84,0.2)';
-                btn.style.borderColor = 'rgba(25,135,84,0.5)';
-            }
             aplicarFiltro(btn.dataset.filtro);
         });
     });
 }
 
 function aplicarFiltro(filtro) {
-    const filtradas = filtro === 'todas'
-        ? todasLasReservas
-        : todasLasReservas.filter(r => r.estado === filtro);
+    let filtradas;
+    if (filtro === 'todas') {
+        filtradas = todasLasReservas;
+    } else if (filtro === 'futuras') {
+        filtradas = todasLasReservas.filter(r => !reservaEsPasada(r.fecha, r.hora_inicio));
+    } else if (filtro === 'pasadas') {
+        filtradas = todasLasReservas.filter(r => reservaEsPasada(r.fecha, r.hora_inicio));
+    } else {
+        filtradas = todasLasReservas.filter(r => r.estado === filtro);
+    }
     renderizarTarjetas(filtradas);
 }
 
@@ -507,120 +515,182 @@ async function cancelarReserva(id) {
 }
 
 // ==========================================
+// HELPERS PDF
+// ==========================================
+function nroAleatorio() {
+    return Math.floor(10000 + Math.random() * 90000);
+}
+
+function pdfLinea(doc, label, valor, y, xLabel = 22, xValor = 80) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(label.toUpperCase(), xLabel, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 30, 30);
+    doc.text(String(valor || '—'), xValor, y);
+}
+
+function pdfEncabezado(doc, tipoDoc, colorTipo, nro) {
+    const { jsPDF } = window.jspdf;
+
+    // Franja verde superior
+    doc.setFillColor(0, 193, 110);
+    doc.rect(0, 0, 210, 14, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(255, 255, 255);
+    doc.text('GOL AHORA', 22, 9.5);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('golahora.com.ar', 210 - 22, 9.5, { align: 'right' });
+
+    // Tipo de documento
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colorTipo);
+    doc.text(tipoDoc, 22, 30);
+
+    // Número de comprobante
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(140, 140, 140);
+    doc.text(`Nro. ${nro}`, 22, 37);
+
+    // Fecha de emisión
+    const fecha = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+    doc.text(`Emitido: ${fecha}`, 210 - 22, 37, { align: 'right' });
+
+    // Línea separadora
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.4);
+    doc.line(22, 41, 188, 41);
+}
+
+function pdfSeccion(doc, titulo, y) {
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(20, y - 5, 170, 8, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(0, 193, 110);
+    doc.text(titulo.toUpperCase(), 22, y);
+    return y + 9;
+}
+
+function pdfPie(doc) {
+    const y = 280;
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.line(20, y, 190, y);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(170, 170, 170);
+    doc.text('Gol Ahora — comprobante generado automáticamente. Conservalo como respaldo.', 105, y + 5, { align: 'center' });
+}
+
+// ==========================================
 // PDF — COMPROBANTE DE MODIFICACIÓN
 // ==========================================
 function generarPdfModificacion(reservaOriginal, nuevoTurno) {
-    const ahora = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const v = window.open('', '_blank', 'width=700,height=800');
-    v.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-    <title>Comprobante de Modificación — Gol Ahora</title>
-    <style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a1a1a;padding:44px}
-        .logo{font-size:1.4rem;font-weight:800;color:#00C16E;margin-bottom:4px}
-        .subtitulo{font-size:0.8rem;color:#888;margin-bottom:28px;padding-bottom:14px;border-bottom:2px solid #00C16E}
-        .tipo-doc{display:inline-block;background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;border-radius:4px;padding:4px 14px;font-size:0.78rem;font-weight:700;margin-bottom:22px}
-        h2{font-size:0.95rem;font-weight:700;color:#00C16E;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;margin-top:22px}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin-bottom:4px}
-        .campo label{font-size:0.67rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:2px}
-        .campo span{font-size:0.9rem;color:#1a1a1a;font-weight:500}
-        .cambio-box{background:#f9fbe7;border:1px solid #c5e1a5;border-radius:6px;padding:14px 18px;margin-top:18px}
-        .cambio-box .label{font-size:0.67rem;color:#558b2f;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;font-weight:700}
-        .cambio-fila{display:flex;gap:20px;align-items:center;margin-bottom:4px}
-        .arrow{color:#00C16E;font-size:1.1rem}
-        .pie{margin-top:36px;padding-top:12px;border-top:1px solid #e0e0e0;font-size:0.7rem;color:#aaa}
-        @media print{body{padding:20px}}
-    </style></head><body>
-    <div class="logo">⚽ Gol Ahora</div>
-    <div class="subtitulo">Comprobante emitido el ${ahora}</div>
-    <div class="tipo-doc">✏️ MODIFICACIÓN DE TURNO</div>
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const nro = nroAleatorio();
 
-    <h2>Datos de la Reserva</h2>
-    <div class="grid">
-        <div class="campo"><label>ID Reserva</label><span>#${reservaOriginal.id_reserva}</span></div>
-        <div class="campo"><label>Cancha</label><span>${reservaOriginal.cancha_nombre}</span></div>
-        <div class="campo"><label>Tipo</label><span>${reservaOriginal.tipo_cancha || '—'}</span></div>
-        <div class="campo"><label>Estado</label><span>${reservaOriginal.estado}</span></div>
-    </div>
+    pdfEncabezado(doc, 'MODIFICACIÓN DE TURNO', [21, 101, 192], nro);
 
-    <div class="cambio-box">
-        <div class="label">Detalle del cambio</div>
-        <div class="cambio-fila">
-            <div>
-                <div style="font-size:0.67rem;color:#888;margin-bottom:2px;">FECHA ANTERIOR</div>
-                <div style="font-size:0.88rem;font-weight:600;">${formatearFecha(reservaOriginal.fecha)}</div>
-                <div style="font-size:0.82rem;color:#555;">${reservaOriginal.hora_inicio} — ${reservaOriginal.hora_fin} hs</div>
-            </div>
-            <div class="arrow">→</div>
-            <div>
-                <div style="font-size:0.67rem;color:#388e3c;margin-bottom:2px;font-weight:700;">NUEVA FECHA</div>
-                <div style="font-size:0.88rem;font-weight:700;color:#1b5e20;">${formatearFecha(nuevoTurno.fecha)}</div>
-                <div style="font-size:0.82rem;color:#2e7d32;font-weight:600;">${nuevoTurno.hora_inicio} — ${nuevoTurno.hora_fin} hs</div>
-            </div>
-        </div>
-    </div>
+    let y = 50;
+    y = pdfSeccion(doc, 'Datos de la Reserva', y);
 
-    <div class="pie">Gol Ahora — comprobante generado automáticamente. Conservalo como respaldo del cambio realizado.</div>
-    <script>window.onload=()=>window.print()<\/script>
-    </body></html>`);
-    v.document.close();
+    pdfLinea(doc, 'ID Reserva',   '#' + reservaOriginal.id_reserva, y);     y += 8;
+    pdfLinea(doc, 'Cancha',        reservaOriginal.cancha_nombre,    y);     y += 8;
+    pdfLinea(doc, 'Tipo',          reservaOriginal.tipo_cancha || '—', y);   y += 8;
+    pdfLinea(doc, 'Estado',        reservaOriginal.estado,           y);     y += 12;
+
+    y = pdfSeccion(doc, 'Detalle del Cambio', y);
+
+    // Bloque "antes"
+    doc.setFillColor(255, 243, 224);
+    doc.roundedRect(20, y, 78, 24, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(180, 80, 0);
+    doc.text('FECHA ANTERIOR', 24, y + 6);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(50, 50, 50);
+    doc.text(formatearFecha(reservaOriginal.fecha), 24, y + 13);
+    doc.setFontSize(8.5); doc.setTextColor(100, 100, 100);
+    doc.text(`${reservaOriginal.hora_inicio} — ${reservaOriginal.hora_fin} hs`, 24, y + 19);
+
+    // Flecha
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(0, 193, 110);
+    doc.text('→', 103, y + 14, { align: 'center' });
+
+    // Bloque "después"
+    doc.setFillColor(232, 245, 233);
+    doc.roundedRect(112, y, 78, 24, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(27, 94, 32);
+    doc.text('NUEVA FECHA', 116, y + 6);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(27, 94, 32);
+    doc.text(formatearFecha(nuevoTurno.fecha), 116, y + 13);
+    doc.setFontSize(8.5);
+    doc.text(`${nuevoTurno.hora_inicio} — ${nuevoTurno.hora_fin} hs`, 116, y + 19);
+
+    y += 32;
+
+    // Nota
+    doc.setFillColor(235, 245, 255);
+    doc.roundedRect(20, y, 170, 14, 2, 2, 'F');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(80, 80, 160);
+    doc.text('El precio y la cancha no se modifican. Este comprobante reemplaza al anterior.', 105, y + 6, { align: 'center' });
+    doc.text('Si tenés dudas, acercate a la recepción del club.', 105, y + 11, { align: 'center' });
+
+    pdfPie(doc);
+
+    doc.save(`golahora-recibo-modificacion-nro${nro}.pdf`);
 }
 
 // ==========================================
 // PDF — COMPROBANTE DE CANCELACIÓN
 // ==========================================
 function generarPdfCancelacion(reserva, sinReembolso) {
-    const ahora = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const v = window.open('', '_blank', 'width=700,height=780');
-    v.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-    <title>Comprobante de Cancelación — Gol Ahora</title>
-    <style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a1a1a;padding:44px}
-        .logo{font-size:1.4rem;font-weight:800;color:#00C16E;margin-bottom:4px}
-        .subtitulo{font-size:0.8rem;color:#888;margin-bottom:28px;padding-bottom:14px;border-bottom:2px solid #00C16E}
-        .tipo-doc{display:inline-block;border-radius:4px;padding:4px 14px;font-size:0.78rem;font-weight:700;margin-bottom:22px}
-        h2{font-size:0.95rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;margin-top:22px}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;margin-bottom:4px}
-        .campo label{font-size:0.67rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:2px}
-        .campo span{font-size:0.9rem;color:#1a1a1a;font-weight:500}
-        .estado-box{border-radius:6px;padding:14px 18px;margin-top:18px}
-        .pie{margin-top:36px;padding-top:12px;border-top:1px solid #e0e0e0;font-size:0.7rem;color:#aaa}
-        @media print{body{padding:20px}}
-    </style></head><body>
-    <div class="logo">⚽ Gol Ahora</div>
-    <div class="subtitulo">Comprobante emitido el ${ahora}</div>
-    <div class="tipo-doc" style="${sinReembolso
-        ? 'background:#fff3e0;color:#e65100;border:1px solid #ffcc80;'
-        : 'background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;'}">
-        ${sinReembolso ? '⚠️ CANCELACIÓN SIN REEMBOLSO' : '✅ CANCELACIÓN CON REEMBOLSO'}
-    </div>
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const nro = nroAleatorio();
 
-    <h2>Datos del Turno Cancelado</h2>
-    <div class="grid">
-        <div class="campo"><label>ID Reserva</label><span>#${reserva.id_reserva}</span></div>
-        <div class="campo"><label>Cancha</label><span>${reserva.cancha_nombre}</span></div>
-        <div class="campo"><label>Fecha del turno</label><span>${formatearFecha(reserva.fecha)}</span></div>
-        <div class="campo"><label>Horario</label><span>${reserva.hora_inicio} — ${reserva.hora_fin} hs</span></div>
-        <div class="campo"><label>Tipo</label><span>${reserva.tipo_cancha || '—'}</span></div>
-        <div class="campo"><label>Estado anterior</label><span>${reserva.estado}</span></div>
-    </div>
+    const colorTitulo = sinReembolso ? [200, 50, 50] : [0, 150, 80];
+    const titulo = sinReembolso ? 'CANCELACIÓN SIN REEMBOLSO' : 'CANCELACIÓN CON REEMBOLSO';
 
-    <div class="estado-box" style="${sinReembolso
-        ? 'background:#fff8f0;border:1px solid #ffcc80;'
-        : 'background:#f9fbe7;border:1px solid #c5e1a5;'}">
-        <div style="font-size:0.82rem;font-weight:700;color:${sinReembolso ? '#e65100' : '#2e7d32'};margin-bottom:6px;">
-            ${sinReembolso ? 'Sin devolución' : 'Reembolso en proceso'}
-        </div>
-        <div style="font-size:0.82rem;color:#555;line-height:1.5;">
-            ${sinReembolso
-        ? 'La cancelación se realizó con menos de 6 horas de anticipación. Según la política del club, no corresponde reembolso. Para cualquier consulta, acercate a la recepción.'
-        : 'La cancelación fue realizada con suficiente anticipación. El reembolso está siendo procesado. Verificá el acreditamiento en los próximos días hábiles o acercate a la recepción del club.'}
-        </div>
-    </div>
+    pdfEncabezado(doc, titulo, colorTitulo, nro);
 
-    <div class="pie">Gol Ahora — comprobante generado automáticamente. Conservalo como respaldo de la cancelación.</div>
-    <script>window.onload=()=>window.print()<\/script>
-    </body></html>`);
-    v.document.close();
+    let y = 50;
+    y = pdfSeccion(doc, 'Turno Cancelado', y);
+
+    pdfLinea(doc, 'ID Reserva',   '#' + reserva.id_reserva,  y); y += 8;
+    pdfLinea(doc, 'Cancha',        reserva.cancha_nombre,     y); y += 8;
+    pdfLinea(doc, 'Tipo',          reserva.tipo_cancha || '—',y); y += 8;
+    pdfLinea(doc, 'Fecha del turno', formatearFecha(reserva.fecha), y); y += 8;
+    pdfLinea(doc, 'Horario',      `${reserva.hora_inicio} — ${reserva.hora_fin} hs`, y); y += 8;
+    pdfLinea(doc, 'Estado anterior', reserva.estado,          y); y += 12;
+
+    y = pdfSeccion(doc, 'Política de Reembolso', y);
+
+    const bgColor  = sinReembolso ? [255, 243, 224] : [232, 245, 233];
+    const txtColor = sinReembolso ? [180, 80, 0]    : [27, 94, 32];
+    const msgTitulo = sinReembolso ? 'Sin devolución' : 'Reembolso en proceso';
+    const msgCuerpo = sinReembolso
+        ? 'La cancelación se realizó con menos de 6 horas de anticipación.\nSegún la política del club, no corresponde reembolso.\nPara consultas, acercate a la recepción.'
+        : 'La cancelación fue realizada con suficiente anticipación.\nEl reembolso está siendo procesado. Verificá el acreditamiento\nen los próximos días hábiles o acercate a la recepción del club.';
+
+    doc.setFillColor(...bgColor);
+    doc.roundedRect(20, y, 170, 28, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...txtColor);
+    doc.text(msgTitulo, 24, y + 7);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.2); doc.setTextColor(70, 70, 70);
+    const lineas = msgCuerpo.split('\n');
+    lineas.forEach((l, i) => doc.text(l, 24, y + 14 + i * 5));
+
+    pdfPie(doc);
+
+    const tipo = sinReembolso ? 'cancelacion-sin-reembolso' : 'cancelacion-con-reembolso';
+    doc.save(`golahora-recibo-${tipo}-nro${nro}.pdf`);
 }
