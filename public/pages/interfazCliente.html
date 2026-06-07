@@ -86,6 +86,16 @@
             color: #00C16E !important;
             transform: scale(1.08);
         }
+
+        /* Hamburger toggle — mismo patrón que interfazEntrenador */
+        #sidebar-wrapper {
+            transition: margin-left 0.25s ease-in-out, min-width 0.25s ease-in-out, max-width 0.25s ease-in-out;
+        }
+        #wrapper.toggled #sidebar-wrapper {
+            min-width: 0;
+            max-width: 0;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="bg-football-dark text-white">
@@ -148,11 +158,14 @@
     <div id="page-content-wrapper">
 
         <header class="navbar navbar-dark bg-navy py-3 px-4 border-bottom border-secondary border-opacity-10 shadow-sm">
-            <div class="container-fluid p-0">
+            <div class="container-fluid p-0 d-flex align-items-center">
+                <button class="btn btn-outline-success btn-sm border-sports text-sports me-3" id="menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <span class="navbar-brand fw-bold m-0 text-uppercase fs-5 tracking-wider">
                     <i class="fa-solid fa-futbol text-sports me-2"></i>Gol Ahora
                 </span>
-                <span class="text-light-50 small fw-medium text-uppercase tracking-wider" id="nav-welcome" style="font-size: 0.75rem;">...</span>
+                <span class="text-light-50 small fw-medium text-uppercase tracking-wider ms-auto" id="nav-welcome" style="font-size: 0.75rem;">...</span>
             </div>
         </header>
 

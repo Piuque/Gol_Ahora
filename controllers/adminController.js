@@ -752,7 +752,7 @@ const modificarCancha = async (req, res) => {
 const listarReservas = async (req, res) => {
   try {
     const sql = `
-      SELECT r.id_reserva AS id, u.nombre AS cliente_nombre, u.apellido AS cliente_apellido,
+      SELECT r.id_reserva AS id, r.id_cobro, u.nombre AS cliente_nombre, u.apellido AS cliente_apellido,
              u.email AS cliente_email, can.nombre AS cancha,
              to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
              to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
@@ -1477,6 +1477,64 @@ const modificarCobro = async (req, res) => {
   }
 };
 
+const crearReserva = async (req, res) => {
+  const { id_usuario, id_cancha, fecha, hora_inicio, hora_fin, id_metodo_de_pago, monto } = req.body;
+
+  if (!id_usuario || !id_cancha || !fecha || !hora_inicio || !hora_fin || !id_metodo_de_pago || !monto) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios para realizar la reserva' });
+  }
+
+  try {
+    // Verificar superposicion
+    const superposicion = await db.query.get(`
+      SELECT id_ocupacion_cancha FROM ocupaciones_cancha
+      WHERE id_cancha = $1 AND fecha = $2
+      AND (
+        (hora_inicio < $4 AND hora_fin > $3)
+      )
+    `, [id_cancha, fecha, hora_inicio, hora_fin]);
+
+    if (superposicion) {
+      return res.status(409).json({ error: 'Ya existe una reserva en ese horario para esa cancha' });
+    }
+
+    await db.pool.query('BEGIN');
+
+    const cobroSql = `
+      INSERT INTO cobros (monto, porcentaje_descuento, detalles, id_club, id_usuario, id_estado_cobro, id_metodo_de_pago)
+      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_cobro
+    `;
+    const cobroRes = await db.pool.query(cobroSql, [
+      monto, 0,
+      `Reserva de cancha para la fecha ${fecha} de ${hora_inicio} a ${hora_fin}`,
+      1, id_usuario, 1, id_metodo_de_pago
+    ]);
+    const idCobro = cobroRes.rows[0].id_cobro;
+
+    const ocupacionSql = `
+      INSERT INTO ocupaciones_cancha (fecha, hora_inicio, hora_fin, id_tipo_ocupacion, id_cancha)
+      VALUES ($1, $2, $3, 1, $4) RETURNING id_ocupacion_cancha
+    `;
+    const ocupacionRes = await db.pool.query(ocupacionSql, [fecha, hora_inicio, hora_fin, id_cancha]);
+    const idOcupacion = ocupacionRes.rows[0].id_ocupacion_cancha;
+
+    const reservaSql = `
+      INSERT INTO reservas (id_ocupacion_cancha, id_usuario, id_cancha, id_cobro)
+      VALUES ($1, $2, $3, $4) RETURNING id_reserva
+    `;
+    const reservaRes = await db.pool.query(reservaSql, [idOcupacion, id_usuario, id_cancha, idCobro]);
+
+    await db.pool.query('COMMIT');
+    res.status(201).json({
+      message: 'Reserva creada exitosamente',
+      id_reserva: reservaRes.rows[0].id_reserva
+    });
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al procesar la reserva', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -1553,4 +1611,5 @@ module.exports = {
   listarCobros,
   obtenerCobro,
   modificarCobro,
+  crearReserva,
 };

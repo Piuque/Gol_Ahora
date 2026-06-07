@@ -109,6 +109,10 @@ function verDetalle(r) {
                 <i class="fa-solid fa-trash me-1"></i> Cancelar
             </button>
         </div>
+        ${r.estado_cobro === 'Pendiente' ? `
+        <button onclick="confirmarPago(${r.id_cobro})" class="btn w-100 btn-sm fw-bold text-white mt-2" style="background-color:#00C16E;">
+            <i class="fa-solid fa-check me-1"></i> Confirmar Pago
+        </button>` : ''}
     `;
     const modal = new bootstrap.Modal(document.getElementById("modalReserva"));
     modal.show();
@@ -205,6 +209,41 @@ async function confirmarEliminarReserva(id) {
         } else {
             const data = await res.json().catch(() => ({}));
             await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al cancelar.', confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+async function confirmarPago(id_cobro) {
+    bootstrap.Modal.getInstance(document.getElementById("modalReserva")).hide();
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const confirm = await Swal.fire({
+        icon: 'question',
+        title: 'Confirmar pago?',
+        text: 'Se marcara la reserva como pagada.',
+        confirmButtonText: 'Si, confirmar',
+        confirmButtonColor: '#00C16E',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const userId = localStorage.getItem("userId");
+    try {
+        const res = await fetch(`/admin/cobros/${id_cobro}/confirmar`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'x-user-id': userId }
+        });
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Pago confirmado.', confirmButtonColor: '#00C16E' });
+            await cargarReservas();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al confirmar.', confirmButtonColor: '#00C16E' });
         }
     } catch (e) {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });

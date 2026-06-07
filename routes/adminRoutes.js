@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController.js');
-const { authMiddleware, requireRole } = require('../middlewares/auth.js');
+
+const { authMiddleware, requireRole, validateRegistration } = require('../middlewares/auth.js');
+
 
 // Las rutas administrativas exigen loguearse con x-user-id de un admin (user_level >= 152)
 router.use(authMiddleware);
@@ -16,7 +18,10 @@ router.get('/clientes', adminController.listarClientes);
 router.get('/clientes/:id', adminController.obtenerCliente);
 router.put('/clientes/:id', adminController.actualizarCliente);
 router.delete('/clientes/:id', adminController.eliminarCliente);
-router.post('/usuarios/registrar', adminController.registrarUsuarioPorAdmin);
+router.post('/usuarios/registrar',
+  validateRegistration,
+  adminController.registrarUsuarioPorAdmin
+);
 
 // Personal y Certificaciones (Profesores y Entrenadores)
 router.post('/profesores', adminController.registrarProfesor);
@@ -64,6 +69,7 @@ router.get('/canchas/:id', adminController.obtenerCancha);
 router.put('/canchas/:id', adminController.modificarCancha);
 
 // Reservas admin
+router.post('/reservas', adminController.crearReserva);
 router.get('/reservas', adminController.listarReservas);
 router.put('/reservas/:id', adminController.modificarReserva);
 router.delete('/reservas/:id', adminController.eliminarReserva);

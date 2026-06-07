@@ -152,17 +152,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         try {
-            const res = await fetch("/cliente/reservas", {
+            const cancha = todasCanchas.find(c => c.id == id_cancha);
+            const monto = cancha ? parseFloat(cancha.precio) : 0;
+            const userId = localStorage.getItem("userId");
+
+            const res = await fetch("/admin/reservas", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-user-id": id_usuario
+                    "x-user-id": userId
                 },
                 credentials: "include",
-                body: JSON.stringify({ id_cancha, fecha, hora_inicio, hora_fin, id_metodo_pago })
+                body: JSON.stringify({
+                    id_usuario: parseInt(id_usuario),
+                    id_cancha: parseInt(id_cancha),
+                    fecha,
+                    hora_inicio,
+                    hora_fin,
+                    id_metodo_de_pago: parseInt(document.getElementById("id_metodo_pago").value),
+                    monto
+                })
             });
 
             const data = await res.json();
+            console.log("Respuesta API:", data);
+
 
             if (res.ok) {
                 await Swal.fire({
