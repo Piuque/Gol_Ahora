@@ -835,8 +835,8 @@ const crearClase = async (req, res) => {
                           VALUES ($1, $2, $3, 2, $4) RETURNING id_ocupacion_cancha`;
     const ocupacion = await db.pool.query(ocupacionSql, [fecha, hora_inicio, hora_fin, id_cancha]);
     const id_ocupacion = ocupacion.rows[0].id_ocupacion_cancha;
-    const claseSql = `INSERT INTO clases (nombre, capacidad_max, id_profesional, id_cancha, id_ocupacion_cancha)
-                      VALUES ($1, $2, $3, $4, $5) RETURNING id_clase`;
+    const claseSql = `INSERT INTO clases (nombre, capacidad_max, id_profesional, id_cancha, id_ocupacion_cancha, id_estado_capacitacion)
+                  VALUES ($1, $2, $3, $4, $5, 1) RETURNING id_clase`;
     const clase = await db.pool.query(claseSql, [nombre, capacidad_max, id_profesional, id_cancha, id_ocupacion]);
     await db.pool.query('COMMIT');
     res.status(201).json({ message: 'Clase creada correctamente', id: clase.rows[0].id_clase });
