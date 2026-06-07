@@ -399,11 +399,15 @@
 
     /* ── Datos del admin ── */
     async function CargarDatosAdmin() {
+        const userId = localStorage.getItem("userId");
         try {
-            const res = await fetch(${API}/admin/perfil, { credentials: 'include' });
+            const res = await fetch(`${API}/admin/info`, {
+                credentials: 'include',
+                headers: { 'x-user-id': userId }
+            });
             if (!res.ok) throw new Error();
             const d = await res.json();
-            document.getElementById('admin-nombre').textContent   = ${d.nombre || ''} ${d.apellido || ''}.trim() || 'Gol Ahora Club';
+            document.getElementById('admin-nombre').textContent   = `${d.nombre || ''} ${d.apellido || ''}`.trim() || 'Gol Ahora Club';
             document.getElementById('admin-email').textContent    = d.email    || '—';
             document.getElementById('admin-telefono').textContent = d.telefono || '—';
             document.getElementById('admin-dni').textContent      = d.dni      || '—';
@@ -416,13 +420,14 @@
     let _tabActiva = 'certificaciones';
 
     async function CargarNotificaciones() {
+        const userId = localStorage.getItem("userId");
         MostrarSpinner();
         try {
             const [resCert, resBajas, resHorarios] = await Promise.all([
-                    fetch(${API}/admin/certificaciones/pendientes, { credentials: 'include' }),
-                fetch(${API}/admin/bajas/pendientes,           { credentials: 'include' }),
-            fetch(${API}/admin/horarios/pendientes,        { credentials: 'include' })
-        ]);
+                fetch(`${API}/admin/certificaciones/pendientes`, { credentials: 'include', headers: { 'x-user-id': userId } }),
+                fetch(`${API}/admin/bajas/pendientes`,           { credentials: 'include', headers: { 'x-user-id': userId } }),
+                fetch(`${API}/admin/horarios/pendientes`,        { credentials: 'include', headers: { 'x-user-id': userId } })
+            ]);
 
             _notifs.certificaciones = resCert.ok    ? await resCert.json()    : [];
             _notifs.bajas           = resBajas.ok   ? await resBajas.json()   : [];
@@ -475,7 +480,7 @@
                         <div class="min-w-0">
                             <div class="fw-semibold text-white small">${config.titulo}</div>
                             <div class="text-truncate" style="font-size:0.78rem;color:var(--text-light-50);">${config.subtitulo}</div>
-                            ${n.fecha ? <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:2px;">${n.fecha}</div> : ''}
+                            ${n.fecha ? `<div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:2px;">${n.fecha}</div>` : ''}
                         </div>
                     </div>
                     <div class="d-flex gap-1 flex-shrink-0">
@@ -496,31 +501,32 @@
             icon: 'fa-solid fa-graduation-cap',
             color: '#f0c040', bg: 'rgba(240,192,64,0.1)',
             titulo: n.nombre_certificacion || 'Certificación sin nombre',
-            subtitulo: ${n.nombre_profesional || '—'} · ${n.institucion || '—'}
+            subtitulo: `${n.nombre_profesional || '—'} · ${n.institucion || '—'}`
     };
         if (tab === 'bajas') return {
             icon: 'fa-solid fa-user-xmark',
             color: '#f25c54', bg: 'rgba(242,92,84,0.1)',
-            titulo: Baja de ${n.rol || 'usuario'}: ${n.nombre || '—'},
+            titulo: `Baja de ${n.rol || 'usuario'}: ${n.nombre || '—'}`,
         subtitulo: n.motivo || 'Sin motivo especificado'
     };
         if (tab === 'horarios') return {
             icon: 'fa-solid fa-clock',
             color: 'var(--sports-green)', bg: 'rgba(0,193,110,0.1)',
-            titulo: Cambio de horario: ${n.actividad || '—'},
-        subtitulo: ${n.nombre_profesional || '—'} · ${n.horario_nuevo || '—'}
+            titulo: `Cambio de horario: ${n.actividad || '—'}`,
+        subtitulo: `${n.nombre_profesional || '—'} · ${n.horario_nuevo || '—'}`
     };
         return { icon: 'fa-solid fa-bell', color: '#aaa', bg: 'rgba(255,255,255,0.05)', titulo: '—', subtitulo: '—' };
     }
 
     /* ── Acciones sobre notificaciones ── */
     async function AcceptarSolicitud(tab, id, btn) {
+        const userId = localStorage.getItem("userId");
         const labels = { certificaciones: 'certificación', bajas: 'solicitud de baja', horarios: 'cambio de horario' };
-        const rutas  = { certificaciones: /admin/certificaciones/${id}/aprobar, bajas: /admin/bajas/${id}/aprobar, horarios: /admin/horarios/${id}/aprobar };
+        const rutas  = { certificaciones: `/admin/certificaciones/${id}/aprobar`, bajas: `/admin/bajas/${id}/aprobar`, horarios: `/admin/horarios/${id}/aprobar` };
 
         const confirm = await Swal.fire({
             title: '¿Aprobar solicitud?',
-            html: Se aprobará esta ${labels[tab]}.,
+            html: `Se aprobará esta ${labels[tab]}.`,
             icon: 'question', iconColor: '#00C16E',
             showCancelButton: true,
             confirmButtonColor: '#00C16E', cancelButtonColor: '#6c757d',
@@ -530,7 +536,11 @@
         if (!confirm.isConfirmed) return;
 
         try {
-            const res = await fetch(${API}${rutas[tab]}, { method: 'POST', credentials: 'include' });
+            const res = await fetch(`${API}${rutas[tab]}`, { 
+                method: 'POST', 
+                credentials: 'include',
+                headers: { 'x-user-id': userId }
+            });
             if (res.ok) {
                 Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Aprobado', text: 'La solicitud fue procesada correctamente.', confirmButtonColor: '#00C16E', timer: 2000, showConfirmButton: false });
                 CargarNotificaciones();
@@ -541,12 +551,13 @@
     }
 
         async function RechazarSolicitud(tab, id, btn) {
+            const userId = localStorage.getItem("userId");
             const labels = { certificaciones: 'certificación', bajas: 'solicitud de baja', horarios: 'cambio de horario' };
-            const rutas  = { certificaciones: /admin/certificaciones/${id}/rechazar, bajas: /admin/bajas/${id}/rechazar, horarios: /admin/horarios/${id}/rechazar };
+            const rutas  = { certificaciones: `/admin/certificaciones/${id}/rechazar`, bajas: `/admin/bajas/${id}/rechazar`, horarios: `/admin/horarios/${id}/rechazar` };
 
             const confirm = await Swal.fire({
                 title: '¿Rechazar solicitud?',
-                html: Se rechazará esta ${labels[tab]}.,
+                html: `Se rechazará esta ${labels[tab]}.`,
                 icon: 'warning', iconColor: '#f25c54',
                 showCancelButton: true,
                 confirmButtonColor: '#f25c54', cancelButtonColor: '#6c757d',
@@ -556,7 +567,11 @@
             if (!confirm.isConfirmed) return;
 
             try {
-                const res = await fetch(${API}${rutas[tab]}, { method: 'POST', credentials: 'include' });
+                const res = await fetch(`${API}${rutas[tab]}`, { 
+                    method: 'POST', 
+                    credentials: 'include',
+                    headers: { 'x-user-id': userId }
+                });
                 if (res.ok) {
                     Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Rechazado', text: 'La solicitud fue rechazada.', confirmButtonColor: '#00C16E', timer: 2000, showConfirmButton: false });
                     CargarNotificaciones();

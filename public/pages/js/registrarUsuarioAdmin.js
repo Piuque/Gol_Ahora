@@ -116,19 +116,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (res.ok) {
                 await Swal.fire({
                     icon: 'success',
-                    title: '¡Listo!',
-                    text: 'Usuario registrado correctamente.',
-                    confirmButtonColor: '#00C16E'
-                });
-                document.getElementById("register-form-admin").reset();
-            } else {
-                await Swal.fire({
-                    icon: 'success',
                     title: '¡Usuario registrado!',
                     html: `El usuario fue creado correctamente.<br><br>
                         <b>Contraseña por defecto:</b><br>
                         <code style="background:#0d1f33; color:#00C16E; padding:4px 8px; border-radius:4px;">Unaj2026@golahora</code><br><br>
                         <small class="text-muted">El usuario deberá cambiarla al primer inicio de sesión.</small>`,
+                    confirmButtonColor: '#00C16E'
+                });
+                document.getElementById("register-form-admin").reset();
+            } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error al registrar',
+                    text: data.error || data.details || data.message || 'Ocurrió un error al intentar registrar al usuario.',
                     confirmButtonColor: '#00C16E'
                 });
             }
