@@ -203,8 +203,8 @@ async function explorarClases() {
                         
                         ${!estaLlena ? `
                             <button class="btn btn-warning btn-sm w-100 fw-bold text-dark mt-2" 
-                                    onclick="event.stopPropagation(); registrarInscripcionClaseAPI(${clase.id_clase}, '${clase.nombre_clase}')">
-                                Confirmar Inscripción
+                                    onclick="event.stopPropagation(); iniciarInscripcionClase(${clase.id_clase})">
+                                Inscribirse y Pagar
                             </button>
                         ` : `
                             <button class="btn btn-secondary btn-sm w-100 fw-bold text-white mt-2" disabled>Curso Completo</button>
@@ -242,38 +242,58 @@ window.toggleDetallesClase = function(idClase) {
 }
 
 // =========================================================
-// 5. REGISTRAR INSCRIPCIÓN (POST REAL)
+// 5. INSCRIPCIÓN CON PAGO Y CONFIRMACIÓN
 // =========================================================
-function registrarInscripcionClaseAPI(idClase, nombreClase) {
-    Swal.fire({
-        title: '¿Confirmar Inscripción?',
-        text: `Vas a matricularte en "${nombreClase}".`,
-        icon: 'question',
-        background: '#0A2540', color: '#fff',
-        showCancelButton: true,
-        confirmButtonColor: '#ffc107', cancelButtonColor: '#6c757d',
-        confirmButtonText: '<span class="text-dark fw-bold">Sí, inscribirme</span>',
-        cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(`/cliente/clases/inscripcion`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
-                    body: JSON.stringify({ id_clase: idClase }),
-                    credentials: 'include'
-                });
+async function iniciarInscripcionClase(idClase) {
+    const clase = catalogoClasesDisponibles.find(c => c.id_clase === idClase);
+    if (!clase) return;
 
-                if (res.ok) {
-                    await Swal.fire({ icon: 'success', title: '¡Inscripción Exitosa!', text: 'Formás parte de la clase.', background: '#071524', color: '#fff', confirmButtonColor: '#00C16E' });
-                    cargarMisClases();
-                } else {
-                    const errorData = await res.json();
-                    throw new Error(errorData.error || "No se pudo guardar la inscripción.");
-                }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Error de inscripción', text: error.message, background: '#071524', color: '#fff', confirmButtonColor: '#ffc107' });
-            }
-        }
+    const monto = parseFloat(clase.monto) || 0;
+    if (monto <= 0) {
+        Swal.fire({ icon: 'warning', title: 'Monto no disponible', text: 'No se pudo determinar el costo de esta clase. Contactá al club.', background: '#071524', color: '#fff', confirmButtonColor: '#ffc107' });
+        return;
+    }
+
+    const pago = await abrirConfirmacionPago({
+        titulo: '<span style="color:#ffc107;font-size:1rem;"><i class="fa-solid fa-graduation-cap me-2"></i>Confirmar inscripción</span>',
+        colorAccent: '#ffc107',
+        monto,
+        resumenHtml: `
+            <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+                <div style="font-weight:700;color:#fff;margin-bottom:6px;">${clase.nombre_clase}</div>
+                <div style="font-size:0.8rem;color:rgba(255,255,255,0.55);">Profesor: ${clase.profesor || 'Por asignar'}</div>
+                <div style="font-size:0.8rem;color:rgba(255,255,255,0.55);">Horarios: ${clase.horarios || 'A definir'}</div>
+            </div>`
     });
+
+    if (!pago) return;
+
+    try {
+        const res = await fetch(`/cliente/clases/inscripcion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', plataform: 'web' },
+            body: JSON.stringify({
+                id_clase: idClase,
+                id_metodo_de_pago: pago.id_metodo_de_pago,
+                monto
+            }),
+            credentials: 'include'
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'No se pudo procesar la inscripción.');
+
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Inscripción solicitada!',
+            html: `<p style="font-size:0.88rem;line-height:1.5;">Tu solicitud fue registrada. Un administrador confirmará el pago y tu lugar en la clase.</p>
+                   <p style="font-size:0.78rem;opacity:0.65;margin:0;">Si no se confirma en las próximas 3 horas, la solicitud puede cancelarse automáticamente.</p>`,
+            background: '#071524', color: '#fff', confirmButtonColor: '#00C16E'
+        });
+
+        Swal.close();
+        cargarMisClases();
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Inscripción rechazada', text: error.message, background: '#071524', color: '#fff', confirmButtonColor: '#ffc107' });
+    }
 }

@@ -98,7 +98,7 @@ function renderizarTarjetas(tipos) {
 
 function avanzarPaso(idTipo) {
     // 1. Buscamos el tipo seleccionado
-    const tipoSeleccionado = tiposGlobales.find(t => t.id === idTipo);
+    const tipoSeleccionado = tiposGlobales.find(t => String(t.id) === String(idTipo));
 
     // 2. Guardamos su imagen en la memoria del navegador
     if (tipoSeleccionado) {

@@ -23,7 +23,7 @@ async function cargarCanchasFiltradas(idTipoCancha) {
 
     try {
         // Petición GET a la ruta específica por ID que me enviaste
-        const response = await fetch(`${API}/api/cliente/canchas/${idTipoCancha}`, {
+        const response = await fetch(`${API}/api/cliente/tipos_cancha/${idTipoCancha}/canchas`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
             credentials: 'include'
@@ -66,13 +66,17 @@ function renderizarTarjetas(canchas) {
 
     document.getElementById('badge-categoria').textContent = canchasValidas[0].tipo_cancha || 'Modalidad';
 
-    // Recuperamos la imagen del Tipo de Cancha guardada en el Paso 1
     const imagenHeredada = sessionStorage.getItem('imagen_tipo_cancha');
     const imgFallback = 'https://images.unsplash.com/photo-1518605368461-1ee7c514baf1?q=80&w=800&auto=format&fit=crop';
 
+    function normalizarImagen(url) {
+        if (!url || url === 'string') return null;
+        if (url.startsWith('/')) return API + url;
+        return url;
+    }
+
     canchasValidas.forEach(cancha => {
-        // Ignoramos lo que mande la API y forzamos la imagen heredada del Paso 1
-        const imgFinal = imagenHeredada || imgFallback;
+        const imgFinal = normalizarImagen(cancha.imagen_url) || imagenHeredada || imgFallback;
 
         const nombreSeguro = (cancha.nombre || 'Cancha').replace(/"/g, '&quot;');
         const formatoSeguro = (cancha.tipo_cancha || 'Formato Estándar').replace(/"/g, '&quot;');

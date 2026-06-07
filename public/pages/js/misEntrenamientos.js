@@ -203,8 +203,8 @@ async function explorarEntrenamientos() {
                         
                         ${!estaLieno ? `
                             <button class="btn btn-danger btn-sm w-100 fw-bold text-white mt-2" 
-                                    onclick="event.stopPropagation(); registrarInscripcionAPI(${et.id_entrenamiento}, '${et.nombre_entrenamiento}')">
-                                Confirmar Inscripción
+                                    onclick="event.stopPropagation(); iniciarInscripcionEntrenamiento(${et.id_entrenamiento})">
+                                Inscribirse y Pagar
                             </button>
                         ` : `
                             <button class="btn btn-secondary btn-sm w-100 fw-bold text-white mt-2" disabled>Cupos Completos</button>
@@ -242,37 +242,58 @@ window.toggleDetallesEntrenamiento = function(idEntrenamiento) {
 }
 
 // =========================================================
-// 5. REGISTRAR INSCRIPCIÓN (POST REAL)
+// 5. INSCRIPCIÓN CON PAGO Y CONFIRMACIÓN
 // =========================================================
-function registrarInscripcionAPI(idEntrenamiento, nombreEntrenamiento) {
-    Swal.fire({
-        title: '¿Confirmar Inscripción?',
-        text: `Vas a reservar una vacante para "${nombreEntrenamiento}".`,
-        icon: 'question',
-        background: '#0A2540', color: '#fff',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, reservar', cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(`/cliente/entrenamientos/inscripcion`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
-                    body: JSON.stringify({ id_entrenamiento: idEntrenamiento }),
-                    credentials: 'include'
-                });
+async function iniciarInscripcionEntrenamiento(idEntrenamiento) {
+    const et = catalogoEntrenamientosDisponibles.find(e => e.id_entrenamiento === idEntrenamiento);
+    if (!et) return;
 
-                if (res.ok) {
-                    await Swal.fire({ icon: 'success', title: '¡Asignado!', text: 'Tu inscripción fue guardada en el sistema.', background: '#071524', color: '#fff', confirmButtonColor: '#00C16E' });
-                    cargarMisEntrenamientos();
-                } else {
-                    const errorData = await res.json();
-                    throw new Error(errorData.error || "No se pudo guardar la vacante.");
-                }
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Error de inscripción', text: error.message, background: '#071524', color: '#fff', confirmButtonColor: '#dc3545' });
-            }
-        }
+    const monto = parseFloat(et.monto) || 0;
+    if (monto <= 0) {
+        Swal.fire({ icon: 'warning', title: 'Monto no disponible', text: 'No se pudo determinar el costo de este entrenamiento. Contactá al club.', background: '#071524', color: '#fff', confirmButtonColor: '#dc3545' });
+        return;
+    }
+
+    const pago = await abrirConfirmacionPago({
+        titulo: '<span style="color:#dc3545;font-size:1rem;"><i class="fa-solid fa-dumbbell me-2"></i>Confirmar inscripción</span>',
+        colorAccent: '#dc3545',
+        monto,
+        resumenHtml: `
+            <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+                <div style="font-weight:700;color:#fff;margin-bottom:6px;">${et.nombre_entrenamiento}</div>
+                <div style="font-size:0.8rem;color:rgba(255,255,255,0.55);">Entrenador: ${et.entrenador || et.profesor || 'Por asignar'}</div>
+                <div style="font-size:0.8rem;color:rgba(255,255,255,0.55);">Horarios: ${et.horarios || 'A definir'}</div>
+            </div>`
     });
+
+    if (!pago) return;
+
+    try {
+        const res = await fetch(`/cliente/entrenamientos/inscripcion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', plataform: 'web' },
+            body: JSON.stringify({
+                id_entrenamiento: idEntrenamiento,
+                id_metodo_de_pago: pago.id_metodo_de_pago,
+                monto
+            }),
+            credentials: 'include'
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'No se pudo procesar la inscripción.');
+
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Inscripción solicitada!',
+            html: `<p style="font-size:0.88rem;line-height:1.5;">Tu solicitud fue registrada. Un administrador confirmará el pago y tu lugar en el entrenamiento.</p>
+                   <p style="font-size:0.78rem;opacity:0.65;margin:0;">Si no se confirma en las próximas 3 horas, la solicitud puede cancelarse automáticamente.</p>`,
+            background: '#071524', color: '#fff', confirmButtonColor: '#00C16E'
+        });
+
+        Swal.close();
+        cargarMisEntrenamientos();
+    } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Inscripción rechazada', text: error.message, background: '#071524', color: '#fff', confirmButtonColor: '#dc3545' });
+    }
 }

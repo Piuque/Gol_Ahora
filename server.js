@@ -125,6 +125,16 @@ app.get('/api/generos', async (req, res) => {
   }
 });
 
+app.get('/api/generos/con-id', async (req, res) => {
+  try {
+    const db = require('./config/db.js');
+    const rows = await db.query.all('SELECT id_genero, genero FROM generos ORDER BY genero ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al consultar géneros', message: err.message });
+  }
+});
+
 
 
 // Endpoints específicos para obtener la información de perfil por roles

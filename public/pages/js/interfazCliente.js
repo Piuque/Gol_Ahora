@@ -192,6 +192,10 @@ function abrirGestionPerfil() {
                     style="flex:1;min-width:130px;padding:9px 12px;border-radius:7px;border:1px solid rgba(26,115,232,0.35);background:rgba(26,115,232,0.1);color:#6ea8fe;font-weight:600;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
                     <i class="fa-solid fa-pen-to-square"></i> Modificar datos
                 </button>
+                <button onclick="Swal.close(); cambiarPasswordCliente()"
+                    style="flex:1;min-width:130px;padding:9px 12px;border-radius:7px;border:1px solid rgba(255,193,7,0.35);background:rgba(255,193,7,0.08);color:#ffc107;font-weight:600;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
+                    <i class="fa-solid fa-key"></i> Cambiar contraseña
+                </button>
                 <button onclick="Swal.close(); solicitarBajaCuenta()"
                     style="flex:1;min-width:130px;padding:9px 12px;border-radius:7px;border:1px solid rgba(242,92,84,0.3);background:rgba(242,92,84,0.08);color:#f25c54;font-weight:600;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
                     <i class="fa-solid fa-user-xmark"></i> Solicitar baja
@@ -282,27 +286,18 @@ async function modificarPerfil() {
     const d = datosPerfilGlobal;
     const dirObj = d.direccion || { calle: d.calle, numero: d.numero, localidad: d.localidad, provincia: d.provincia, codigo_postal: d.codigo_postal };
 
-    // Lista EXACTA extraída de la Base de Datos. Así evitamos cualquier problema con fetch o desorden.
-    const listaGenerosSegura = [
-        { id: 0, nombre: "Agénero" },
-        { id: 1, nombre: "Femenino" },
-        { id: 2, nombre: "Género fluido" },
-        { id: 3, nombre: "Helicoptero Apache" },
-        { id: 4, nombre: "Hombre trans" },
-        { id: 5, nombre: "Masculino" },
-        { id: 6, nombre: "Mujer trans" },
-        { id: 7, nombre: "No binario" },
-        { id: 8, nombre: "Otro" },
-        { id: 9, nombre: "Prefiero no especificar" }
-    ];
+    let listaGeneros = [];
+    try {
+        const resGeneros = await fetch(`${API}/api/generos/con-id`);
+        if (resGeneros.ok) listaGeneros = await resGeneros.json();
+    } catch (_) { /* sin géneros de BD */ }
 
     let opcionesGenerosHTML = `<option value="" disabled>Seleccione un género</option>`;
+    const idActual = (d.id_genero !== null && d.id_genero !== undefined) ? parseInt(d.id_genero, 10) : -1;
 
-    listaGenerosSegura.forEach(g => {
-        // Obtenemos el ID del usuario asegurándonos que es un número
-        const idActual = (d.id_genero !== null && d.id_genero !== undefined) ? parseInt(d.id_genero, 10) : -1;
-        const seleccionado = (idActual === g.id) ? 'selected' : '';
-        opcionesGenerosHTML += `<option value="${g.id}" ${seleccionado}>${g.nombre}</option>`;
+    listaGeneros.forEach(g => {
+        const seleccionado = (idActual === parseInt(g.id_genero, 10)) ? 'selected' : '';
+        opcionesGenerosHTML += `<option value="${g.id_genero}" ${seleccionado}>${g.genero}</option>`;
     });
 
     const selectGeneroHTML = `
@@ -446,6 +441,80 @@ async function guardarModificacionPerfil() {
         errorEl.style.display = 'block';
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
+    }
+}
+
+/* -----------------------------------------------------------------------
+   CAMBIAR CONTRASEÑA
+----------------------------------------------------------------------- */
+function cambiarPasswordCliente() {
+    Swal.fire({
+        background: '#0A2540',
+        color: '#fff',
+        width: '480px',
+        showConfirmButton: false,
+        showCloseButton: true,
+        html: `
+        <div style="font-family:'Poppins',sans-serif;text-align:left;padding:4px 6px 0;">
+            <h5 style="color:#ffc107;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-key me-2"></i>Cambiar contraseña</h5>
+            <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:16px;">Ingresá tu contraseña actual y la nueva (mínimo 6 caracteres).</p>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+                ${_inputEdit('pwd-actual', 'Contraseña actual', '', 'password')}
+                ${_inputEdit('pwd-nueva', 'Nueva contraseña', '', 'password')}
+                ${_inputEdit('pwd-confirm', 'Confirmar nueva contraseña', '', 'password')}
+            </div>
+            <div id="pwd-error" style="display:none;background:rgba(242,92,84,0.1);border:1px solid rgba(242,92,84,0.3);color:#f25c54;font-size:0.8rem;padding:8px 12px;border-radius:6px;margin-bottom:10px;"></div>
+            <button onclick="guardarNuevaPassword()"
+                style="width:100%;padding:10px;border-radius:7px;border:none;background:#ffc107;color:#071524;font-weight:700;font-size:0.9rem;cursor:pointer;">
+                <i class="fa-solid fa-floppy-disk me-2"></i>Actualizar contraseña
+            </button>
+        </div>`
+    });
+}
+
+async function guardarNuevaPassword() {
+    const errorEl = document.getElementById('pwd-error');
+    errorEl.style.display = 'none';
+
+    const password_actual = document.getElementById('pwd-actual')?.value || '';
+    const password_nueva = document.getElementById('pwd-nueva')?.value || '';
+    const confirmar_password = document.getElementById('pwd-confirm')?.value || '';
+
+    if (!password_actual || !password_nueva || !confirmar_password) {
+        errorEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Completá todos los campos.';
+        errorEl.style.display = 'block';
+        return;
+    }
+    if (password_nueva.length < 6) {
+        errorEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>La nueva contraseña debe tener al menos 6 caracteres.';
+        errorEl.style.display = 'block';
+        return;
+    }
+    if (password_nueva !== confirmar_password) {
+        errorEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Las contraseñas nuevas no coinciden.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API}/api/cliente/perfil/password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', plataform: 'web' },
+            credentials: 'include',
+            body: JSON.stringify({ password_actual, password_nueva, confirmar_password })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+
+        Swal.fire({
+            icon: 'success', iconColor: '#00C16E', title: 'Contraseña actualizada',
+            text: 'Tu contraseña fue cambiada correctamente.',
+            confirmButtonColor: '#00C16E', background: '#0A2540', color: '#fff'
+        });
+    } catch (err) {
+        errorEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i>${err.message || 'No se pudo actualizar la contraseña.'}`;
+        errorEl.style.display = 'block';
     }
 }
 

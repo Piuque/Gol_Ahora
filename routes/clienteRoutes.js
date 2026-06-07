@@ -12,13 +12,16 @@ const usuarioController = require('../controllers/usuarioController.js');
 router.get('/info', usuarioController.obtenerInfoUsuarioLogueado);
 router.get('/perfil', clienteController.obtenerPerfil);
 router.put('/perfil', clienteController.modificarPerfil);
+router.put('/perfil/password', clienteController.cambiarPassword);
 
 // Canchas y Reservas
 router.get('/canchas', clienteController.listarCanchasCliente);
-router.get('/canchas/:id', clienteController.listarCanchasClientePorTipo);
+router.get('/tipos_cancha/:id/canchas', clienteController.listarCanchasClientePorTipo);
+router.get('/canchas/:id', clienteController.obtenerCanchaPorId);
 router.get('/canchas/:id/disponibilidad', clienteController.consultarDisponibilidadCanchaEspecifica);
 router.get('/canchas/:id/ocupaciones', clienteController.consultarOcupacionesCanchaEspecifica);
 router.get('/tipos_canchas', clienteController.listarTiposCanchaCliente);
+router.get('/metodos_pago', clienteController.listarMetodosPago);
 router.post('/reservas', clienteController.realizarReserva);
 router.get('/reservas', clienteController.listarReservasCliente);
 router.put('/reservas/:id', clienteController.modificarReserva);

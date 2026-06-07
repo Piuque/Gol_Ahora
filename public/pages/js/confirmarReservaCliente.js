@@ -281,12 +281,22 @@ async function procesarReservaFinal() {
             throw new Error(data.error || data.details || "No se pudo procesar la reserva.");
         }
 
+        generarPdfSolicitudReserva({
+            id_reserva: data.id_reserva,
+            cancha: document.getElementById('resumen-cancha').textContent,
+            fecha,
+            hora,
+            monto: montoReserva,
+            metodo: nombreMetodoSeleccionado
+        });
+
         await Swal.fire({
             icon: 'success',
             title: '\u00a1Reserva Solicitada!',
             html: `
                 <p style="margin-bottom: 0.75rem; line-height: 1.5;">
                     Tu solicitud fue registrada y la cancha queda <strong>ocupada temporalmente</strong> para vos.
+                    Se descargó tu comprobante de solicitud.
                 </p>
                 <p style="margin-bottom: 0.75rem; line-height: 1.5;">
                     Un administrador del club revisará y confirmará el turno a la brevedad.
@@ -320,4 +330,74 @@ function cambiarFormatoFecha(fechaStr) {
     const partes = fechaStr.split('-');
     if (partes.length !== 3) return fechaStr;
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+// ==========================================
+// PDF — COMPROBANTE DE SOLICITUD DE RESERVA
+// ==========================================
+function generarPdfSolicitudReserva(datos) {
+    if (!window.jspdf) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const nro = Math.floor(10000 + Math.random() * 90000);
+    const fechaFmt = cambiarFormatoFecha(datos.fecha);
+    const montoFmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(datos.monto || 0);
+
+    doc.setFillColor(0, 193, 110);
+    doc.rect(0, 0, 210, 14, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(255, 255, 255);
+    doc.text('GOL AHORA', 22, 9.5);
+
+    doc.setFontSize(16);
+    doc.setTextColor(0, 193, 110);
+    doc.text('SOLICITUD DE RESERVA', 22, 30);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(140, 140, 140);
+    doc.text(`Nro. ${nro}`, 22, 37);
+    doc.text(`Emitido: ${new Date().toLocaleDateString('es-AR')}`, 210 - 22, 37, { align: 'right' });
+
+    doc.setDrawColor(220, 220, 220);
+    doc.line(22, 41, 188, 41);
+
+    let y = 52;
+    const linea = (label, valor) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text(label.toUpperCase(), 22, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor(30, 30, 30);
+        doc.text(String(valor || '—'), 80, y);
+        y += 8;
+    };
+
+    linea('ID Reserva', datos.id_reserva ? '#' + datos.id_reserva : 'Pendiente');
+    linea('Cancha', datos.cancha);
+    linea('Fecha', fechaFmt);
+    linea('Horario', `${datos.hora} hs`);
+    linea('Monto', montoFmt);
+    linea('Método de pago', datos.metodo || '—');
+    linea('Estado', 'Pendiente de confirmación');
+
+    y += 6;
+    doc.setFillColor(235, 245, 255);
+    doc.roundedRect(20, y, 170, 18, 2, 2, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 160);
+    doc.text('Conservá este comprobante. Un administrador confirmará tu turno a la brevedad.', 105, y + 7, { align: 'center' });
+    doc.text('Si no se confirma en 3 horas, el horario quedará disponible nuevamente.', 105, y + 13, { align: 'center' });
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(170, 170, 170);
+    doc.text('Gol Ahora — comprobante generado automáticamente.', 105, 285, { align: 'center' });
+
+    doc.save(`golahora-solicitud-reserva-nro${nro}.pdf`);
 }

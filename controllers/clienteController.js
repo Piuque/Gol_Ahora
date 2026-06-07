@@ -31,6 +31,46 @@ const obtenerPerfil = async (req, res) => {
   }
 };
 
+// PUT /cliente/perfil/password
+const cambiarPassword = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { password_actual, password_nueva, confirmar_password } = req.body;
+
+  if (!password_actual || !password_nueva || !confirmar_password) {
+    return res.status(400).json({ error: 'Todos los campos de contraseña son obligatorios' });
+  }
+  if (password_nueva.length < 6) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+  }
+  if (password_nueva !== confirmar_password) {
+    return res.status(400).json({ error: 'La confirmación de contraseña no coincide' });
+  }
+  if (password_actual === password_nueva) {
+    return res.status(400).json({ error: 'La nueva contraseña debe ser distinta a la actual' });
+  }
+
+  try {
+    const user = await db.query.get(
+      'SELECT password FROM usuarios WHERE id_usuario = $1',
+      [idUsuario]
+    );
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    if (user.password !== password_actual) {
+      return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+    }
+
+    await db.pool.query(
+      'UPDATE usuarios SET password = $1 WHERE id_usuario = $2',
+      [password_nueva, idUsuario]
+    );
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al cambiar la contraseña', message: err.message });
+  }
+};
+
 // PUT /cliente/perfil
 const modificarPerfil = async (req, res) => {
   const idUsuario = req.user.id_usuario;
@@ -93,7 +133,68 @@ const listarCanchasCliente = async (req, res) => {
   }
 };
 
-// GET /cliente/canchas/:id (Listar canchas según tipo de cancha)
+// GET /cliente/canchas/:id (Detalle de una cancha por id_cancha)
+const obtenerCanchaPorId = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const sql = `
+      SELECT 
+        can.id_cancha AS id,
+        can.id_cancha,
+        can.nombre,
+        tc.tipo_cancha,
+        tc.ancho,
+        tc.largo,
+        tc.capacidad,
+        s.id_superficie AS superficie_id,
+        s.tipo_superficie AS superficie_tipo,
+        s.descripcion AS superficie_descripcion,
+        can.precio_hora_reserva,
+        can.tiempo_cancelacion,
+        tc.duracion_min,
+        tc.duracion_max,
+        cl.id_club AS club_id,
+        cl.nombre AS club_nombre,
+        tc.imagen_url
+      FROM canchas can
+      LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      LEFT JOIN superficies s ON tc.id_superficie = s.id_superficie
+      LEFT JOIN clubes cl ON can.id_club = cl.id_club
+      WHERE can.id_cancha = $1
+    `;
+    const row = await db.query.get(sql, [id]);
+    if (!row) {
+      return res.status(404).json({ error: 'Cancha no encontrada' });
+    }
+    res.json({
+      id: row.id,
+      id_cancha: row.id_cancha,
+      nombre: row.nombre,
+      tipo_cancha: row.tipo_cancha,
+      ancho: row.ancho,
+      largo: row.largo,
+      capacidad: row.capacidad,
+      superficie: {
+        id: row.superficie_id,
+        tipo: row.superficie_tipo,
+        descripcion: row.superficie_descripcion
+      },
+      precio_hora_reserva: row.precio_hora_reserva,
+      tiempo_cancelacion: row.tiempo_cancelacion,
+      duracion_min: row.duracion_min,
+      duracion_max: row.duracion_max,
+      club: {
+        id: row.club_id,
+        nombre: row.club_nombre
+      },
+      imagen_url: row.imagen_url
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener la cancha', message: err.message });
+  }
+};
+
+// GET /cliente/tipos_cancha/:id/canchas (Listar canchas según tipo de cancha)
 const listarCanchasClientePorTipo = async (req, res) => {
   const { id } = req.params;
   try {
@@ -544,10 +645,12 @@ const listarClasesDisponibles = async (req, res) => {
              c.capacidad_max AS capacidad_maxima,
              COALESCE(u.nombre || ' ' || u.apellido, 'Por asignar') AS profesor,
              (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos,
-             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios
+             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios,
+             COALESCE(can.precio_hora_reserva, 0) AS monto
       FROM clases c
       LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
       LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      LEFT JOIN canchas can ON c.id_cancha = can.id_cancha
       WHERE u.user_level = 'profesor' OR c.id_profesional IS NULL
       ORDER BY c.nombre ASC
     `;
@@ -566,7 +669,8 @@ const listarEntrenamientosDisponibles = async (req, res) => {
              e.capacidad_max AS capacidad_maxima,
              COALESCE(u.nombre || ' ' || u.apellido, 'Preparador asignado') AS entrenador,
              (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos,
-             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios
+             to_char(oc.fecha, 'DD/MM/YYYY') || ' ' || to_char(oc.hora_inicio, 'HH24:MI') || '-' || to_char(oc.hora_fin, 'HH24:MI') AS horarios,
+             COALESCE(can.precio_hora_reserva, 0) AS monto
       FROM entrenamientos e
       LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
       LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
@@ -744,19 +848,85 @@ const consultarMiRecibo = async (req, res) => {
   }
 };
 
+// GET /cliente/metodos_pago
+const listarMetodosPago = async (req, res) => {
+  try {
+    const sql = `
+      SELECT id_metodo_de_pago AS id_metodo_pago, nombre
+      FROM metodos_de_pago
+      ORDER BY id_metodo_de_pago ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar métodos de pago', message: err.message });
+  }
+};
+
 // POST /cliente/clases/inscripcion
 const inscribirClase = async (req, res) => {
   const idUsuario = req.user.id_usuario;
-  const { id_clase } = req.body;
+  const { id_clase, id_metodo_de_pago, monto } = req.body;
+
+  if (!id_clase || !id_metodo_de_pago || monto === undefined || monto === null) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios para la inscripción (clase, método de pago y monto)' });
+  }
+
   try {
-    const sql = `
-      INSERT INTO clientes_clases (id_cliente, id_clase, id_asistencia)
-      VALUES ($1, $2, 2) -- id_asistencia = 2 ('Ausente' hasta que asista)
-      RETURNING id_cliente_clase
+    const clase = await db.query.get(
+      `SELECT c.id_clase, c.nombre, c.capacidad_max,
+              (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos
+       FROM clases c WHERE c.id_clase = $1`,
+      [id_clase]
+    );
+    if (!clase) {
+      return res.status(404).json({ error: 'Clase no encontrada' });
+    }
+    if (clase.inscriptos >= clase.capacidad_max) {
+      return res.status(400).json({ error: 'La clase no tiene cupos disponibles' });
+    }
+
+    const yaInscripto = await db.query.get(
+      'SELECT id_cliente_clase FROM clientes_clases WHERE id_cliente = $1 AND id_clase = $2',
+      [idUsuario, id_clase]
+    );
+    if (yaInscripto) {
+      return res.status(400).json({ error: 'Ya estás inscripto en esta clase' });
+    }
+
+    await db.pool.query('BEGIN');
+
+    const cobroSql = `
+      INSERT INTO cobros (monto, porcentaje_descuento, detalles, id_club, id_usuario, id_estado_cobro, id_metodo_de_pago)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id_cobro
     `;
-    const result = await db.query.run(sql, [idUsuario, id_clase]);
-    res.status(201).json({ message: 'Inscripción a clase registrada con éxito', id: result.id });
+    const cobroRes = await db.pool.query(cobroSql, [
+      monto,
+      0,
+      `Inscripción a clase "${clase.nombre}"`,
+      1,
+      idUsuario,
+      1,
+      id_metodo_de_pago
+    ]);
+    const idCobro = cobroRes.rows[0].id_cobro;
+
+    const inscripcionRes = await db.pool.query(
+      `INSERT INTO clientes_clases (id_cliente, id_clase, id_asistencia)
+       VALUES ($1, $2, 2)
+       RETURNING id_cliente_clase`,
+      [idUsuario, id_clase]
+    );
+
+    await db.pool.query('COMMIT');
+    res.status(201).json({
+      message: 'Inscripción solicitada. Pendiente de confirmación de pago.',
+      id: inscripcionRes.rows[0].id_cliente_clase,
+      id_cobro: idCobro
+    });
   } catch (err) {
+    await db.pool.query('ROLLBACK');
     res.status(500).json({ error: 'Error al inscribirse a la clase', message: err.message });
   }
 };
@@ -783,16 +953,70 @@ const darBajaClase = async (req, res) => {
 // POST /cliente/entrenamientos/inscripcion
 const inscribirEntrenamiento = async (req, res) => {
   const idUsuario = req.user.id_usuario;
-  const { id_entrenamiento } = req.body;
+  const { id_entrenamiento, id_metodo_de_pago, monto } = req.body;
+
+  if (!id_entrenamiento || !id_metodo_de_pago || monto === undefined || monto === null) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios para la inscripción (entrenamiento, método de pago y monto)' });
+  }
+
   try {
-    const sql = `
-      INSERT INTO clientes_entrenamientos (id_cliente, id_entrenamiento, id_asistencia)
-      VALUES ($1, $2, 2)
-      RETURNING id_cliente_capacitacion
+    const entrenamiento = await db.query.get(
+      `SELECT e.id_entrenamiento, e.capacidad_max,
+              'Entrenamiento ' || COALESCE(can.nombre, '') AS nombre,
+              (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos
+       FROM entrenamientos e
+       LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
+       WHERE e.id_entrenamiento = $1`,
+      [id_entrenamiento]
+    );
+    if (!entrenamiento) {
+      return res.status(404).json({ error: 'Entrenamiento no encontrado' });
+    }
+    if (entrenamiento.inscriptos >= entrenamiento.capacidad_max) {
+      return res.status(400).json({ error: 'El entrenamiento no tiene cupos disponibles' });
+    }
+
+    const yaInscripto = await db.query.get(
+      'SELECT id_cliente_capacitacion FROM clientes_entrenamientos WHERE id_cliente = $1 AND id_entrenamiento = $2',
+      [idUsuario, id_entrenamiento]
+    );
+    if (yaInscripto) {
+      return res.status(400).json({ error: 'Ya estás inscripto en este entrenamiento' });
+    }
+
+    await db.pool.query('BEGIN');
+
+    const cobroSql = `
+      INSERT INTO cobros (monto, porcentaje_descuento, detalles, id_club, id_usuario, id_estado_cobro, id_metodo_de_pago)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id_cobro
     `;
-    const result = await db.query.run(sql, [idUsuario, id_entrenamiento]);
-    res.status(201).json({ message: 'Inscrito al entrenamiento con éxito', id: result.id });
+    const cobroRes = await db.pool.query(cobroSql, [
+      monto,
+      0,
+      `Inscripción a ${entrenamiento.nombre}`,
+      1,
+      idUsuario,
+      1,
+      id_metodo_de_pago
+    ]);
+    const idCobro = cobroRes.rows[0].id_cobro;
+
+    const inscripcionRes = await db.pool.query(
+      `INSERT INTO clientes_entrenamientos (id_cliente, id_entrenamiento, id_asistencia)
+       VALUES ($1, $2, 2)
+       RETURNING id_cliente_capacitacion`,
+      [idUsuario, id_entrenamiento]
+    );
+
+    await db.pool.query('COMMIT');
+    res.status(201).json({
+      message: 'Inscripción solicitada. Pendiente de confirmación de pago.',
+      id: inscripcionRes.rows[0].id_cliente_capacitacion,
+      id_cobro: idCobro
+    });
   } catch (err) {
+    await db.pool.query('ROLLBACK');
     res.status(500).json({ error: 'Error al inscribirse al entrenamiento', message: err.message });
   }
 };
@@ -865,7 +1089,9 @@ const realizarPago = async (req, res) => {
 module.exports = {
   obtenerPerfil,
   modificarPerfil,
+  cambiarPassword,
   listarCanchasCliente,
+  obtenerCanchaPorId,
   listarCanchasClientePorTipo,
   listarTiposCanchaCliente,
   consultarDisponibilidadCanchaEspecifica,
@@ -882,6 +1108,7 @@ module.exports = {
   darBajaClase,
   inscribirEntrenamiento,
   darBajaEntrenamiento,
+  listarMetodosPago,
   listarMisPagos,
   consultarMiPago,
   listarMisRecibos,
