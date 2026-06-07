@@ -13,6 +13,12 @@ async function cargarCobros() {
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
     try {
         const res = await fetch("/admin/cobros", { credentials: "include", headers: { "x-user-id": userId } });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/acceder';
+            return;
+        }
+        if (!res.ok) throw new Error("Error del servidor");
+
         cobrosData = await res.json();
         if (!cobrosData || cobrosData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay cobros registrados.</p>`;

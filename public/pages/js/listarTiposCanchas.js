@@ -23,6 +23,12 @@ async function cargarTipos() {
             credentials: "include",
             headers: { "x-user-id": userId }
         });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/acceder';
+            return;
+        }
+        if (!res.ok) throw new Error("Error del servidor");
+
         tiposData = await res.json();
         if (!tiposData || tiposData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay tipos de cancha registrados.</p>`;

@@ -15,6 +15,12 @@ async function cargarDescuentos() {
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
     try {
         const res = await fetch("/admin/descuentos", { credentials: "include", headers: { "x-user-id": userId } });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/acceder';
+            return;
+        }
+        if (!res.ok) throw new Error("Error del servidor");
+
         descuentosData = await res.json();
         if (!descuentosData || descuentosData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay descuentos registrados.</p>`;

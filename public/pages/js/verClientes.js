@@ -32,6 +32,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 },
                 credentials: "include"
             });
+            if (res.status === 401 || res.status === 403) {
+                window.location.href = '/acceder';
+                return;
+            }
+            if (!res.ok) throw new Error("Error del servidor");
+
             clientesData = await res.json();
 
             if (!clientesData || clientesData.length === 0) {
