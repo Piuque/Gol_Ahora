@@ -1144,7 +1144,7 @@ const eliminarLiga = async (req, res) => {
   try {
     await db.pool.query('BEGIN');
     await db.pool.query('DELETE FROM partidos WHERE id_liga = $1', [id]);
-    await db.pool.query('DELETE FROM inscripciones_ligas WHERE id_liga = $1', [id]);
+    await db.pool.query('DELETE FROM participacion_ligas WHERE id_liga = $1', [id]);
     await db.pool.query('DELETE FROM ligas WHERE id_liga = $1', [id]);
     await db.pool.query('COMMIT');
     res.status(204).end();
@@ -1158,13 +1158,13 @@ const generarFixture = async (req, res) => {
   const { id } = req.params;
   try {
     const inscriptos = await db.query.all(
-      'SELECT id_usuario FROM inscripciones_ligas WHERE id_liga = $1', [id]
+      'SELECT id_equipo FROM participacion_ligas WHERE id_liga = $1', [id]
     );
     if (inscriptos.length < 2) return res.status(400).json({ error: 'Se necesitan al menos 2 equipos' });
 
     await db.pool.query('DELETE FROM partidos WHERE id_liga = $1', [id]);
 
-    const equipos = inscriptos.map(i => i.id_usuario);
+    const equipos = inscriptos.map(i => i.id_equipo);
     const partidos = [];
     for (let i = 0; i < equipos.length; i++) {
       for (let j = i + 1; j < equipos.length; j++) {
@@ -1174,12 +1174,10 @@ const generarFixture = async (req, res) => {
 
     for (const p of partidos) {
       await db.pool.query(
-        'INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_liga) VALUES ($1, $2, $3)',
-        p
+        'INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_liga) VALUES ($1, $2, $3)', p
       );
     }
 
-    await db.pool.query('COMMIT');
     res.json({ message: `Fixture generado con ${partidos.length} partidos` });
   } catch (err) {
     res.status(500).json({ error: 'Error al generar fixture', message: err.message });
@@ -1190,7 +1188,7 @@ const inscribirEnLiga = async (req, res) => {
   const { id } = req.params;
   const { id_usuario } = req.body;
   try {
-    await db.query.run('INSERT INTO inscripciones_ligas (id_liga, id_usuario) VALUES ($1, $2)', [id, id_usuario]);
+    await db.query.run('INSERT INTO participacion_ligas (id_liga, id_equipo) VALUES ($1, $2)', [id, id_usuario]);
     res.status(201).json({ message: 'Usuario inscripto en la liga' });
   } catch (err) {
     res.status(500).json({ error: 'Error al inscribir en liga', message: err.message });

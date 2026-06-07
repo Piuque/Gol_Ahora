@@ -153,7 +153,7 @@ async function abrirRegistrar() {
                 Swal.showValidationMessage('Todos los campos son obligatorios');
                 return false;
             }
-            return { nombre, fecha_inicio, fecha_fin, idUsuarioTutor: document.getElementById('swal-tutor').value || null };
+            return { nombre, fecha_inicio, fecha_fin, id_usuario_tutor: document.getElementById('swal-tutor').value || null };
         }
     });
 
