@@ -286,7 +286,7 @@ async function procesarReservaFinal() {
             title: '\u00a1Reserva Solicitada!',
             html: `
                 <p style="margin-bottom: 0.75rem; line-height: 1.5;">
-                    Tu solicitud fue registrada y la cancha queda <strong>ocupada| temporalmente</strong> para vos.
+                    Tu solicitud fue registrada y la cancha queda <strong>ocupada temporalmente</strong> para vos.
                 </p>
                 <p style="margin-bottom: 0.75rem; line-height: 1.5;">
                     Un administrador del club revisará y confirmará el turno a la brevedad.
