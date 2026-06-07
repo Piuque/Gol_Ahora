@@ -99,7 +99,7 @@
         <p class="text-light-50 small mb-0">
             <i class="fa-solid fa-arrows-left-right me-2 text-sports"></i>Deslizá para ver todos tus turnos
         </p>
-        <div class="d-flex gap-2" id="filtros-reservas">
+        <div class="d-flex flex-wrap gap-2" id="filtros-reservas">
             <button class="btn btn-sm fw-bold filtro-btn active" data-filtro="todas"
                     style="background:rgba(0,193,110,0.15);border:1px solid rgba(0,193,110,0.4);color:#00C16E;border-radius:20px;padding:5px 16px;">
                 Todas
@@ -111,6 +111,14 @@
             <button class="btn btn-sm fw-bold filtro-btn" data-filtro="Confirmada"
                     style="background:rgba(25,135,84,0.08);border:1px solid rgba(25,135,84,0.25);color:#198754;border-radius:20px;padding:5px 16px;">
                 Confirmadas
+            </button>
+            <button class="btn btn-sm fw-bold filtro-btn" data-filtro="futuras"
+                    style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.25);color:#63b3ed;border-radius:20px;padding:5px 16px;">
+                Futuras
+            </button>
+            <button class="btn btn-sm fw-bold filtro-btn" data-filtro="pasadas"
+                    style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.2);color:#94a3b8;border-radius:20px;padding:5px 16px;">
+                Pasadas
             </button>
         </div>
     </div>
@@ -126,6 +134,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/misReservas.js"></script>
 </body>
 </html>
