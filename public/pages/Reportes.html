@@ -168,31 +168,37 @@
         }
         .btn-imprimir:hover { background:rgba(0,193,110,0.1); }
 
-        /* ── @media print ── */
-        @media print {
-            #sidebar-wrapper, nav.navbar,
-            .filtros-bar, .reporte-actions,
-            .btn-imprimir, .back-to-top,
-            #menu-toggle, .reporte-estado { display:none!important; }
-
-            body,#page-content-wrapper,#main-content {
-                background:#fff!important;color:#111!important;
-            }
-            #wrapper { display:block!important; }
-            .reporte-card {
-                background:#fff!important;border:1px solid #ddd!important;
-                box-shadow:none!important;break-inside:avoid;
-                page-break-inside:avoid;margin-bottom:14px!important;
-                transform:none!important;
-            }
-            .reporte-card h6 { color:#111!important; }
-            .reporte-card p  { color:#555!important; }
-            .reporte-tabla-wrapper { display:block!important;max-height:none!important; }
-            .reporte-tabla thead th { background:#eee!important;color:#111!important; }
-            .reporte-tabla tbody td { color:#111!important; }
-            .row.g-4 { display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important; }
-            @page { size:A4;margin:18mm 14mm; }
+        /* ── Print: ocultar todo (impresión se hace en ventana separada) ── */
+        .print-modal-overlay {
+            display:none;position:fixed;inset:0;
+            background:rgba(0,0,0,0.78);z-index:9999;
+            align-items:center;justify-content:center;
         }
+        .print-modal-overlay.open { display:flex; }
+        .print-modal-box {
+            background:#0a2540;border:1px solid rgba(255,255,255,0.1);
+            border-radius:14px;padding:28px;width:540px;max-width:95vw;
+            box-shadow:0 24px 60px rgba(0,0,0,0.6);
+        }
+        .print-option-btn {
+            display:flex;align-items:center;gap:14px;
+            width:100%;background:rgba(255,255,255,0.03);
+            border:1px solid rgba(255,255,255,0.07);border-radius:10px;
+            padding:13px 16px;cursor:pointer;
+            transition:background 0.15s,border-color 0.15s;
+            text-align:left;margin-bottom:9px;
+        }
+        .print-option-btn:hover {
+            background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.2);
+        }
+        .print-option-btn:last-child { margin-bottom:0; }
+        .print-opt-icon {
+            width:42px;height:42px;border-radius:10px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.1rem;flex-shrink:0;
+        }
+        .print-opt-title { font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:2px; }
+        .print-opt-desc  { font-size:0.72rem;color:rgba(255,255,255,0.42);line-height:1.4; }
     </style>
 </head>
 <body class="bg-football-dark text-light">
@@ -342,7 +348,7 @@
                 <i class="fa-solid fa-futbol text-sports me-2"></i>Gol Ahora
             </span>
             <div class="ms-auto d-flex align-items-center gap-3">
-                <button class="btn-imprimir" onclick="window.print()">
+                <button class="btn-imprimir" onclick="abrirModalImpresion()">
                     <i class="fa-solid fa-print"></i> Imprimir Reporte
                 </button>
                 <span class="small fw-medium" id="nav-fecha" style="color:var(--text-light-50);"></span>
@@ -584,7 +590,7 @@
                         </div>
                         <h6>Imprimir Pantalla</h6>
                         <p>Imprimí todos los reportes cargados en formato A4 limpio, sin menús ni botones.</p>
-                        <button class="btn-rp mt-3 mx-auto" onclick="window.print()" style="font-size:0.8rem;padding:8px 18px;">
+                        <button class="btn-rp mt-3 mx-auto" onclick="abrirModalImpresion()" style="font-size:0.8rem;padding:8px 18px;">
                             <i class="fa-solid fa-print"></i> Imprimir ahora
                         </button>
                     </div>
@@ -675,15 +681,15 @@
             // Combina tipos de cancha + canchas físicas
             fetch: async () => {
                 const [r1, r2] = await Promise.all([
-                        fetch(`${API}/admin/tipos-canchas`,    { credentials:'include' }),
+                    fetch(`${API}/admin/tipos-canchas`,    { credentials:'include' }),
                     fetch(`${API}/admin/canchas/listar`,   { credentials:'include' })
-            ]);
+                ]);
                 if (!r1.ok || !r2.ok) throw new Error();
                 return { tipos: await r1.json(), canchas: await r2.json() };
             },
             render: ({ tipos }) => {
                 const tbody = document.getElementById('tbody-canchas');
-                if (!tipos.length) { tbody.innerHTML = <tr><td colspan="5" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>; return 0; }
+                if (!tipos.length) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>`; return 0; }
                 tbody.innerHTML = tipos.map(t => `
                 <tr>
                     <td>${t.tipo_cancha}</td>
@@ -705,7 +711,7 @@
             },
             render: (rows) => {
                 const tbody = document.getElementById('tbody-ingresos');
-                if (!rows.length) { tbody.innerHTML = <tr><td colspan="3" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>; return 0; }
+                if (!rows.length) { tbody.innerHTML = `<tr><td colspan="3" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>`; return 0; }
                 let totalOps = 0, totalMonto = 0;
                 tbody.innerHTML = rows.map(r => {
                     totalOps   += parseInt(r.total_operaciones || 0);
@@ -734,7 +740,7 @@
             },
             render: (rows) => {
                 const tbody = document.getElementById('tbody-reservas');
-                if (!rows.length) { tbody.innerHTML = <tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin reservas en el período</td></tr>; return 0; }
+                if (!rows.length) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin reservas en el período</td></tr>`; return 0; }
                 tbody.innerHTML = rows.map(r => `
                 <tr>
                     <td>${r.cliente_nombre ?? ''} ${r.cliente_apellido ?? ''}</td>
@@ -764,7 +770,7 @@
             },
             render: (rows) => {
                 const tbody = document.getElementById('tbody-clases');
-                if (!rows.length) { tbody.innerHTML = <tr><td colspan="7" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin clases registradas</td></tr>; return 0; }
+                if (!rows.length) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin clases registradas</td></tr>`; return 0; }
                 tbody.innerHTML = rows.map(r => {
                     const pct = r.capacidad_max > 0 ? Math.round((r.inscriptos/r.capacidad_max)*100) : 0;
                     return `<tr>
@@ -792,7 +798,7 @@
             },
             render: (rows) => {
                 const tbody = document.getElementById('tbody-entrenamientos');
-                if (!rows.length) { tbody.innerHTML = <tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin entrenamientos registrados</td></tr>; return 0; }
+                if (!rows.length) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin entrenamientos registrados</td></tr>`; return 0; }
                 tbody.innerHTML = rows.map(r => {
                     const pct = r.capacidad_max > 0 ? Math.round((r.inscriptos/r.capacidad_max)*100) : 0;
                     return `<tr>
@@ -815,7 +821,7 @@
     async function cargarReporte(tipo) {
         const cfg = REPORTES[tipo];
         setEstado(tipo, 'cargando',
-            '<div class="spinner-border spinner-border-sm" role="status"></div><span>Consultando datos...</span>');
+            `<div class="spinner-border spinner-border-sm" role="status"></div><span>Consultando datos...</span>`);
         document.getElementById(`tabla-${tipo}`)?.classList.remove('visible');
 
         try {
@@ -827,7 +833,7 @@
             setTimeout(() => setEstado(tipo,'',''), 3500);
         } catch {
             setEstado(tipo, 'error',
-                '<i class="fa-solid fa-triangle-exclamation"></i><span>No se pudieron obtener los datos. Verificá la conexión.</span>');
+                `<i class="fa-solid fa-triangle-exclamation"></i><span>No se pudieron obtener los datos. Verificá la conexión.</span>`);
             setTimeout(() => setEstado(tipo,'',''), 5000);
         }
     }
@@ -844,10 +850,511 @@
         }).then(async r => {
             if (!r.isConfirmed) return;
             try { await fetch(`${API}/logout`, { method:'POST', credentials:'include' }); } catch {}
-                window.location.href = '/acceder';
-            });
-        }
+            window.location.href = '/acceder';
+        });
+    }
 
 </script>
+
+<!-- ============================================================
+     MODAL SELECTOR DE IMPRESIÓN
+     ============================================================ -->
+<div class="print-modal-overlay" id="printModalOverlay" onclick="if(event.target===this)cerrarModalImpresion()">
+    <div class="print-modal-box">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="fw-bold text-white mb-0">
+                    <i class="fa-solid fa-print text-sports me-2"></i>Seleccioná el reporte a imprimir
+                </h5>
+                <p class="small mb-0 mt-1" style="color:rgba(255,255,255,0.4);">
+                    Cada reporte tiene su propio diseño y plantilla A4.
+                </p>
+            </div>
+            <button onclick="cerrarModalImpresion()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
+        </div>
+
+        <button class="print-option-btn" onclick="imprimirReporte('canchas')">
+            <div class="print-opt-icon" style="background:rgba(0,193,110,0.12);color:#00C16E;">
+                <i class="fa-solid fa-futbol"></i>
+            </div>
+            <div>
+                <div class="print-opt-title">Tipos de Canchas y Características</div>
+                <div class="print-opt-desc">Ficha técnica por tipo de cancha — dimensiones, capacidad y duraciones.</div>
+            </div>
+        </button>
+
+        <button class="print-option-btn" onclick="imprimirReporte('ingresos')">
+            <div class="print-opt-icon" style="background:rgba(240,192,64,0.12);color:#f0c040;">
+                <i class="fa-solid fa-dollar-sign"></i>
+            </div>
+            <div>
+                <div class="print-opt-title">Ingresos del Complejo</div>
+                <div class="print-opt-desc">Resumen financiero por estado de cobro con totales acumulados.</div>
+            </div>
+        </button>
+
+        <button class="print-option-btn" onclick="imprimirReporte('reservas')">
+            <div class="print-opt-icon" style="background:rgba(110,168,254,0.12);color:#6ea8fe;">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div>
+                <div class="print-opt-title">Reservas de Canchas</div>
+                <div class="print-opt-desc">Listado detallado de reservas con cliente, cancha, horario y pago.</div>
+            </div>
+        </button>
+
+        <button class="print-option-btn" onclick="imprimirReporte('clases')">
+            <div class="print-opt-icon" style="background:rgba(224,92,92,0.12);color:#e05c5c;">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <div>
+                <div class="print-opt-title">Asistencias a Clases</div>
+                <div class="print-opt-desc">Planilla de asistencia por clase con inscriptos y porcentaje de ocupación.</div>
+            </div>
+        </button>
+
+        <button class="print-option-btn" onclick="imprimirReporte('entrenamientos')">
+            <div class="print-opt-icon" style="background:rgba(34,211,238,0.12);color:#22d3ee;">
+                <i class="fa-solid fa-dumbbell"></i>
+            </div>
+            <div>
+                <div class="print-opt-title">Asistencias a Entrenamientos</div>
+                <div class="print-opt-desc">Planilla de asistencia por sesión de entrenamiento con entrenador y ocupación.</div>
+            </div>
+        </button>
+
+        <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+            <button onclick="cerrarModalImpresion()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:6px;padding:7px 18px;cursor:pointer;font-size:0.8rem;width:100%;">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ============================================================
+       SISTEMA DE PLANTILLAS DE IMPRESIÓN
+       ============================================================ */
+
+    const FECHA_HOY   = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' });
+    const CLUB_NOMBRE = "El Buen Deporte";
+    const CLUB_DIR    = "Av. Calchaquí 6200 · Florencio Varela · Bs. As.";
+
+    function abrirModalImpresion() {
+        document.getElementById('printModalOverlay').classList.add('open');
+    }
+    function cerrarModalImpresion() {
+        document.getElementById('printModalOverlay').classList.remove('open');
+    }
+
+    /* ── Encabezado común para todas las plantillas ── */
+    function headerPlantilla(titulo, color, icono) {
+        return `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                border-bottom:3px solid ${color};padding-bottom:14px;margin-bottom:22px;">
+        <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                <div style="width:38px;height:38px;background:${color};border-radius:9px;
+                            display:flex;align-items:center;justify-content:center;
+                            color:#fff;font-size:1rem;">
+                    ${icono}
+                </div>
+                <div>
+                    <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;
+                                color:#888;font-weight:600;">${CLUB_NOMBRE}</div>
+                    <div style="font-size:1.25rem;font-weight:800;color:#111;line-height:1.1;">${titulo}</div>
+                </div>
+            </div>
+            <div style="font-size:0.72rem;color:#999;">${CLUB_DIR}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.8px;color:#aaa;">Fecha de emisión</div>
+            <div style="font-size:0.9rem;font-weight:700;color:#333;">${FECHA_HOY}</div>
+            <div style="margin-top:8px;display:inline-block;background:${color}18;
+                        border:1px solid ${color}55;border-radius:4px;
+                        padding:3px 10px;font-size:0.68rem;font-weight:700;color:${color};">
+                REPORTE OFICIAL
+            </div>
+        </div>
+    </div>`;
+    }
+
+    /* ── CSS base para todas las plantillas ── */
+    const BASE_CSS = `
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Poppins',sans-serif;background:#fff;color:#222;
+           padding:20mm 18mm;font-size:11px; }
+    table { width:100%;border-collapse:collapse;margin-top:12px; }
+    thead th { padding:9px 10px;text-align:left;font-size:0.68rem;
+               text-transform:uppercase;letter-spacing:0.5px;font-weight:700; }
+    tbody td { padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:0.75rem; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:nth-child(even) td { background:#fafafa; }
+    .badge { display:inline-block;padding:2px 8px;border-radius:4px;
+             font-size:0.65rem;font-weight:700; }
+    .footer-print { margin-top:28px;padding-top:12px;border-top:1px solid #eee;
+                    font-size:0.65rem;color:#bbb;display:flex;
+                    justify-content:space-between;align-items:center; }
+    .stat-box { display:inline-flex;flex-direction:column;align-items:center;
+                background:#f8f8f8;border:1px solid #eee;border-radius:8px;
+                padding:10px 16px;min-width:90px; }
+    .stat-num  { font-size:1.5rem;font-weight:800; }
+    .stat-label{ font-size:0.62rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px; }
+    @page { size:A4;margin:0; }
+    @media print { body { padding:15mm 14mm; } }
+`;
+
+    /* ── Obtener datos reales de la tabla si fue cargada, sino usar datos de ejemplo ── */
+    function getDatosTabla(tipo) {
+        const tbody = document.getElementById(`tbody-${tipo}`);
+        if (tbody && tbody.children.length > 0 &&
+            !tbody.innerHTML.includes('Sin datos') &&
+            !tbody.innerHTML.includes('Sin reservas') &&
+            !tbody.innerHTML.includes('Sin clases') &&
+            !tbody.innerHTML.includes('Sin entrenamientos')) {
+            // Extraer datos reales de la tabla DOM
+            const rows = [];
+            for (const tr of tbody.querySelectorAll('tr')) {
+                const cells = [];
+                for (const td of tr.querySelectorAll('td')) cells.push(td.innerText.trim());
+                if (cells.length) rows.push(cells);
+            }
+            return { real: true, rows };
+        }
+        return { real: false, rows: [] };
+    }
+
+    /* ============================================================
+       PLANTILLA 1 — CANCHAS (tarjetas por tipo)
+       ============================================================ */
+    function plantillaCanchas() {
+        const d = getDatosTabla('canchas');
+
+        const fichas = d.real ? d.rows.map(r => `
+        <div style="border:1px solid #e8e8e8;border-radius:10px;padding:16px 18px;margin-bottom:14px;
+                    border-left:4px solid #00C16E;break-inside:avoid;">
+            <div style="font-size:0.95rem;font-weight:800;color:#111;margin-bottom:10px;">
+                ⬤ <span style="color:#00C16E;">${r[0]}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+                <div class="stat-box"><span class="stat-num" style="color:#00C16E;">${r[1]}</span><span class="stat-label">Ancho</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#00C16E;">${r[2]}</span><span class="stat-label">Largo</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#333;">${r[3]}</span><span class="stat-label">Capacidad</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#333;">${r[4]}</span><span class="stat-label">Duración</span></div>
+            </div>
+        </div>`) : [
+            // Datos de ejemplo
+            { nombre:'Cancha 5', ancho:'20 m', largo:'40 m', cap:'10', dur:'60 – 90 min', sup:'Césped sintético' },
+            { nombre:'Cancha 7', ancho:'25 m', largo:'50 m', cap:'14', dur:'60 – 120 min', sup:'Cemento alisado' },
+            { nombre:'Futsal',   ancho:'20 m', largo:'40 m', cap:'10', dur:'60 min',       sup:'Parquet' },
+        ].map(t => `
+        <div style="border:1px solid #e8e8e8;border-radius:10px;padding:16px 18px;margin-bottom:14px;
+                    border-left:4px solid #00C16E;break-inside:avoid;">
+            <div style="font-size:0.95rem;font-weight:800;color:#111;margin-bottom:10px;">
+                ⬤ <span style="color:#00C16E;">${t.nombre}</span>
+                <span style="font-size:0.68rem;color:#999;font-weight:400;margin-left:8px;">Superficie: ${t.sup}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+                <div class="stat-box"><span class="stat-num" style="color:#00C16E;">${t.ancho}</span><span class="stat-label">Ancho</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#00C16E;">${t.largo}</span><span class="stat-label">Largo</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#333;">${t.cap}</span><span class="stat-label">Capacidad</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#333;font-size:1rem;">${t.dur}</span><span class="stat-label">Duración</span></div>
+            </div>
+        </div>`);
+
+        return `<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+        <title>Reporte Canchas</title>
+        <style>${BASE_CSS}
+            .nota { background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;
+                    padding:8px 12px;font-size:0.72rem;color:#166534;margin-bottom:18px; }
+        </style>
+        </head><body>
+        ${headerPlantilla('Tipos de Canchas y Características', '#00C16E', '⚽')}
+        <div class="nota">📋 Este reporte detalla los tipos de cancha registrados en el sistema con sus medidas y características técnicas.</div>
+        ${fichas.join('')}
+        <div class="footer-print">
+            <span>Gol Ahora · Sistema de Gestión · ${CLUB_NOMBRE}</span>
+            <span>Generado el ${FECHA_HOY}</span>
+        </div>
+        <script>window.onload=()=>{ window.print(); window.onafterprint=()=>window.close(); }<\/script>
+    </body></html>`;
+    }
+
+    /* ============================================================
+       PLANTILLA 2 — INGRESOS (resumen financiero)
+       ============================================================ */
+    function plantillaIngresos() {
+        const d = getDatosTabla('ingresos');
+
+        let filas, totalOps = 0, totalMonto = 0;
+        if (d.real && d.rows.length) {
+            filas = d.rows.slice(0,-1); // quitar fila TOTAL que ya calculamos
+            filas.forEach(r => {
+                totalOps   += parseInt(r[1]) || 0;
+                totalMonto += parseFloat(r[2]?.replace(/[$.,]/g,'') || 0);
+            });
+        } else {
+            filas = [
+                ['Pagado',    '47', '$284.500'],
+                ['Pendiente', '12', '$63.200'],
+                ['Cancelado', '5',  '$21.000'],
+            ];
+            totalOps = 64; totalMonto = 368700;
+        }
+
+        const filasHTML = filas.map((r,i) => {
+            const colors = ['#00C16E','#f0c040','#f25c54'];
+            const c = colors[i % colors.length];
+            return `<tr>
+            <td><span class="badge" style="background:${c}18;color:${c};border:1px solid ${c}44;">${r[0]}</span></td>
+            <td style="font-weight:700;font-size:0.85rem;">${r[1]}</td>
+            <td style="font-weight:800;font-size:0.9rem;color:#111;">${r[2]}</td>
+        </tr>`;
+        }).join('');
+
+        return `<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+        <title>Reporte Ingresos</title>
+        <style>${BASE_CSS}
+            thead th { background:#fffbeb;color:#92400e; }
+            .resumen { display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap; }
+            .kpi { flex:1;min-width:120px;background:linear-gradient(135deg,#fffbeb,#fef3c7);
+                   border:1px solid #fde68a;border-radius:10px;padding:14px 16px;text-align:center; }
+            .kpi-num   { font-size:1.6rem;font-weight:800;color:#92400e; }
+            .kpi-label { font-size:0.65rem;color:#a16207;text-transform:uppercase;letter-spacing:0.5px;margin-top:3px; }
+        </style>
+        </head><body>
+        ${headerPlantilla('Ingresos del Complejo', '#f0c040', '💲')}
+        <div class="resumen">
+            <div class="kpi">
+                <div class="kpi-num">$${totalMonto.toLocaleString('es-AR')}</div>
+                <div class="kpi-label">Ingreso Total</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-num">${totalOps}</div>
+                <div class="kpi-label">Operaciones</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-num">$${totalOps ? Math.round(totalMonto/totalOps).toLocaleString('es-AR') : '0'}</div>
+                <div class="kpi-label">Ticket Promedio</div>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>Estado de Cobro</th><th>Cantidad de Operaciones</th><th>Total Recaudado</th></tr></thead>
+            <tbody>${filasHTML}
+                <tr style="background:#fffbeb;font-weight:800;">
+                    <td style="color:#92400e;">TOTAL GENERAL</td>
+                    <td style="color:#92400e;">${totalOps}</td>
+                    <td style="color:#92400e;">$${totalMonto.toLocaleString('es-AR')}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="footer-print">
+            <span>Gol Ahora · Sistema de Gestión · ${CLUB_NOMBRE}</span>
+            <span>Generado el ${FECHA_HOY}</span>
+        </div>
+        <script>window.onload=()=>{ window.print(); window.onafterprint=()=>window.close(); }<\/script>
+    </body></html>`;
+    }
+
+    /* ============================================================
+       PLANTILLA 3 — RESERVAS (tabla detallada)
+       ============================================================ */
+    function plantillaReservas() {
+        const d = getDatosTabla('reservas');
+
+        const filas = d.real && d.rows.length ? d.rows : [
+            ['Laura Gómez',    'Cancha 5', '2026-06-10', '18:00 – 19:00', '$5.500', 'Pagado'],
+            ['Martín López',   'Cancha 7', '2026-06-10', '19:00 – 20:00', '$6.200', 'Pendiente'],
+            ['Ana Fernández',  'Futsal',   '2026-06-11', '10:00 – 11:00', '$4.800', 'Pagado'],
+            ['Carlos Ruiz',    'Cancha 5', '2026-06-11', '16:00 – 17:00', '$5.500', 'Pagado'],
+            ['Sofía Méndez',   'Cancha 7', '2026-06-12', '20:00 – 21:00', '$6.200', 'Cancelado'],
+            ['Diego Torres',   'Futsal',   '2026-06-13', '09:00 – 10:00', '$4.800', 'Pagado'],
+        ];
+
+        const filasHTML = filas.map(r => {
+            const estado = r[5];
+            const c = estado==='Pagado'?'#00C16E':estado==='Pendiente'?'#f0c040':'#f25c54';
+            return `<tr>
+            <td style="font-weight:600;">${r[0]}</td>
+            <td>${r[1]}</td>
+            <td>${r[2]}</td>
+            <td>${r[3]}</td>
+            <td style="font-weight:700;">${r[4]}</td>
+            <td><span class="badge" style="background:${c}18;color:${c};border:1px solid ${c}44;">${r[5]}</span></td>
+        </tr>`;
+        }).join('');
+
+        return `<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+        <title>Reporte Reservas</title>
+        <style>${BASE_CSS}
+            thead th { background:#eff6ff;color:#1e40af; }
+        </style>
+        </head><body>
+        ${headerPlantilla('Reservas de Canchas', '#6ea8fe', '📅')}
+        <table>
+            <thead>
+                <tr>
+                    <th>Cliente</th><th>Cancha</th><th>Fecha</th>
+                    <th>Horario</th><th>Monto</th><th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>${filasHTML}</tbody>
+        </table>
+        <div class="footer-print">
+            <span>Gol Ahora · Sistema de Gestión · ${CLUB_NOMBRE}</span>
+            <span>${filas.length} reservas · Generado el ${FECHA_HOY}</span>
+        </div>
+        <script>window.onload=()=>{ window.print(); window.onafterprint=()=>window.close(); }<\/script>
+    </body></html>`;
+    }
+
+    /* ============================================================
+       PLANTILLA 4 — CLASES (planilla de asistencia)
+       ============================================================ */
+    function plantillaClases() {
+        const d = getDatosTabla('clases');
+
+        const filas = d.real && d.rows.length ? d.rows : [
+            ['Iniciación',   'Carlos Gómez',    'Cancha 3', '2026-06-09', '08:00 – 09:30', '8',  '12'],
+            ['Intermedio',   'Valeria Suárez',  'Cancha 5', '2026-06-09', '10:00 – 11:30', '10', '12'],
+            ['Avanzado',     'Roberto Díaz',    'Futsal',   '2026-06-10', '16:00 – 17:30', '6',  '10'],
+            ['Juvenil Sub-16','Mariana Paz',    'Cancha 7', '2026-06-11', '14:00 – 15:30', '11', '14'],
+        ];
+
+        const filasHTML = filas.map(r => {
+            const insc = parseInt(r[5]||r[0])||0;
+            const cap  = parseInt(r[6]||r[1])||1;
+            const pct  = Math.round((insc/cap)*100);
+            const c    = pct>=80?'#f25c54':pct>=60?'#f0c040':'#00C16E';
+            const bar  = `<div style="background:#eee;border-radius:3px;height:5px;width:60px;display:inline-block;vertical-align:middle;margin-left:5px;">
+                        <div style="background:${c};height:5px;border-radius:3px;width:${pct}%;"></div></div>`;
+            return `<tr>
+            <td style="font-weight:700;">${filas.length===d.rows.length?r[0]:(r[0]??'—')}</td>
+            <td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>
+            <td style="font-weight:700;color:${c};">${insc}</td>
+            <td>${cap} ${bar} <small style="color:#999;">${pct}%</small></td>
+        </tr>`;
+        }).join('');
+
+        return `<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+        <title>Reporte Clases</title>
+        <style>${BASE_CSS}
+            thead th { background:#fff1f2;color:#9f1239; }
+            .leyenda { display:flex;gap:14px;margin:14px 0 18px;font-size:0.68rem;color:#666; }
+            .ley { display:flex;align-items:center;gap:5px; }
+            .ley-dot { width:10px;height:10px;border-radius:50%; }
+        </style>
+        </head><body>
+        ${headerPlantilla('Asistencias a Clases', '#e05c5c', '🏫')}
+        <div class="leyenda">
+            <span class="ley"><span class="ley-dot" style="background:#f25c54;"></span>≥80% ocupación (alta)</span>
+            <span class="ley"><span class="ley-dot" style="background:#f0c040;"></span>60–79% (media)</span>
+            <span class="ley"><span class="ley-dot" style="background:#00C16E;"></span>&lt;60% (disponible)</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Clase</th><th>Profesor</th><th>Cancha</th>
+                    <th>Fecha</th><th>Horario</th><th>Inscriptos</th><th>Capacidad</th>
+                </tr>
+            </thead>
+            <tbody>${filasHTML}</tbody>
+        </table>
+        <div class="footer-print">
+            <span>Gol Ahora · Sistema de Gestión · ${CLUB_NOMBRE}</span>
+            <span>${filas.length} clases · Generado el ${FECHA_HOY}</span>
+        </div>
+        <script>window.onload=()=>{ window.print(); window.onafterprint=()=>window.close(); }<\/script>
+    </body></html>`;
+    }
+
+    /* ============================================================
+       PLANTILLA 5 — ENTRENAMIENTOS (planilla de sesiones)
+       ============================================================ */
+    function plantillaEntrenamientos() {
+        const d = getDatosTabla('entrenamientos');
+
+        const filas = d.real && d.rows.length ? d.rows : [
+            ['Pablo Herrera',  'Cancha 5', '2026-06-09', '07:00 – 08:30', '9',  '12'],
+            ['Daniela Cruz',   'Cancha 7', '2026-06-09', '09:00 – 10:30', '5',  '10'],
+            ['Lucas Romero',   'Cancha 3', '2026-06-10', '17:00 – 18:30', '11', '12'],
+            ['Cecilia Mora',   'Futsal',   '2026-06-11', '20:00 – 21:30', '8',  '10'],
+        ];
+
+        const filasHTML = filas.map(r => {
+            const insc = parseInt(r[4])||0;
+            const cap  = parseInt(r[5])||1;
+            const pct  = Math.round((insc/cap)*100);
+            const c    = pct>=80?'#f25c54':pct>=60?'#f0c040':'#22d3ee';
+            const bar  = `<div style="background:#eee;border-radius:3px;height:5px;width:60px;display:inline-block;vertical-align:middle;margin-left:5px;">
+                        <div style="background:${c};height:5px;border-radius:3px;width:${pct}%;"></div></div>`;
+            return `<tr>
+            <td style="font-weight:700;">${r[0]}</td>
+            <td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td>
+            <td style="font-weight:700;color:${c};">${insc}</td>
+            <td>${cap} ${bar} <small style="color:#999;">${pct}%</small></td>
+        </tr>`;
+        }).join('');
+
+        return `<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+        <title>Reporte Entrenamientos</title>
+        <style>${BASE_CSS}
+            thead th { background:#ecfeff;color:#155e75; }
+            .leyenda { display:flex;gap:14px;margin:14px 0 18px;font-size:0.68rem;color:#666; }
+            .ley { display:flex;align-items:center;gap:5px; }
+            .ley-dot { width:10px;height:10px;border-radius:50%; }
+        </style>
+        </head><body>
+        ${headerPlantilla('Asistencias a Entrenamientos', '#22d3ee', '🏋')}
+        <div class="leyenda">
+            <span class="ley"><span class="ley-dot" style="background:#f25c54;"></span>≥80% (alta demanda)</span>
+            <span class="ley"><span class="ley-dot" style="background:#f0c040;"></span>60–79% (media)</span>
+            <span class="ley"><span class="ley-dot" style="background:#22d3ee;"></span>&lt;60% (disponible)</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Entrenador</th><th>Cancha</th><th>Fecha</th>
+                    <th>Horario</th><th>Inscriptos</th><th>Capacidad</th>
+                </tr>
+            </thead>
+            <tbody>${filasHTML}</tbody>
+        </table>
+        <div class="footer-print">
+            <span>Gol Ahora · Sistema de Gestión · ${CLUB_NOMBRE}</span>
+            <span>${filas.length} sesiones · Generado el ${FECHA_HOY}</span>
+        </div>
+        <script>window.onload=()=>{ window.print(); window.onafterprint=()=>window.close(); }<\/script>
+    </body></html>`;
+    }
+
+    /* ── Abrir ventana de impresión ── */
+    function imprimirReporte(tipo) {
+        cerrarModalImpresion();
+        const plantillas = {
+            canchas:        plantillaCanchas,
+            ingresos:       plantillaIngresos,
+            reservas:       plantillaReservas,
+            clases:         plantillaClases,
+            entrenamientos: plantillaEntrenamientos,
+        };
+        const html = plantillas[tipo]?.();
+        if (!html) return;
+        const win = window.open('', '_blank', 'width=850,height=700,scrollbars=yes');
+        win.document.write(html);
+        win.document.close();
+    }
+</script>
+
 </body>
 </html>
