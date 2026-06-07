@@ -152,7 +152,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         try {
-            console.log("Datos reserva:", { idCliente: parseInt(id_usuario), idCancha: parseInt(id_cancha), fecha, horaInicio: hora_inicio, horaFin: hora_fin });
+            const cancha = todasCanchas.find(c => c.id == id_cancha);
+            const monto = cancha ? parseFloat(cancha.precio) : 0;
+
             const res = await fetch("/cliente/reservas", {
                 method: "POST",
                 headers: {
@@ -161,15 +163,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                 },
                 credentials: "include",
                 body: JSON.stringify({
-                    idCliente: parseInt(id_usuario),
-                    idCancha: parseInt(id_cancha),
+                    id_cancha: parseInt(id_cancha),
                     fecha,
-                    horaInicio: hora_inicio,
-                    horaFin: hora_fin
+                    hora_inicio,
+                    hora_fin,
+                    id_metodo_de_pago: parseInt(document.getElementById("id_metodo_pago").value),
+                    monto
                 })
             });
 
             const data = await res.json();
+            console.log("Respuesta API:", data);
+
 
             if (res.ok) {
                 await Swal.fire({
