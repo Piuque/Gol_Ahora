@@ -114,7 +114,7 @@ function verInfoInscripta(idClase) {
             </div>
         `,
         confirmButtonColor: '#ffc107',
-        confirmButtonText: '<span class="text-dark fw-bold">Cerrar Ventana</span>'
+        confirmButtonText: '<span class="text-dark fw-bold">Cerrar</span>'
     });
 }
 
@@ -124,7 +124,7 @@ function verInfoInscripta(idClase) {
 async function darseDeBaja(idInscripcion) {
     const result = await Swal.fire({
         title: '¿Cancelar tu inscripción?',
-        text: "Liberarás tu lugar en esta clase permanentemente.",
+        text: "Liberarás tu lugar en esta clase.",
         icon: 'warning',
         background: '#071524', color: '#fff',
         showCancelButton: true,

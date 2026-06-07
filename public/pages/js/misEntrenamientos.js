@@ -114,7 +114,7 @@ function verInfoInscripta(idEntrenamiento) {
             </div>
         `,
         confirmButtonColor: '#dc3545',
-        confirmButtonText: 'Cerrar Ventana'
+        confirmButtonText: 'Cerrar'
     });
 }
 
@@ -141,7 +141,7 @@ async function darseDeBaja(idInscripcion) {
             });
 
             if (res.ok) {
-                await Swal.fire({ icon: 'success', title: 'Turno Cancelado', background: '#071524', color: '#fff', confirmButtonColor: '#00C16E' });
+                await Swal.fire({ icon: 'success', title: 'Baja exitosa', background: '#071524', color: '#fff', confirmButtonColor: '#00C16E' });
                 cargarMisEntrenamientos();
             } else {
                 const errorData = await res.json();
@@ -164,7 +164,7 @@ async function explorarEntrenamientos() {
             credentials: 'include'
         });
 
-        if (!response.ok) throw new Error("Fallo al obtener prácticas disponibles");
+        if (!response.ok) throw new Error("Fallo al obtener entrenamientos disponibles");
 
         catalogoEntrenamientosDisponibles = await response.json();
 
