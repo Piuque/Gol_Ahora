@@ -66,3 +66,32 @@ module.exports = {
   authMiddleware,
   requireRole
 };
+const { z } = require('zod');
+
+const registerSchema = z.object({
+  email: z.string().email({ message: "Formato de email inválido" }),
+  password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
+  confirmPassword: z.string(),
+  birthDate: z.string().refine((val) => {
+    const date = new Date(val);
+    const now = new Date();
+    return date < now && date.getFullYear() >= 1900;
+  }, { message: "Fecha de nacimiento inválida" }),
+  dni: z.string().regex(/^\d+$/, { message: "El DNI debe contener solo números" }),
+  phone: z.string().regex(/^\d+$/, { message: "El teléfono debe contener solo números" }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
+});
+
+// Middleware para aplicar el esquema
+const validate = (schema) => (req, res, next) => {
+  try {
+    schema.parse(req.body);
+    next();
+  } catch (err) {
+    res.status(400).json({ errors: err.errors });
+  }
+};
+
+module.exports = { registerSchema, validate };
