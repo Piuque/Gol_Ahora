@@ -202,6 +202,7 @@ function abrirGestionPerfil() {
     });
 }
 
+// Celda de dato reutilizable
 function _fila(label, valor) {
     return `
         <div>
@@ -282,28 +283,25 @@ async function modificarPerfil() {
     const d = datosPerfilGlobal;
     const dirObj = d.direccion || { calle: d.calle, numero: d.numero, localidad: d.localidad, provincia: d.provincia, codigo_postal: d.codigo_postal };
 
-    // Lista EXACTA extraída de la Base de Datos. Así evitamos cualquier problema con fetch o desorden.
-    const listaGenerosSegura = [
-        { id: 0, nombre: "Agénero" },
-        { id: 1, nombre: "Femenino" },
-        { id: 2, nombre: "Género fluido" },
-        { id: 3, nombre: "Helicoptero Apache" },
-        { id: 4, nombre: "Hombre trans" },
-        { id: 5, nombre: "Masculino" },
-        { id: 6, nombre: "Mujer trans" },
-        { id: 7, nombre: "No binario" },
-        { id: 8, nombre: "Otro" },
-        { id: 9, nombre: "Prefiero no especificar" }
-    ];
+    // Obtener géneros dinámicos y mapearles un ID lógico
+    let opcionesGenerosHTML = `<option value="">Seleccione un género</option>`;
+    try {
+        const resGen = await fetch(`${API}/api/generos`);
+        if (resGen.ok) {
+            const listaGeneros = await resGen.json();
+            listaGeneros.forEach(gen => {
+                let idFicticio = '';
+                if(gen.toLowerCase() === 'masculino') idFicticio = 1;
+                else if(gen.toLowerCase() === 'femenino') idFicticio = 2;
+                else idFicticio = 3;
 
-    let opcionesGenerosHTML = `<option value="" disabled>Seleccione un género</option>`;
-
-    listaGenerosSegura.forEach(g => {
-        // Obtenemos el ID del usuario asegurándonos que es un número
-        const idActual = (d.id_genero !== null && d.id_genero !== undefined) ? parseInt(d.id_genero, 10) : -1;
-        const seleccionado = (idActual === g.id) ? 'selected' : '';
-        opcionesGenerosHTML += `<option value="${g.id}" ${seleccionado}>${g.nombre}</option>`;
-    });
+                const seleccionado = (d.genero === gen) ? 'selected' : '';
+                opcionesGenerosHTML += `<option value="${idFicticio}" ${seleccionado}>${gen}</option>`;
+            });
+        }
+    } catch (e) {
+        console.error("No se pudo obtener géneros:", e);
+    }
 
     const selectGeneroHTML = `
         <div>
@@ -348,7 +346,7 @@ async function modificarPerfil() {
                 ${_inputEdit('mod-provincia', 'Provincia',     dirObj.provincia      || '', 'text', true)}
             </div>
 
-            <div id="mod-error" style="display:none;background:rgba(242,92,84,0.1);border:1px solid rgba(242,92,84,0.3);color:#f25c54;font-size:0.8rem;padding:8px 12px;border-radius:6px;margin-bottom:10px;"></div>
+            <div id="mod-error" style="display:none;color:#f25c54;font-size:0.8rem;margin-bottom:10px;"></div>
 
             <div style="display:flex;gap:8px;">
                 <button onclick="guardarModificacionPerfil()"
@@ -377,41 +375,28 @@ function _inputEdit(id, label, value, type = 'text', readonly = false) {
 }
 
 async function guardarModificacionPerfil() {
-    const errorEl = document.getElementById('mod-error');
-    errorEl.style.display = 'none'; // Limpiamos errores previos
+    const idGeneroObtenido = parseInt(document.getElementById('mod-genero')?.value);
 
-    const selectElement = document.getElementById('mod-genero');
-    let idGeneroAEnviar = null;
-
-    // Validación estricta del campo Género
-    if (selectElement && selectElement.value !== "") {
-        idGeneroAEnviar = parseInt(selectElement.value, 10);
-    }
-
-    if (idGeneroAEnviar === null || isNaN(idGeneroAEnviar)) {
-        errorEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Por favor, selecciona un género válido de la lista.';
-        errorEl.style.display = 'block';
-        return;
-    }
-
+    // Payload EXACTO como lo pide req.body en clienteController.js
     const payload = {
         username:         document.getElementById('mod-username')?.value.trim(),
         nombre:           document.getElementById('mod-nombre')?.value.trim(),
         apellido:         document.getElementById('mod-apellido')?.value.trim(),
         email:            document.getElementById('mod-email')?.value.trim(),
         fecha_nacimiento: document.getElementById('mod-nacimiento')?.value || null,
-        dni:              datosPerfilGlobal.dni,
+        dni:              datosPerfilGlobal.dni, // Re-enviamos tal cual
         telefono:         document.getElementById('mod-telefono')?.value.trim(),
-        id_genero:        idGeneroAEnviar,
-        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad || null,
+        id_genero:        idGeneroObtenido ? idGeneroObtenido : (datosPerfilGlobal.id_genero || null),
+        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad || null, // Se re-envía para no borrarla
         calle:            document.getElementById('mod-calle')?.value.trim(),
         numero:           document.getElementById('mod-numero')?.value.trim(),
         codigo_postal:    document.getElementById('mod-cp')?.value.trim(),
-        id_localidad:     datosPerfilGlobal.id_localidad || null
+        id_localidad:     datosPerfilGlobal.id_localidad || null // Se re-envía intacto
     };
 
+    const errorEl = document.getElementById('mod-error');
     if (!payload.nombre || !payload.apellido || !payload.email) {
-        errorEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i>Nombre, apellido y email son obligatorios.';
+        errorEl.textContent = 'Nombre, apellido y email son obligatorios.';
         errorEl.style.display = 'block';
         return;
     }
@@ -434,6 +419,7 @@ async function guardarModificacionPerfil() {
             throw new Error(err.error || `Error ${res.status}`);
         }
 
+        // Recargar perfil
         await verificarSesionYPerfil();
 
         Swal.close();
@@ -442,7 +428,7 @@ async function guardarModificacionPerfil() {
             confirmButtonColor: '#00C16E', background: '#0A2540', color: '#fff' });
 
     } catch (err) {
-        errorEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i>${err.message || 'No se pudo guardar. Intentá de nuevo.'}`;
+        errorEl.textContent = err.message || 'No se pudo guardar. Intentá de nuevo.';
         errorEl.style.display = 'block';
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
@@ -492,6 +478,7 @@ function solicitarBajaCuenta() {
 /* -----------------------------------------------------------------------
    CERRAR SESIÓN
 ----------------------------------------------------------------------- */
+
 function cerrarSesion() {
     Swal.fire({
         title: '¿Cerrar sesión?',
