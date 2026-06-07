@@ -1111,10 +1111,10 @@ const obtenerLiga = async (req, res) => {
     
     const partidos = await db.query.all(`
       SELECT p.id_partido AS id, 
-             u1.nombre || ' ' || u1.apellido AS equipo_local,
-             u2.nombre || ' ' || u2.apellido AS equipo_visitante,
-             p.goles_local, p.goles_visitante,
-             to_char(p.fecha, 'YYYY-MM-DD') AS fecha
+            u1.nombre || ' ' || u1.apellido AS equipo_local,
+            u2.nombre || ' ' || u2.apellido AS equipo_visitante,
+            p.goles_local, p.goles_visitante,
+            to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
       FROM partidos p
       LEFT JOIN usuarios u1 ON p.id_equipo_local = u1.id_usuario
       LEFT JOIN usuarios u2 ON p.id_equipo_visitante = u2.id_usuario
