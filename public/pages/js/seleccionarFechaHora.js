@@ -236,7 +236,7 @@ function mostrarBotonContinuar() {
             hora: horaSeleccionada
         });
 
-        window.location.href = `confirmarReserva.html?${queryParams.toString()}`;
+        window.location.href = `confirmarReservaCliente.html?${queryParams.toString()}`;
     };
 }
 
