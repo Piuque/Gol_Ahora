@@ -119,6 +119,12 @@ async function abrirRegistrar() {
     const profOptions = profesores.map(p => `<option value="${p.id}">${p.nombre} ${p.apellido}</option>`).join('');
     const canchaOptions = canchas.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
 
+    // Fecha mínima = hoy
+    const hoy = new Date().toISOString().split('T')[0];
+
+    const horas = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+    const horasFin = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00'];
+
     const { value: formValues } = await Swal.fire({
         title: 'Nueva Clase',
         html: `
@@ -140,20 +146,18 @@ async function abrirRegistrar() {
             </div>
             <div style="text-align:left; margin-bottom:8px;">
                 <label style="color:#555; font-size:0.85rem;">Fecha</label>
-                <input id="swal-fecha" type="date" class="swal2-input">
+                <input id="swal-fecha" type="date" class="swal2-input" min="${hoy}">
             </div>
             <div style="text-align:left; margin-bottom:8px;">
                 <label style="color:#555; font-size:0.85rem;">Hora inicio</label>
                 <select id="swal-hora-inicio" class="swal2-input">
-                    ${['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00']
-                        .map(h => `<option value="${h}">${h}</option>`).join('')}
+                    ${horas.map(h => `<option value="${h}">${h}</option>`).join('')}
                 </select>
             </div>
             <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Hora fin</label>
+                <label style="color:#555; font-size:0.85rem;">Hora fin <span style="color:#00C16E; font-size:0.75rem;">(automática)</span></label>
                 <select id="swal-hora-fin" class="swal2-input">
-                    ${['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00']
-                        .map(h => `<option value="${h}">${h}</option>`).join('')}
+                    ${horasFin.map(h => `<option value="${h}">${h}</option>`).join('')}
                 </select>
             </div>
         `,
@@ -162,14 +166,39 @@ async function abrirRegistrar() {
         cancelButtonText: 'Cancelar',
         showCancelButton: true,
         focusConfirm: false,
+        didOpen: () => {
+            // Hora fin automática al cambiar hora inicio
+            const selectInicio = document.getElementById('swal-hora-inicio');
+            const selectFin = document.getElementById('swal-hora-fin');
+
+            function actualizarHoraFin() {
+                const [h] = selectInicio.value.split(':').map(Number);
+                const horaFinAuto = String(h + 1).padStart(2, '0') + ':00';
+                // Seleccionar la opción correspondiente si existe
+                const opcion = [...selectFin.options].find(o => o.value === horaFinAuto);
+                if (opcion) selectFin.value = horaFinAuto;
+            }
+
+            // Inicializar con el valor por defecto al abrir
+            actualizarHoraFin();
+            selectInicio.addEventListener('change', actualizarHoraFin);
+        },
         preConfirm: () => {
-            const nombre = document.getElementById('swal-nombre').value;
+            const nombre = document.getElementById('swal-nombre').value.trim();
             const capacidad_max = parseInt(document.getElementById('swal-capacidad').value);
             const fecha = document.getElementById('swal-fecha').value;
+
             if (!nombre || !capacidad_max || !fecha) {
                 Swal.showValidationMessage('Nombre, capacidad y fecha son obligatorios');
                 return false;
             }
+
+            // Validar que la fecha no sea anterior a hoy
+            if (fecha < hoy) {
+                Swal.showValidationMessage('La fecha no puede ser anterior a hoy');
+                return false;
+            }
+
             return {
                 nombre,
                 capacidad_max,
@@ -181,6 +210,27 @@ async function abrirRegistrar() {
             };
         }
     });
+
+    if (!formValues) return;
+
+    try {
+        const res = await fetch("/admin/clases", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-user-id": userId },
+            credentials: "include",
+            body: JSON.stringify(formValues)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Clase creada correctamente.', confirmButtonColor: '#00C16E' });
+            await cargarClases();
+        } else {
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
 
     if (!formValues) return;
 
