@@ -284,16 +284,17 @@ async function modificarPerfil() {
     const d = datosPerfilGlobal;
     const dirObj = d.direccion || { calle: d.calle, numero: d.numero, localidad: d.localidad, provincia: d.provincia, codigo_postal: d.codigo_postal };
 
-    // 1. Obtener la lista dinámica de géneros desde la Base de Datos
+    // 1. Obtener la lista dinámica de géneros desde la Base de Datos (Ruta Corregida)
     let opcionesGenerosHTML = `<option value="">Seleccione un género</option>`;
     try {
-        const resGen = await fetch(`${API}/api/usuario/generos`);
+        const resGen = await fetch(`${API}/api/generos`);
         if (resGen.ok) {
             const listaGeneros = await resGen.json();
+            // La API devuelve un array de strings, ej: ["Femenino", "Masculino"]
             listaGeneros.forEach(gen => {
-                // Marcar como seleccionado si coincide con el del usuario actual
-                const seleccionado = (d.id_genero === gen.id_genero || d.genero === gen.genero) ? 'selected' : '';
-                opcionesGenerosHTML += `<option value="${gen.id_genero}" ${seleccionado}>${gen.genero}</option>`;
+                // Marcar como seleccionado si coincide con el string del usuario actual
+                const seleccionado = (d.genero === gen) ? 'selected' : '';
+                opcionesGenerosHTML += `<option value="${gen}" ${seleccionado}>${gen}</option>`;
             });
         }
     } catch (e) {
@@ -371,7 +372,7 @@ function _inputEdit(id, label, value, type = 'text', readonly = false) {
 }
 
 async function guardarModificacionPerfil() {
-    // 2. Extraemos todos los campos mapeados según requiere tu controlador
+    // 2. Extraemos todos los campos (ahora enviamos 'genero' como texto, como pide OpenAPI)
     const payload = {
         nombre:           document.getElementById('mod-nombre')?.value.trim(),
         apellido:         document.getElementById('mod-apellido')?.value.trim(),
@@ -380,14 +381,13 @@ async function guardarModificacionPerfil() {
         telefono:         document.getElementById('mod-telefono')?.value.trim(),
         fecha_nacimiento: document.getElementById('mod-nacimiento')?.value || null,
         dni:              datosPerfilGlobal.dni, // readonly — no se modifica
-        id_genero:        document.getElementById('mod-genero')?.value || null,
+        genero:           document.getElementById('mod-genero')?.value || null, // CORREGIDO
         calle:            document.getElementById('mod-calle')?.value.trim(),
         numero:           document.getElementById('mod-numero')?.value.trim(),
         localidad:        document.getElementById('mod-localidad')?.value.trim(),
         provincia:        document.getElementById('mod-provincia')?.value.trim(),
         codigo_postal:    document.getElementById('mod-cp')?.value.trim(),
-        // Conservamos los IDs que no editamos directamente
-        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad  || null
+        nacionalidad:     datosPerfilGlobal.nacionalidad || null
     };
 
     const errorEl = document.getElementById('mod-error');
@@ -415,7 +415,7 @@ async function guardarModificacionPerfil() {
             throw new Error(err.error || `Error ${res.status}`);
         }
 
-        // 3. Volvemos a pedir los datos a la DB para actualizar nombres de géneros y localidades
+        // 3. Volvemos a pedir los datos a la DB para actualizar todo el perfil visual
         await verificarSesionYPerfil();
 
         Swal.close();
