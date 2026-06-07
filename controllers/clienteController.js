@@ -4,17 +4,21 @@ const db = require('../config/db.js');
 const obtenerPerfil = async (req, res) => {
   const idUsuario = req.user.id_usuario;
   try {
+    // 💡 SOLUCIÓN: Agregados los IDs ocultos que el frontend necesita para no enviar nulls
     const sql = `
-      SELECT u.id_usuario, u.id_usuario AS id, u.user_level, u.username, u.nombre, u.apellido, u.email, u.fecha_nacimiento, 
-             u.dni, u.telefono, u.fecha_registro, g.genero AS genero, pa.nombre AS nacionalidad, 
-             d.calle, d.numero, d.codigo_postal, loc.nombre AS localidad, prov.nombre AS provincia 
-      FROM usuarios u 
-      LEFT JOIN generos g ON u.id_genero = g.id_genero 
-      LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais 
-      LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion 
-      LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad 
-      LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad 
-      LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia 
+      SELECT u.id_usuario, u.id_usuario AS id, u.user_level, u.username, u.nombre, u.apellido, u.email, u.fecha_nacimiento,
+             u.dni, u.telefono, u.fecha_registro,
+             u.id_genero, g.genero AS genero,
+             u.id_nacionalidad, pa.nombre AS nacionalidad,
+             d.calle, d.numero, d.codigo_postal,
+             d.id_localidad, loc.nombre AS localidad, prov.nombre AS provincia
+      FROM usuarios u
+             LEFT JOIN generos g ON u.id_genero = g.id_genero
+             LEFT JOIN paises pa ON u.id_nacionalidad = pa.id_pais
+             LEFT JOIN direcciones d ON u.id_direccion = d.id_direccion
+             LEFT JOIN localidades loc ON d.id_localidad = loc.id_localidad
+             LEFT JOIN ciudades c ON loc.id_ciudad = c.id_ciudad
+             LEFT JOIN provincias prov ON c.id_provincia = prov.id_provincia
       WHERE u.id_usuario = $1
     `;
     const profile = await db.query.get(sql, [idUsuario]);
@@ -23,16 +27,16 @@ const obtenerPerfil = async (req, res) => {
     }
     res.json(profile);
   } catch (err) {
-    res.status(500).json({ error: 'Error al consultar el perfil', message: err.message });
+    res.status(500).json({ error: 'Error al obtener el perfil', message: err.message });
   }
 };
 
 // PUT /cliente/perfil
 const modificarPerfil = async (req, res) => {
   const idUsuario = req.user.id_usuario;
-  const { 
+  const {
     username, nombre, apellido, email, fecha_nacimiento, dni, telefono, id_genero, id_nacionalidad,
-    calle, numero, codigo_postal, id_localidad 
+    calle, numero, codigo_postal, id_localidad
   } = req.body;
 
   try {
@@ -40,21 +44,21 @@ const modificarPerfil = async (req, res) => {
 
     // 1. Modificar usuario
     const userSql = `
-      UPDATE usuarios 
-      SET username = $1, nombre = $2, apellido = $3, email = $4, 
-          fecha_nacimiento = $5, dni = $6, telefono = $7, id_genero = $8, id_nacionalidad = $9 
+      UPDATE usuarios
+      SET username = $1, nombre = $2, apellido = $3, email = $4,
+          fecha_nacimiento = $5, dni = $6, telefono = $7, id_genero = $8, id_nacionalidad = $9
       WHERE id_usuario = $10
     `;
     await db.pool.query(userSql, [
-      username, nombre, apellido, email, 
-      fecha_nacimiento, dni, telefono, id_genero, id_nacionalidad, 
+      username, nombre, apellido, email,
+      fecha_nacimiento, dni, telefono, id_genero, id_nacionalidad,
       idUsuario
     ]);
 
     // 2. Modificar dirección del usuario
     const dirSql = `
-      UPDATE direcciones 
-      SET calle = $1, numero = $2, codigo_postal = $3, id_localidad = $4 
+      UPDATE direcciones
+      SET calle = $1, numero = $2, codigo_postal = $3, id_localidad = $4
       WHERE id_direccion = (SELECT id_direccion FROM usuarios WHERE id_usuario = $5)
     `;
     await db.pool.query(dirSql, [calle, numero, codigo_postal, id_localidad, idUsuario]);

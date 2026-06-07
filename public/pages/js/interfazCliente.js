@@ -289,11 +289,15 @@ async function modificarPerfil() {
         const resGen = await fetch(`${API}/api/generos`);
         if (resGen.ok) {
             const listaGeneros = await resGen.json();
-            listaGeneros.forEach(gen => {
-                let idFicticio = '';
-                if(gen.toLowerCase() === 'masculino') idFicticio = 1;
-                else if(gen.toLowerCase() === 'femenino') idFicticio = 2;
-                else idFicticio = 3;
+            listaGeneros.forEach((gen, index) => {
+                let idFicticio = index + 1; // Asignación lógica genérica
+                if(gen.toLowerCase() === 'femenino') idFicticio = 1;
+                else if(gen.toLowerCase() === 'masculino') idFicticio = 2;
+
+                // Si el backend nos mandó el ID real del usuario, lo usamos para no fallar
+                if (d.genero === gen && d.id_genero) {
+                    idFicticio = d.id_genero;
+                }
 
                 const seleccionado = (d.genero === gen) ? 'selected' : '';
                 opcionesGenerosHTML += `<option value="${idFicticio}" ${seleccionado}>${gen}</option>`;
@@ -377,21 +381,21 @@ function _inputEdit(id, label, value, type = 'text', readonly = false) {
 async function guardarModificacionPerfil() {
     const idGeneroObtenido = parseInt(document.getElementById('mod-genero')?.value);
 
-    // Payload EXACTO como lo pide req.body en clienteController.js
+    // Payload EXACTO para PostgreSQL (¡Ahora sí mandamos los IDs sin fallar!)
     const payload = {
         username:         document.getElementById('mod-username')?.value.trim(),
         nombre:           document.getElementById('mod-nombre')?.value.trim(),
         apellido:         document.getElementById('mod-apellido')?.value.trim(),
         email:            document.getElementById('mod-email')?.value.trim(),
         fecha_nacimiento: document.getElementById('mod-nacimiento')?.value || null,
-        dni:              datosPerfilGlobal.dni, // Re-enviamos tal cual
+        dni:              datosPerfilGlobal.dni,
         telefono:         document.getElementById('mod-telefono')?.value.trim(),
-        id_genero:        idGeneroObtenido ? idGeneroObtenido : (datosPerfilGlobal.id_genero || null),
-        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad || null, // Se re-envía para no borrarla
+        id_genero:        isNaN(idGeneroObtenido) ? (datosPerfilGlobal.id_genero || null) : idGeneroObtenido,
+        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad || null, // <- LA CLAVE DEL ÉXITO ESTÁ AQUÍ
         calle:            document.getElementById('mod-calle')?.value.trim(),
         numero:           document.getElementById('mod-numero')?.value.trim(),
         codigo_postal:    document.getElementById('mod-cp')?.value.trim(),
-        id_localidad:     datosPerfilGlobal.id_localidad || null // Se re-envía intacto
+        id_localidad:     datosPerfilGlobal.id_localidad || null     // <- Y AQUÍ
     };
 
     const errorEl = document.getElementById('mod-error');
@@ -419,7 +423,7 @@ async function guardarModificacionPerfil() {
             throw new Error(err.error || `Error ${res.status}`);
         }
 
-        // Recargar perfil
+        // Recargar perfil instantáneamente tras el guardado exitoso
         await verificarSesionYPerfil();
 
         Swal.close();
@@ -478,7 +482,6 @@ function solicitarBajaCuenta() {
 /* -----------------------------------------------------------------------
    CERRAR SESIÓN
 ----------------------------------------------------------------------- */
-
 function cerrarSesion() {
     Swal.fire({
         title: '¿Cerrar sesión?',
