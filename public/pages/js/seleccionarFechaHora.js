@@ -163,13 +163,16 @@ function procesarYMostrarGrilla(fechaElegida, ocupacionesArray) {
     }
 
     const hoyObj = new Date();
-    const esHoy = (fechaElegida === hoyObj.toISOString().split('T')[0]);
+    // Usamos fecha local (no UTC) para evitar el desfase horario en Argentina (UTC-3)
+    const hoyLocal = `${hoyObj.getFullYear()}-${String(hoyObj.getMonth() + 1).padStart(2, '0')}-${String(hoyObj.getDate()).padStart(2, '0')}`;
+    const esHoy = (fechaElegida === hoyLocal);
     const horaActual = hoyObj.getHours();
+    const minutoActual = hoyObj.getMinutes();
 
     const grillaFinal = bloquesClub.map(bloque => {
         const horaInicioNum = parseInt(bloque.horaInicio.split(':')[0]);
 
-        if (esHoy && horaInicioNum <= horaActual) {
+        if (esHoy && (horaInicioNum < horaActual || (horaInicioNum === horaActual && parseInt(bloque.horaInicio.split(':')[1]) <= minutoActual))) {
             return { ...bloque, disponible: false, motivo: "Pasado", claseCss: "ocupacion-pasado" };
         }
 

@@ -63,7 +63,7 @@
             background-color: rgba(255, 255, 255, 0.01);
             color: rgba(255, 255, 255, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.04);
-            cursor: not-allowed;
+            cursor: default;
         }
 
         .hora-texto { font-weight: 600; font-size: 1.05rem; }
@@ -115,11 +115,8 @@
         </div>
 
         <div class="flex-grow-1">
-            <label class="form-label text-light-50 small fw-bold text-uppercase d-flex justify-content-between align-items-center mb-3" style="letter-spacing: 1px;">
+            <label class="form-label text-light-50 small fw-bold text-uppercase mb-3" style="letter-spacing: 1px;">
                 <span>2. Disponibilidad horaria</span>
-                <span id="duracion-reserva" class="badge bg-secondary text-white fw-medium py-2 px-3">
-                    <i class="fa-s  olid fa-stopwatch me-1 text-sports"></i>Cargando formato...
-                </span>
             </label>
 
             <div id="contenedor-horarios" class="row g-0 mt-1">
