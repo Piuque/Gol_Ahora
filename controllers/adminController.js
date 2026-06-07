@@ -1299,7 +1299,7 @@ const crearDescuento = async (req, res) => {
   const { descripcion, porcentaje_descuento, activo } = req.body;
   try {
     const result = await db.query.run(
-      `INSERT INTO descuentos (descripcion, porcentaje_descuento, activo) VALUES ($1, $2, $3) RETURNING id_descuento`,
+      `INSERT INTO descuentos (descripcion, porcentaje_descuento, activo, id_club) VALUES ($1, $2, $3, 1) RETURNING id_descuento`,
       [descripcion, porcentaje_descuento, activo ?? true]
     );
     res.status(201).json({ message: 'Descuento registrado', id: result.id });
