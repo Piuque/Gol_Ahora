@@ -36,6 +36,7 @@ function renderLigas(ligas) {
     }
     contenedor.innerHTML = "";
     ligas.forEach(l => {
+        const colorEstado = l.estado === 'En curso' ? '#00C16E' : l.estado === 'Finalizado' ? '#6c757d' : '#f59e0b';
         const div = document.createElement("div");
         div.className = "liga-card d-flex align-items-center gap-3";
         div.onclick = () => verDetalle(l.id);
@@ -43,7 +44,7 @@ function renderLigas(ligas) {
             <div class="flex-grow-1">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <p class="text-white fw-bold mb-0">${l.nombre}</p>
-                    <span class="badge" style="background-color:#00C16E;">${l.estado || 'Programado'}</span>
+                    <span class="badge" style="background-color:${colorEstado};">${l.estado || 'Programado'}</span>
                 </div>
                 <p class="text-light-50 small mb-0">
                     <i class="fa-solid fa-calendar me-1" style="color:#00C16E"></i> ${l.fecha_inicio} → ${l.fecha_fin} &nbsp;·&nbsp;

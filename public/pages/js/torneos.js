@@ -36,6 +36,7 @@ function renderTorneos(torneos) {
     }
     contenedor.innerHTML = "";
     torneos.forEach(t => {
+        const colorEstado = t.estado === 'En curso' ? '#00C16E' : t.estado === 'Finalizado' ? '#6c757d' : '#f59e0b';
         const div = document.createElement("div");
         div.className = "torneo-card d-flex align-items-center gap-3";
         div.onclick = () => verDetalle(t.id);
@@ -43,7 +44,7 @@ function renderTorneos(torneos) {
             <div class="flex-grow-1">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <p class="text-white fw-bold mb-0">${t.nombre}</p>
-                    <span class="badge" style="background-color:#f59e0b;">${t.estado || 'Programado'}</span>
+                    <span class="badge" style="background-color:${colorEstado};">${t.estado || 'Programado'}</span>
                 </div>
                 <p class="text-light-50 small mb-0">
                     <i class="fa-solid fa-calendar me-1" style="color:#00C16E"></i> ${t.fecha_inicio} → ${t.fecha_fin} &nbsp;·&nbsp;
