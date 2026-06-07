@@ -139,6 +139,11 @@ window.seleccionarMetodo = function(idMetodo, nombreMetodo) {
     document.getElementById('wrapper-transferencia').classList.add('d-none');
     document.getElementById('wrapper-mp').classList.add('d-none');
 
+    // Limpiar campos de tarjeta al cambiar de método
+    document.getElementById('input-numero-tarjeta').value = '';
+    document.getElementById('input-vencimiento').value = '';
+    document.getElementById('input-cvc').value = '';
+
     const btnFinalizar = document.getElementById('btn-finalizar');
     btnFinalizar.disabled = false;
 
@@ -157,7 +162,62 @@ window.seleccionarMetodo = function(idMetodo, nombreMetodo) {
     else {
         document.getElementById('wrapper-tarjeta').classList.remove('d-none');
         btnFinalizar.innerHTML = 'Procesar Pago <i class="fa-solid fa-shield-halved ms-2"></i>';
+        // Con tarjeta el botón arranca deshabilitado hasta completar los campos
+        btnFinalizar.disabled = true;
+        inicializarInputsTarjeta();
     }
+}
+
+// ==========================================
+// VALIDACIÓN Y FORMATO DE TARJETA
+// ==========================================
+function inicializarInputsTarjeta() {
+    const inputNumero     = document.getElementById('input-numero-tarjeta');
+    const inputVencimiento = document.getElementById('input-vencimiento');
+    const inputCvc        = document.getElementById('input-cvc');
+
+    // --- Número de tarjeta: solo dígitos, formato "0000 0000 0000 0000" ---
+    inputNumero.addEventListener('input', (e) => {
+        let raw = e.target.value.replace(/\D/g, '').substring(0, 16);
+        e.target.value = raw.match(/.{1,4}/g)?.join(' ') || raw;
+        validarTarjetaCompleta();
+    });
+    inputNumero.addEventListener('keydown', bloquearNoNumericos);
+
+    // --- Vencimiento: solo dígitos, formato "MM/AA" ---
+    inputVencimiento.addEventListener('input', (e) => {
+        let raw = e.target.value.replace(/\D/g, '').substring(0, 4);
+        if (raw.length >= 3) {
+            raw = raw.substring(0, 2) + '/' + raw.substring(2);
+        }
+        e.target.value = raw;
+        validarTarjetaCompleta();
+    });
+    inputVencimiento.addEventListener('keydown', bloquearNoNumericos);
+
+    // --- CVC: solo dígitos ---
+    inputCvc.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
+        validarTarjetaCompleta();
+    });
+    inputCvc.addEventListener('keydown', bloquearNoNumericos);
+}
+
+function bloquearNoNumericos(e) {
+    const permitidas = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+    const esCopiarPegar = (e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase());
+    if (!permitidas.includes(e.key) && !esCopiarPegar && !/^\d$/.test(e.key)) {
+        e.preventDefault();
+    }
+}
+
+function validarTarjetaCompleta() {
+    const numero = document.getElementById('input-numero-tarjeta').value.replace(/\s/g, '');
+    const venc   = document.getElementById('input-vencimiento').value;
+    const cvc    = document.getElementById('input-cvc').value;
+
+    const valido = numero.length === 16 && venc.length === 5 && cvc.length >= 3;
+    document.getElementById('btn-finalizar').disabled = !valido;
 }
 
 // ==========================================
@@ -221,20 +281,24 @@ async function procesarReservaFinal() {
             throw new Error(data.error || data.details || "No se pudo procesar la reserva.");
         }
 
-        let tituloSwal = '¡Reserva Confirmada!';
-        let textoSwal = 'Tu pago online fue procesado y tu turno ya está asegurado.';
-
-        if (nombreMetodoSeleccionado.includes('efectivo')) {
-            tituloSwal = '¡Solicitud Recibida!';
-            textoSwal = 'Tu turno quedó pre-reservado. Recordá abonarlo en administración para confirmarlo.';
-        } else if (nombreMetodoSeleccionado.includes('transferencia')) {
-            tituloSwal = '¡Casi Listo!';
-            textoSwal = 'El turno está reservado. Por favor, realizá la transferencia y subí el comprobante desde "Mis Reservas".';
-        }
-
         await Swal.fire({
-            icon: 'success', title: tituloSwal, text: textoSwal,
-            background: '#071524', color: '#fff', confirmButtonColor: '#00C16E'
+            icon: 'success',
+            title: '\u00a1Reserva Solicitada!',
+            html: `
+                <p style="margin-bottom: 0.75rem; line-height: 1.5;">
+                    Tu solicitud fue registrada y la cancha queda <strong>ocupada| temporalmente</strong> para vos.
+                </p>
+                <p style="margin-bottom: 0.75rem; line-height: 1.5;">
+                    Un administrador del club revisará y confirmará el turno a la brevedad.
+                </p>
+                <p style="margin: 0; font-size: 0.82rem; opacity: 0.65; line-height: 1.4;">
+                    Si la reserva no es confirmada dentro de las <strong>próximas 3 horas</strong>, se cancelará automáticamente y el horario quedará disponible nuevamente.
+                </p>
+            `,
+            background: '#071524',
+            color: '#fff',
+            confirmButtonColor: '#00C16E',
+            confirmButtonText: 'Entendido'
         });
 
         window.location.href = 'misReservas.html';
