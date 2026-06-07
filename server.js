@@ -74,6 +74,25 @@ app.get(['/admin/RegistrarTipoDeCancha', '/admin/RegistrarTipoDeCancha.html'], (
   res.sendFile(path.join(__dirname, 'public/pages/RegistrarTipoDeCancha.html'));
 });
 
+// Rutas de páginas HTML administrativas (registradas antes de montar la API de /admin para evitar conflictos de rutas)
+app.get(['/admin/Clases'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Clases.html'));
+});
+app.get(['/admin/Entrenamientos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Entrenamientos.html'));
+});
+app.get(['/admin/Ligas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Ligas.html'));
+});
+app.get(['/admin/Torneos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Torneos.html'));
+});
+app.get(['/admin/Descuentos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Descuentos.html'));
+});
+app.get(['/admin/Cobros'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Cobros.html'));
+});
 
 // Montar Rutas de la API por prefijos de roles
 app.use('/usuario', usuarioRoutes);
@@ -538,27 +557,5 @@ const startServer = async () => {
     console.log(`=============================================================`);
   });
 };
-
-app.get(['/admin/Clases'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/Clases.html'));
-});
-app.get(['/admin/Entrenamientos'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/Entrenamientos.html'));
-});
-
-app.get(['/admin/Ligas'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/Ligas.html'));
-});
-app.get(['/admin/Torneos'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/Torneos.html'));
-});
-
-app.get(['/admin/Descuentos'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/Descuentos.html'));
-});
-
-app.get(['/admin/Cobros'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/Cobros.html'));
-});
 
 startServer();
