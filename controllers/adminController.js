@@ -1271,7 +1271,15 @@ const obtenerTorneo = async (req, res) => {
       WHERE t.id_torneo = $1
     `, [id]);
     if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado' });
-    res.json(torneo);
+
+    const equipos = await db.query.all(`
+      SELECT e.id_equipo, e.nombre
+      FROM participacion_torneos pt
+      JOIN equipos e ON pt.id_equipo = e.id_equipo
+      WHERE pt.id_torneo = $1
+    `, [id]);
+
+    res.json({ ...torneo, equipos });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener torneo', message: err.message });
   }
@@ -1294,7 +1302,7 @@ const eliminarTorneo = async (req, res) => {
   try {
     await db.pool.query('BEGIN');
     await db.pool.query('DELETE FROM partidos WHERE id_torneo = $1', [id]);
-    await db.pool.query('DELETE FROM inscripciones_torneos WHERE id_torneo = $1', [id]);
+    await db.pool.query('DELETE FROM participacion_torneos WHERE id_torneo = $1', [id]);
     await db.pool.query('DELETE FROM torneos WHERE id_torneo = $1', [id]);
     await db.pool.query('COMMIT');
     res.status(204).end();
@@ -1308,13 +1316,13 @@ const generarCuadroTorneo = async (req, res) => {
   const { id } = req.params;
   try {
     const inscriptos = await db.query.all(
-      'SELECT id_usuario FROM inscripciones_torneos WHERE id_torneo = $1', [id]
+      'SELECT id_equipo FROM participacion_torneos WHERE id_torneo = $1', [id]
     );
     if (inscriptos.length < 2) return res.status(400).json({ error: 'Se necesitan al menos 2 equipos' });
 
     await db.pool.query('DELETE FROM partidos WHERE id_torneo = $1', [id]);
 
-    const equipos = inscriptos.map(i => i.id_usuario);
+    const equipos = inscriptos.map(i => i.id_equipo);
     for (let i = 0; i < equipos.length - 1; i += 2) {
       await db.pool.query(
         'INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_torneo) VALUES ($1, $2, $3)',
@@ -1328,13 +1336,34 @@ const generarCuadroTorneo = async (req, res) => {
   }
 };
 
+const eliminarEquipoTorneo = async (req, res) => {
+  const { id, id_equipo } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM participacion_torneos WHERE id_torneo = $1 AND id_equipo = $2', [id, id_equipo]);
+    await db.pool.query('DELETE FROM equipos WHERE id_equipo = $1', [id_equipo]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar equipo', message: err.message });
+  }
+};
+
 const inscribirEnTorneo = async (req, res) => {
   const { id } = req.params;
-  const { id_usuario } = req.body;
+  const { nombre } = req.body;
   try {
-    await db.query.run('INSERT INTO inscripciones_torneos (id_torneo, id_usuario) VALUES ($1, $2)', [id, id_usuario]);
-    res.status(201).json({ message: 'Usuario inscripto en el torneo' });
+    await db.pool.query('BEGIN');
+    const equipo = await db.pool.query(
+      'INSERT INTO equipos (nombre) VALUES ($1) RETURNING id_equipo', [nombre]
+    );
+    const id_equipo = equipo.rows[0].id_equipo;
+    await db.pool.query('INSERT INTO participacion_torneos (id_torneo, id_equipo) VALUES ($1, $2)', [id, id_equipo]);
+    await db.pool.query('COMMIT');
+    res.status(201).json({ message: 'Equipo inscripto en el torneo' });
   } catch (err) {
+    await db.pool.query('ROLLBACK');
     res.status(500).json({ error: 'Error al inscribir en torneo', message: err.message });
   }
 };
@@ -1848,4 +1877,5 @@ module.exports = {
   reporteClases,
   reporteEntrenamientos,
   eliminarEquipoLiga,
+  eliminarEquipoTorneo,
 };

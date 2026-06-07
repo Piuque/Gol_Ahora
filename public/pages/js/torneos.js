@@ -15,12 +15,8 @@ async function cargarTorneos() {
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
     try {
         const res = await fetch("/admin/torneos", { credentials: "include", headers: { "x-user-id": userId } });
-        if (res.status === 401 || res.status === 403) {
-            window.location.href = '/acceder';
-            return;
-        }
+        if (res.status === 401 || res.status === 403) { window.location.href = '/acceder'; return; }
         if (!res.ok) throw new Error("Error del servidor");
-
         torneosData = await res.json();
         if (!torneosData || torneosData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay torneos registrados.</p>`;
@@ -66,6 +62,15 @@ async function verDetalle(id) {
         const res = await fetch(`/admin/torneos/${id}`, { credentials: "include", headers: { "x-user-id": userId } });
         const t = await res.json();
 
+        const equiposHTML = t.equipos && t.equipos.length > 0 ? t.equipos.map(e => `
+            <div class="d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
+                <span class="text-white small"><i class="fa-solid fa-shield-halved me-2" style="color:#00C16E"></i>${e.nombre}</span>
+                <button onclick="eliminarEquipoTorneo(${e.id_equipo}, ${t.id})" class="btn btn-sm text-white py-0" style="background-color:#ef4444; font-size:0.75rem;">
+                    <i class="fa-solid fa-x"></i>
+                </button>
+            </div>
+        `).join('') : `<p class="text-light-50 small">Sin equipos inscriptos.</p>`;
+
         document.getElementById("modal-titulo").textContent = t.nombre;
         document.getElementById("modal-info").innerHTML = `
             <div class="info-row"><span class="info-label">Estado</span><span class="info-value">${t.estado || '-'}</span></div>
@@ -90,6 +95,8 @@ async function verDetalle(id) {
                     <i class="fa-solid fa-trophy me-1"></i> Generar Cuadro
                 </button>
             </div>
+            <p class="text-light-50 small mt-3 mb-1">Equipos inscriptos</p>
+            ${equiposHTML}
         `;
 
         const modal = new bootstrap.Modal(document.getElementById("modalTorneo"));
@@ -255,16 +262,13 @@ async function inscribirEquipo(id_torneo) {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const userId = localStorage.getItem("userId");
-    const res = await fetch("/admin/clientes", { credentials: "include", headers: { "x-user-id": userId } });
-    const clientes = await res.json();
-    const options = clientes.map(c => `<option value="${c.id_usuario}">${c.nombre} ${c.apellido}</option>`).join('');
 
     const { value: formValues } = await Swal.fire({
         title: 'Inscribir Equipo',
         html: `
             <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Seleccionar usuario</label>
-                <select id="swal-usuario" class="swal2-input">${options}</select>
+                <label style="color:#555; font-size:0.85rem;">Nombre del equipo</label>
+                <input id="swal-equipo" class="swal2-input" placeholder="Ej: Los Leones">
             </div>
         `,
         confirmButtonText: 'Inscribir',
@@ -272,7 +276,11 @@ async function inscribirEquipo(id_torneo) {
         cancelButtonText: 'Cancelar',
         showCancelButton: true,
         focusConfirm: false,
-        preConfirm: () => ({ id_usuario: parseInt(document.getElementById('swal-usuario').value) })
+        preConfirm: () => {
+            const nombre = document.getElementById('swal-equipo').value;
+            if (!nombre) { Swal.showValidationMessage('El nombre es obligatorio'); return false; }
+            return { nombre };
+        }
     });
 
     if (!formValues) return;
@@ -322,6 +330,37 @@ async function generarCuadro(id_torneo) {
             verDetalle(id_torneo);
         } else {
             await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+async function eliminarEquipoTorneo(id_equipo, id_torneo) {
+    const userId = localStorage.getItem("userId");
+    const confirm = await Swal.fire({
+        icon: 'warning',
+        title: 'Eliminar equipo?',
+        confirmButtonText: 'Si, eliminar',
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+        const res = await fetch(`/admin/torneos/${id_torneo}/equipos/${id_equipo}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'x-user-id': userId }
+        });
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Equipo eliminado.', confirmButtonColor: '#00C16E' });
+            verDetalle(id_torneo);
+        } else {
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al eliminar.', confirmButtonColor: '#00C16E' });
         }
     } catch (e) {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });

@@ -119,6 +119,8 @@ router.delete('/torneos/:id', adminController.eliminarTorneo);
 router.post('/torneos/:id/cuadro', adminController.generarCuadroTorneo);
 router.post('/torneos/:id/inscripciones', adminController.inscribirEnTorneo);
 router.put('/torneos/:id/partidos/:idPartido/resultado', adminController.registrarResultadoTorneo);
+router.delete('/torneos/:id/equipos/:id_equipo', adminController.eliminarEquipoTorneo);
+
 
 // Descuentos
 router.post('/descuentos', adminController.crearDescuento);
