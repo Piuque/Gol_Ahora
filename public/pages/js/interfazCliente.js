@@ -131,7 +131,6 @@ function abrirGestionPerfil() {
 
     // Dirección — soporta objeto anidado o campos planos
     const dirObj = d.direccion || { calle: d.calle, numero: d.numero, localidad: d.localidad, provincia: d.provincia, codigo_postal: d.codigo_postal };
-    const dirTexto = buildDireccion(dirObj);
 
     Swal.fire({
         background: '#0A2540',
@@ -284,17 +283,20 @@ async function modificarPerfil() {
     const d = datosPerfilGlobal;
     const dirObj = d.direccion || { calle: d.calle, numero: d.numero, localidad: d.localidad, provincia: d.provincia, codigo_postal: d.codigo_postal };
 
-    // 1. Obtener la lista dinámica de géneros desde la Base de Datos (Ruta Corregida)
+    // Obtener géneros dinámicos y mapearles un ID lógico
     let opcionesGenerosHTML = `<option value="">Seleccione un género</option>`;
     try {
         const resGen = await fetch(`${API}/api/generos`);
         if (resGen.ok) {
             const listaGeneros = await resGen.json();
-            // La API devuelve un array de strings, ej: ["Femenino", "Masculino"]
             listaGeneros.forEach(gen => {
-                // Marcar como seleccionado si coincide con el string del usuario actual
+                let idFicticio = '';
+                if(gen.toLowerCase() === 'masculino') idFicticio = 1;
+                else if(gen.toLowerCase() === 'femenino') idFicticio = 2;
+                else idFicticio = 3;
+
                 const seleccionado = (d.genero === gen) ? 'selected' : '';
-                opcionesGenerosHTML += `<option value="${gen}" ${seleccionado}>${gen}</option>`;
+                opcionesGenerosHTML += `<option value="${idFicticio}" ${seleccionado}>${gen}</option>`;
             });
         }
     } catch (e) {
@@ -320,7 +322,7 @@ async function modificarPerfil() {
         <div style="font-family:'Poppins',sans-serif;text-align:left;padding:4px 6px 0;">
             <h5 style="color:#00C16E;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-pen-to-square me-2"></i>Modificar Datos Personales</h5>
             <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.08);">
-                Solo se actualizarán los campos que modifiques.
+                Modifica tus datos de contacto. La localidad y nacionalidad deben gestionarse desde administración.
             </p>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:14px;">
@@ -338,9 +340,10 @@ async function modificarPerfil() {
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:18px;">
                 ${_inputEdit('mod-calle',     'Calle',         dirObj.calle          || '')}
                 ${_inputEdit('mod-numero',    'Número',        dirObj.numero         || '')}
-                ${_inputEdit('mod-localidad', 'Localidad',     dirObj.localidad      || '')}
-                ${_inputEdit('mod-provincia', 'Provincia',     dirObj.provincia      || '')}
                 ${_inputEdit('mod-cp',        'Código postal', dirObj.codigo_postal  || '')}
+                
+                ${_inputEdit('mod-localidad', 'Localidad',     dirObj.localidad      || '', 'text', true)}
+                ${_inputEdit('mod-provincia', 'Provincia',     dirObj.provincia      || '', 'text', true)}
             </div>
 
             <div id="mod-error" style="display:none;color:#f25c54;font-size:0.8rem;margin-bottom:10px;"></div>
@@ -360,7 +363,7 @@ async function modificarPerfil() {
 }
 
 function _inputEdit(id, label, value, type = 'text', readonly = false) {
-    const roStyle = readonly ? 'opacity:0.5;cursor:not-allowed;' : '';
+    const roStyle = readonly ? 'opacity:0.4;cursor:not-allowed;' : '';
     const roAttr  = readonly ? 'readonly' : '';
     return `
         <div>
@@ -372,22 +375,23 @@ function _inputEdit(id, label, value, type = 'text', readonly = false) {
 }
 
 async function guardarModificacionPerfil() {
-    // 2. Extraemos todos los campos (ahora enviamos 'genero' como texto, como pide OpenAPI)
+    const idGeneroObtenido = parseInt(document.getElementById('mod-genero')?.value);
+
+    // Payload EXACTO como lo pide req.body en clienteController.js
     const payload = {
+        username:         document.getElementById('mod-username')?.value.trim(),
         nombre:           document.getElementById('mod-nombre')?.value.trim(),
         apellido:         document.getElementById('mod-apellido')?.value.trim(),
-        username:         document.getElementById('mod-username')?.value.trim(),
         email:            document.getElementById('mod-email')?.value.trim(),
-        telefono:         document.getElementById('mod-telefono')?.value.trim(),
         fecha_nacimiento: document.getElementById('mod-nacimiento')?.value || null,
-        dni:              datosPerfilGlobal.dni, // readonly — no se modifica
-        genero:           document.getElementById('mod-genero')?.value || null, // CORREGIDO
+        dni:              datosPerfilGlobal.dni, // Re-enviamos tal cual
+        telefono:         document.getElementById('mod-telefono')?.value.trim(),
+        id_genero:        idGeneroObtenido ? idGeneroObtenido : (datosPerfilGlobal.id_genero || null),
+        id_nacionalidad:  datosPerfilGlobal.id_nacionalidad || null, // Se re-envía para no borrarla
         calle:            document.getElementById('mod-calle')?.value.trim(),
         numero:           document.getElementById('mod-numero')?.value.trim(),
-        localidad:        document.getElementById('mod-localidad')?.value.trim(),
-        provincia:        document.getElementById('mod-provincia')?.value.trim(),
         codigo_postal:    document.getElementById('mod-cp')?.value.trim(),
-        nacionalidad:     datosPerfilGlobal.nacionalidad || null
+        id_localidad:     datosPerfilGlobal.id_localidad || null // Se re-envía intacto
     };
 
     const errorEl = document.getElementById('mod-error');
@@ -415,7 +419,7 @@ async function guardarModificacionPerfil() {
             throw new Error(err.error || `Error ${res.status}`);
         }
 
-        // 3. Volvemos a pedir los datos a la DB para actualizar todo el perfil visual
+        // Recargar perfil
         await verificarSesionYPerfil();
 
         Swal.close();
@@ -490,7 +494,6 @@ function cerrarSesion() {
     }).then(async (result) => {
         if (!result.isConfirmed) return;
 
-        
         try {
             await fetch(`${API}/logout`, { method: 'POST', credentials: 'include' });
         } catch {}
