@@ -827,3 +827,25 @@ input[type="file"].form-control {
   pointer-events: auto;
   transform: translateY(0);
 }
+
+/* Estilo personalizado para botones de Gol Ahora */
+.btn-sports {
+  background-color: #00C16E !important; /* El verde característico */
+  border-color: #00C16E !important;
+  color: #071524 !important; /* Texto oscuro para máxima legibilidad */
+  transition: all 0.3s ease;
+}
+
+/* Efecto al pasar el mouse por encima (hover) */
+.btn-sports:hover {
+  background-color: #00e683 !important; /* Un verde más claro/brillante */
+  border-color: #00e683 !important;
+  color: #071524 !important;
+  transform: translateY(-2px); /* Un pequeño salto hacia arriba */
+  box-shadow: 0 4px 12px rgba(0, 193, 110, 0.3) !important;
+}
+
+/* Efecto al hacer clic */
+.btn-sports:active {
+  transform: translateY(0);
+}

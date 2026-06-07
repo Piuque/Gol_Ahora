@@ -51,76 +51,54 @@ async function cargarCanchasFiltradas(idTipoCancha) {
     }
 }
 
+// Reemplaza SOLO la función renderizarTarjetas en tu js/listarCanchasCliente.js
+
 function renderizarTarjetas(canchas) {
     const contenedor = document.getElementById('contenedor-canchas');
     contenedor.innerHTML = '';
 
-    if (!canchas || canchas.length === 0) {
+    const canchasValidas = canchas.filter(c => c && (c.id !== undefined || c.id_cancha !== undefined));
+    if (canchasValidas.length === 0) {
         document.getElementById('badge-categoria').textContent = 'Sin resultados';
-        contenedor.innerHTML = `
-            <div class="w-100 text-center text-light-50 py-5">
-                <i class="fa-regular fa-folder-open fa-3x mb-3 opacity-50"></i>
-                <p>Actualmente no hay canchas configuradas para este formato.</p>
-                <a href="listarTiposCanchaCliente.html" class="btn btn-sm btn-outline-light mt-2">Elegir otra modalidad</a>
-            </div>`;
+        contenedor.innerHTML = `<div class="w-100 text-center text-light-50 py-5"><p>No hay canchas configuradas para este formato.</p></div>`;
         return;
     }
 
-    // Actualizamos el badge leyendo el JSON exacto (tipo_cancha)
-    document.getElementById('badge-categoria').textContent = canchas[0].tipo_cancha || 'Modalidad Seleccionada';
+    document.getElementById('badge-categoria').textContent = canchasValidas[0].tipo_cancha || 'Modalidad';
 
-    canchas.forEach(cancha => {
+    // Recuperamos la imagen del Tipo de Cancha guardada en el Paso 1
+    const imagenHeredada = sessionStorage.getItem('imagen_tipo_cancha');
+    const imgFallback = 'https://images.unsplash.com/photo-1518605368461-1ee7c514baf1?q=80&w=800&auto=format&fit=crop';
 
-        // ==========================================
-        // SOLUCIÓN PARA LA CARGA DE LA IMAGEN
-        // ==========================================
-        let imagenUrl = cancha.imagen_url;
+    canchasValidas.forEach(cancha => {
+        // Ignoramos lo que mande la API y forzamos la imagen heredada del Paso 1
+        const imgFinal = imagenHeredada || imgFallback;
 
-        // Si la URL arranca con "/" significa que es relativa. Le concatenamos la URL de Render.
-        if (imagenUrl && imagenUrl.startsWith('/')) {
-            imagenUrl = API + imagenUrl;
-        }
-        // Si viene vacía, nula o dice "string" (por culpa del Swagger), usamos la imagen default.
-        else if (!imagenUrl || imagenUrl === "string") {
-            imagenUrl = 'https://images.unsplash.com/photo-1518605368461-1ee7c514baf1?q=80&w=800&auto=format&fit=crop';
-        }
-        // ==========================================
+        const nombreSeguro = (cancha.nombre || 'Cancha').replace(/"/g, '&quot;');
+        const formatoSeguro = (cancha.tipo_cancha || 'Formato Estándar').replace(/"/g, '&quot;');
 
-        // Mapeo seguro del precio basado en tu JSON
-        const precioNumero = parseFloat(cancha.precio_hora_reserva) || 0;
-        const precioFormateado = new Intl.NumberFormat('es-AR', {
-            style: 'currency', currency: 'ARS', minimumFractionDigits: 0
-        }).format(precioNumero);
+        const precioVal = cancha.precio_hora_reserva !== undefined ? cancha.precio_hora_reserva : cancha.precio;
+        const idReal = cancha.id_cancha || cancha.id;
+        const precioFormateado = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(parseFloat(precioVal) || 0);
 
         const cardHTML = `
-            <div class="cancha-card" onclick="avanzarPaso(${cancha.id})">
-                
+            <div class="cancha-card" onclick="avanzarPaso(${idReal})">
                 <div class="img-wrapper">
-                    <img src="${imagenUrl}" alt="${cancha.nombre}" onerror="this.src='https://images.unsplash.com/photo-1518605368461-1ee7c514baf1?q=80&w=800&auto=format&fit=crop'">
+                    <img src="${imgFinal}" alt="${nombreSeguro}" onerror="this.onerror=null; this.src='${imgFallback}'">
                     <div class="img-overlay"></div>
                 </div>
-                
                 <div class="p-4 d-flex flex-column flex-grow-1">
-                    
-                    <h5 class="fw-bold text-white mb-1" style="font-size: 1.15rem; line-height: 1.3;">${cancha.nombre}</h5>
-                    <p class="text-light-50 small mb-4"><i class="fa-solid fa-layer-group text-sports me-2"></i>Formato: ${cancha.tipo_cancha}</p>
-                    
+                    <h5 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">${nombreSeguro}</h5>
+                    <p class="text-light-50 small mb-4"><i class="fa-solid fa-layer-group text-sports me-2"></i>Formato: ${formatoSeguro}</p>
                     <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex flex-column gap-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-light-50 small">Reserva (1 hora)</span>
-                            <span class="precio-badge">
-                                ${precioFormateado}
-                            </span>
+                            <span class="text-light-50 small">Reserva por turno</span>
+                            <span class="precio-badge">${precioFormateado}</span>
                         </div>
-                        
-                        <button class="btn btn-sports w-100 fw-bold py-2 shadow-sm">
-                            Elegir Cancha <i class="fa-solid fa-arrow-right ms-1"></i>
-                        </button>
+                        <button class="btn btn-sports w-100 fw-bold py-2 shadow-sm">Elegir Cancha <i class="fa-solid fa-arrow-right ms-1"></i></button>
                     </div>
-
                 </div>
-            </div>
-        `;
+            </div>`;
         contenedor.innerHTML += cardHTML;
     });
 }
