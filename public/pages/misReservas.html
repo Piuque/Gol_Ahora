@@ -95,9 +95,25 @@
         </a>
     </div>
 
-    <p class="text-light-50 small mb-2 text-center text-md-start">
-        <i class="fa-solid fa-arrows-left-right me-2 text-sports"></i>Deslizá para ver todos tus turnos
-    </p>
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mb-3">
+        <p class="text-light-50 small mb-0">
+            <i class="fa-solid fa-arrows-left-right me-2 text-sports"></i>Deslizá para ver todos tus turnos
+        </p>
+        <div class="d-flex gap-2" id="filtros-reservas">
+            <button class="btn btn-sm fw-bold filtro-btn active" data-filtro="todas"
+                    style="background:rgba(0,193,110,0.15);border:1px solid rgba(0,193,110,0.4);color:#00C16E;border-radius:20px;padding:5px 16px;">
+                Todas
+            </button>
+            <button class="btn btn-sm fw-bold filtro-btn" data-filtro="Pendiente"
+                    style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.25);color:#ffc107;border-radius:20px;padding:5px 16px;">
+                Pendientes
+            </button>
+            <button class="btn btn-sm fw-bold filtro-btn" data-filtro="Confirmada"
+                    style="background:rgba(25,135,84,0.08);border:1px solid rgba(25,135,84,0.25);color:#198754;border-radius:20px;padding:5px 16px;">
+                Confirmadas
+            </button>
+        </div>
+    </div>
 
     <div id="contenedor-reservas" class="scroll-horizontal">
         <div class="w-100 text-center py-5">
