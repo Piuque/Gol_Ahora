@@ -1037,7 +1037,7 @@ const listarLigas = async (req, res) => {
              e.estado
       FROM ligas l
       LEFT JOIN usuarios u ON l.id_usuario_tutor = u.id_usuario
-      LEFT JOIN estados e ON l.id_estado = e.id_estado
+      LEFT JOIN estado_partidos e ON l.id_estado = e.id_estado_partido
       ORDER BY l.fecha_inicio DESC
     `;
     const rows = await db.query.all(sql);
@@ -1058,7 +1058,7 @@ const obtenerLiga = async (req, res) => {
              e.estado
       FROM ligas l
       LEFT JOIN usuarios u ON l.id_usuario_tutor = u.id_usuario
-      LEFT JOIN estados e ON l.id_estado = e.id_estado
+      LEFT JOIN estado_partidos e ON l.id_estado = e.id_estado_partido
       WHERE l.id_liga = $1
     `, [id]);
     if (!liga) return res.status(404).json({ error: 'Liga no encontrada' });
@@ -1188,7 +1188,7 @@ const listarTorneos = async (req, res) => {
              e.estado
       FROM torneos t
       LEFT JOIN usuarios u ON t.id_usuario_tutor = u.id_usuario
-      LEFT JOIN estados e ON t.id_estado = e.id_estado
+      LEFT JOIN estado_partidos e ON t.id_estado = e.id_estado_partido
       ORDER BY t.fecha_inicio DESC
     `;
     const rows = await db.query.all(sql);
@@ -1209,7 +1209,7 @@ const obtenerTorneo = async (req, res) => {
              e.estado
       FROM torneos t
       LEFT JOIN usuarios u ON t.id_usuario_tutor = u.id_usuario
-      LEFT JOIN estados e ON t.id_estado = e.id_estado
+      LEFT JOIN estado_partidos e ON t.id_estado = e.id_estado_partido
       WHERE t.id_torneo = $1
     `, [id]);
     if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado' });
