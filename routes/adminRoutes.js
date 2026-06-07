@@ -44,6 +44,10 @@ router.post('/ligas', adminController.crearLiga);
 
 // Reportes agregados
 router.get('/reportes/ingresos', adminController.reporteFinanciero);
+router.get('/reportes/canchas', adminController.reporteCanchas);
+router.get('/reportes/reservas', adminController.reporteReservas);
+router.get('/reportes/clases', adminController.reporteClases);
+router.get('/reportes/entrenamientos', adminController.reporteEntrenamientos);
 
 //Administradores
 router.get('/administradores', adminController.listarAdministradores);
@@ -83,6 +87,7 @@ router.put('/clases/:id', adminController.modificarClase);
 router.delete('/clases/:id', adminController.eliminarClase);
 router.post('/clases/asignacion-particular', adminController.asignarClaseParticular);
 router.post('/clases/:id/asistencia', adminController.registrarAsistenciaClase);
+router.get('/clases/:id/asistencias', adminController.obtenerAsistenciasClase);
 
 // Entrenamientos
 router.post('/entrenamientos', adminController.crearEntrenamiento);
@@ -92,6 +97,7 @@ router.put('/entrenamientos/:id', adminController.modificarEntrenamiento);
 router.delete('/entrenamientos/:id', adminController.eliminarEntrenamiento);
 router.post('/entrenamientos/asignacion-particular', adminController.asignarEntrenamientoParticular);
 router.post('/entrenamientos/:id/asistencia', adminController.registrarAsistenciaEntrenamiento);
+router.get('/entrenamientos/:id/asistencias', adminController.obtenerAsistenciasEntrenamiento);
 
 // Ligas
 router.get('/ligas', adminController.listarLigas);
