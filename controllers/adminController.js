@@ -145,7 +145,7 @@ const eliminarCliente = async (req, res) => {
 const registrarUsuarioPorAdmin = async (req, res) => {
   const { 
     username, user_level, nombre, apellido, email, password, fecha_nacimiento, dni, telefono,
-    calle, numero, codigo_postal, localidad
+    calle, numero, codigo_postal, localidad, genero, nacionalidad
   } = req.body;
 
   const rolesValidos = ['administrador', 'profesor', 'entrenador', 'cliente'];
@@ -180,7 +180,45 @@ const registrarUsuarioPorAdmin = async (req, res) => {
       }
     }
 
-    // 2. Insertar la dirección
+    // 2. Resolver el id_genero de la tabla generos mediante el string 'genero'
+    let idGenero = 1;
+    if (genero) {
+      const genName = genero.trim();
+      const existingGen = await db.query.get(
+        'SELECT id_genero FROM generos WHERE LOWER(genero) = LOWER($1)',
+        [genName]
+      );
+      if (existingGen) {
+        idGenero = existingGen.id_genero;
+      } else {
+        const insertGen = await db.pool.query(
+          'INSERT INTO generos (genero) VALUES ($1) RETURNING id_genero',
+          [genName]
+        );
+        idGenero = insertGen.rows[0].id_genero;
+      }
+    }
+
+    // 3. Resolver el id_nacionalidad de la tabla paises mediante el string 'nacionalidad'
+    let idNacionalidad = 1;
+    if (nacionalidad) {
+      const nacName = nacionalidad.trim();
+      const existingPais = await db.query.get(
+        'SELECT id_pais FROM paises WHERE LOWER(nombre) = LOWER($1)',
+        [nacName]
+      );
+      if (existingPais) {
+        idNacionalidad = existingPais.id_pais;
+      } else {
+        const insertPais = await db.pool.query(
+          'INSERT INTO paises (nombre) VALUES ($1) RETURNING id_pais',
+          [nacName]
+        );
+        idNacionalidad = insertPais.rows[0].id_pais;
+      }
+    }
+
+    // 4. Insertar la dirección
     const dirSql = `
       INSERT INTO direcciones (calle, numero, codigo_postal, id_localidad) 
       VALUES ($1, $2, $3, $4) 
@@ -194,12 +232,12 @@ const registrarUsuarioPorAdmin = async (req, res) => {
     ]);
     const idDireccion = dirResult.rows[0].id_direccion;
 
-    // 3. Insertar/registrar al usuario con el rol elegido
+    // 5. Insertar/registrar al usuario con el rol elegido
     const userSql = `
       INSERT INTO usuarios (
         username, user_level, nombre, apellido, email, password, 
         fecha_nacimiento, dni, telefono, id_direccion, id_genero, id_nacionalidad, id_club
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1, 1, 1)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 1)
       RETURNING id_usuario, username, nombre, apellido, email, user_level
     `;
     const insertResult = await db.query.get(userSql, [
@@ -208,11 +246,13 @@ const registrarUsuarioPorAdmin = async (req, res) => {
       nombre,
       apellido,
       email,
-      password || 'temp_pass',
+      password || 'Unaj2026@golahora',
       fecha_nacimiento || '1985-01-01',
       dni || `DNI_${Date.now()}`,
       telefono || '-',
-      idDireccion
+      idDireccion,
+      idGenero,
+      idNacionalidad
     ]);
 
     await db.pool.query('COMMIT');
@@ -223,6 +263,12 @@ const registrarUsuarioPorAdmin = async (req, res) => {
     });
   } catch (err) {
     await db.pool.query('ROLLBACK');
+    if (err.code === '23505') {
+      return res.status(400).json({ 
+        error: 'Datos duplicados', 
+        details: 'El username, email o DNI ya se encuentra registrado.' 
+      });
+    }
     res.status(500).json({ error: 'Error al registrar el usuario', message: err.message });
   }
 };
@@ -239,7 +285,7 @@ const registrarProfesor = async (req, res) => {
       RETURNING id_usuario
     `;
     const result = await db.query.run(sql, [
-      username || `prof_${Date.now()}`, nombre, apellido, email, password || 'temp_pass',
+      username || `prof_${Date.now()}`, nombre, apellido, email, password || 'Unaj2026@golahora',
       fecha_nacimiento || '1985-01-01', dni, telefono || '-'
     ]);
     res.status(201).json({ message: 'Profesor registrado', id: result.id });
@@ -270,7 +316,7 @@ const registrarEntrenador = async (req, res) => {
       RETURNING id_usuario
     `;
     const result = await db.query.run(sql, [
-      username || `trainer_${Date.now()}`, nombre, apellido, email, password || 'temp_pass',
+      username || `trainer_${Date.now()}`, nombre, apellido, email, password || 'Unaj2026@golahora',
       fecha_nacimiento || '1985-01-01', dni, telefono || '-'
     ]);
     res.status(201).json({ message: 'Entrenador registrado', id: result.id });
