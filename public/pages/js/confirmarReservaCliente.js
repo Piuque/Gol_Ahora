@@ -1,5 +1,5 @@
 /* ==========================================================================
-   GOL AHORA — confirmarReserva.js (Integración DB Métodos de Pago)
+   GOL AHORA — confirmarReservaCliente.js (Payload exacto de API)
    ========================================================================== */
 
 const API = "https://gol-ahora.onrender.com";
@@ -7,6 +7,9 @@ const API = "https://gol-ahora.onrender.com";
 let idCancha = null;
 let fecha = null;
 let hora = null;
+let duracionCanchaMinutos = 60; // Para calcular horaFin
+let idClienteReal = 0; // Se obtiene del perfil
+
 let idMetodoSeleccionado = null;
 let nombreMetodoSeleccionado = "";
 
@@ -24,12 +27,38 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('resumen-fecha').textContent = cambiarFormatoFecha(fecha);
     document.getElementById('resumen-hora').textContent = `${hora} hs`;
 
+    // Disparamos las llamadas al servidor
+    obtenerPerfilCliente();
     obtenerDetallesResumen(idCancha);
-    cargarMetodosDePago(); // Función nueva
+    cargarMetodosDePago();
 
     document.getElementById('btn-finalizar').addEventListener('click', procesarReservaFinal);
 });
 
+// ==========================================
+// OBTENER ID DEL CLIENTE EN SESIÓN
+// ==========================================
+async function obtenerPerfilCliente() {
+    try {
+        const response = await fetch(`${API}/api/cliente/perfil`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const perfil = await response.json();
+            // Nos aseguramos de tomar el ID ya sea que venga como 'id' o 'id_usuario'
+            idClienteReal = perfil.id || perfil.id_usuario || 0;
+        }
+    } catch (error) {
+        console.error("Error obteniendo perfil del cliente:", error);
+    }
+}
+
+// ==========================================
+// OBTENER DETALLES DE CANCHA (Para precio y duracion)
+// ==========================================
 async function obtenerDetallesResumen(id) {
     try {
         const response = await fetch(`${API}/api/cliente/canchas/${id}`, {
@@ -45,6 +74,10 @@ async function obtenerDetallesResumen(id) {
 
         if (cancha) {
             document.getElementById('resumen-cancha').textContent = cancha.nombre || `Cancha N° ${id}`;
+
+            // Guardamos la duración para calcular horaFin
+            duracionCanchaMinutos = cancha.duracion_min || 60;
+
             const precio = parseFloat(cancha.precio_hora_reserva) || 0;
             document.getElementById('resumen-total').textContent = new Intl.NumberFormat('es-AR', {
                 style: 'currency', currency: 'ARS', minimumFractionDigits: 0
@@ -56,14 +89,13 @@ async function obtenerDetallesResumen(id) {
 }
 
 // ==========================================
-// CARGAR MÉTODOS DE PAGO DESDE LA BD
+// CARGAR MÉTODOS DE PAGO
 // ==========================================
 async function cargarMetodosDePago() {
     const contenedor = document.getElementById('contenedor-metodos');
     let metodosBD = [];
 
     try {
-        // Asumimos que tienes una ruta para traer métodos de pago (ej: /api/cliente/metodos_pago)
         const response = await fetch(`${API}/api/cliente/metodos_pago`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
@@ -73,11 +105,10 @@ async function cargarMetodosDePago() {
         if (response.ok) {
             metodosBD = await response.json();
         } else {
-            throw new Error("Endpoint no disponible aún, usando backup");
+            throw new Error("Ruta no disponible");
         }
     } catch (error) {
-        console.warn("Usando métodos de pago por defecto (fallback)", error.message);
-        // Fallback seguro si la ruta de métodos de pago aún no está desarrollada en backend
+        // Fallback exacto de la base de datos
         metodosBD = [
             { id_metodo_pago: 1, nombre: 'Efectivo', icono: 'fa-money-bill-wave' },
             { id_metodo_pago: 2, nombre: 'Tarjeta de Crédito', icono: 'fa-credit-card' },
@@ -94,10 +125,8 @@ function renderizarMetodosDePago(metodos) {
     const contenedor = document.getElementById('contenedor-metodos');
     contenedor.innerHTML = '';
 
-    // En pantallas chicas usamos col-6 (2 por fila), pero para 5 elementos, podemos usar col-4
     metodos.forEach(metodo => {
-        // Icono por defecto por si el backend no lo envía
-        const iconClass = metodo.icono || asignarIconoSegunNombre(metodo.nombre);
+        let iconClass = asignarIconoSegunNombre(metodo.nombre);
 
         const div = document.createElement('div');
         div.className = 'col-6 col-sm-4 col-md-4';
@@ -115,25 +144,19 @@ function renderizarMetodosDePago(metodos) {
 function asignarIconoSegunNombre(nombre) {
     const n = nombre.toLowerCase();
     if (n.includes('efectivo')) return 'fa-money-bill-wave';
-    if (n.includes('crédito') || n.includes('credito')) return 'fa-credit-card';
-    if (n.includes('débito') || n.includes('debito')) return 'fa-credit-card';
+    if (n.includes('crédito') || n.includes('credito') || n.includes('débito') || n.includes('debito')) return 'fa-credit-card';
     if (n.includes('transferencia')) return 'fa-money-bill-transfer';
     if (n.includes('mercado') || n.includes('mp')) return 'fa-handshake';
     return 'fa-wallet';
 }
 
-// ==========================================
-// CONTROLADOR INTERACTIVO DE PAGO
-// ==========================================
 window.seleccionarMetodo = function(idMetodo, nombreMetodo) {
     idMetodoSeleccionado = idMetodo;
     nombreMetodoSeleccionado = nombreMetodo.toLowerCase();
 
-    // Resetear diseño de selección
     document.querySelectorAll('.metodo-pago-card').forEach(card => card.classList.remove('selected'));
     document.getElementById(`metodo-${idMetodo}`).classList.add('selected');
 
-    // Resetear formularios visibles
     document.getElementById('wrapper-tarjeta').classList.add('d-none');
     document.getElementById('wrapper-efectivo').classList.add('d-none');
     document.getElementById('wrapper-transferencia').classList.add('d-none');
@@ -142,7 +165,6 @@ window.seleccionarMetodo = function(idMetodo, nombreMetodo) {
     const btnFinalizar = document.getElementById('btn-finalizar');
     btnFinalizar.disabled = false;
 
-    // Mostrar UI específica
     if (nombreMetodoSeleccionado.includes('efectivo')) {
         document.getElementById('wrapper-efectivo').classList.remove('d-none');
         btnFinalizar.innerHTML = 'Solicitar Turno <i class="fa-solid fa-paper-plane ms-2"></i>';
@@ -156,10 +178,29 @@ window.seleccionarMetodo = function(idMetodo, nombreMetodo) {
         btnFinalizar.innerHTML = 'Pagar en Mercado Pago <i class="fa-solid fa-arrow-up-right-from-square ms-2"></i>';
     }
     else {
-        // Tarjetas de Crédito y Débito
         document.getElementById('wrapper-tarjeta').classList.remove('d-none');
         btnFinalizar.innerHTML = 'Procesar Pago <i class="fa-solid fa-shield-halved ms-2"></i>';
     }
+}
+
+// ==========================================
+// CALCULAR HORA DE FINALIZACIÓN
+// ==========================================
+function calcularHoraFin(horaInicioStr, minutosDuracion) {
+    let partes = horaInicioStr.split(':');
+    let h = parseInt(partes[0]);
+    let m = parseInt(partes[1] || 0);
+
+    m += minutosDuracion;
+    h += Math.floor(m / 60);
+    m = m % 60;
+
+    // Si llega a las 24:00, la base de datos (Postgres) asume '23:59:59' para evitar conflictos de días
+    if (h === 24) {
+        return "23:59:59";
+    }
+
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
 }
 
 // ==========================================
@@ -168,13 +209,20 @@ window.seleccionarMetodo = function(idMetodo, nombreMetodo) {
 async function procesarReservaFinal() {
     if (!idMetodoSeleccionado) return;
 
-    // Cuerpo esperado por Postgres y tu controlador
+    // Calculamos la hora de fin basándonos en la duración
+    const horaFinCompleta = calcularHoraFin(hora, duracionCanchaMinutos);
+    const horaInicioCompleta = `${hora.length === 5 ? hora : hora.padStart(5, '0')}:00`;
+
+    // PAYLOAD EXACTO COMO PIDE TU BACKEND
     const payload = {
-        id_cancha: parseInt(idCancha),
+        idCliente: idClienteReal,
+        idCancha: parseInt(idCancha),
         fecha: fecha,
-        hora_inicio: `${hora}:00`,
-        id_metodo_pago: parseInt(idMetodoSeleccionado)
+        horaInicio: horaInicioCompleta,
+        horaFin: horaFinCompleta
     };
+
+    console.log("Enviando JSON:", payload);
 
     const btn = document.getElementById('btn-finalizar');
     const textoOriginal = btn.innerHTML;
@@ -200,7 +248,7 @@ async function procesarReservaFinal() {
             throw new Error(data.error || data.details || "No se pudo procesar la reserva.");
         }
 
-        // MENSAJES DE ÉXITO DINÁMICOS SEGÚN EL MÉTODO
+        // Si la reserva fue exitosa, validamos qué método era para el cartel final
         let tituloSwal = '¡Reserva Confirmada!';
         let textoSwal = 'Tu pago online fue procesado y tu turno ya está asegurado.';
 
