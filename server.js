@@ -25,8 +25,8 @@ app.use('/img', express.static(path.join(__dirname, 'public/pages/img')));
 app.get(['/admin', '/Admin'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/InterfazAdministrador.html'));
 });
-app.get(['/admin/verCanchas'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/VerCanchas.html'));
+app.get(['/admin/verCanchas', '/admin/VerCanchas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/verCanchas.html'));
 });
 app.get(['/admin/ListarTiposCanchas'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/ListarTiposCanchas.html'));
