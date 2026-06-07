@@ -133,8 +133,11 @@
             </div>
 
             <div class="mb-4">
-                <label class="form-label small fw-bold text-white">Link del archivo de certificación</label>
-                <input type="text" class="form-control bg-football-dark border-secondary text-white" id="link_archivo" required placeholder="https://drive.google.com/...">
+                <label class="form-label small fw-bold text-white">
+                    Adjuntar Comprobante Digital <span class="text-danger">*</span>
+                    <span class="text-light-50 ms-1">(PDF o Imagen)</span>
+                </label>
+                <input type="file" class="form-control bg-football-dark text-white border-secondary shadow-none" id="cert-archivo" accept="image/*,application/pdf" required>
             </div>
 
             <button type="submit" class="btn w-100 py-2 fw-bold text-white" style="background-color: #00C16E !important;">
