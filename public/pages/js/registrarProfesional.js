@@ -49,7 +49,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         const user_level = document.getElementById("user_level").value;
         const matricula = document.getElementById("matricula").value;
         const fecha_caducidad = document.getElementById("fecha_caducidad").value;
-        const link_archivo = document.getElementById("link_archivo").value;
+        const fileInput = document.getElementById("cert-archivo");
+        const file = fileInput.files[0];
+
+        if (!file) {
+            await Swal.fire({ icon: 'error', title: 'Archivo faltante', text: 'Por favor, adjuntá el comprobante digital.', confirmButtonColor: '#00C16E' });
+            return;
+        }
 
         const hoy = new Date();
         hoy.setHours(0, 0, 0, 0);
@@ -75,62 +81,68 @@ document.addEventListener("DOMContentLoaded", async () => {
             telefono: document.getElementById("telefono").value,
         };
 
-        try {
-            const userId = localStorage.getItem("userId");
-            const endpoint = user_level === "10" ? "/admin/profesores" : "/admin/entrenadores";
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const link_archivo = reader.result;
 
-            const resUsuario = await fetch(endpoint, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-user-id": userId
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                    username: datos.email.split('@')[0],
-                    nombre: datos.nombre,
-                    apellido: datos.apellido,
-                    email: datos.email,
-                    password: "Unaj2026@golahora",
-                    dni: datos.dni,
-                    telefono: datos.telefono,
-                    fecha_nacimiento: datos.fecha_nacimiento
-                })
-            });
+            try {
+                const userId = localStorage.getItem("userId");
+                const endpoint = user_level === "10" ? "/admin/profesores" : "/admin/entrenadores";
 
-            const dataUsuario = await resUsuario.json();
+                const resUsuario = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-user-id": userId
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        username: datos.email.split('@')[0],
+                        nombre: datos.nombre,
+                        apellido: datos.apellido,
+                        email: datos.email,
+                        password: "Unaj2026@golahora",
+                        dni: datos.dni,
+                        telefono: datos.telefono,
+                        fecha_nacimiento: datos.fecha_nacimiento
+                    })
+                });
 
-            if (!resUsuario.ok) {
-                await Swal.fire({ icon: 'error', title: 'Error', text: dataUsuario.error || 'Error al registrar', confirmButtonColor: '#00C16E' });
-                return;
+                const dataUsuario = await resUsuario.json();
+
+                if (!resUsuario.ok) {
+                    await Swal.fire({ icon: 'error', title: 'Error', text: dataUsuario.error || 'Error al registrar', confirmButtonColor: '#00C16E' });
+                    return;
+                }
+
+                // Registrar certificacion
+                const idNuevoUsuario = dataUsuario.id;
+                const certEndpoint = user_level === "10" ? `/admin/profesores/${idNuevoUsuario}/certificaciones` : `/admin/entrenadores/${idNuevoUsuario}/certificaciones`;
+
+                await fetch(certEndpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-user-id": userId
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({ matricula, fecha_caducidad, link_archivo })
+                });
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Profesional registrado!',
+                    html: `El profesional fue registrado correctamente.<br><br>
+                           <b>Contrasena por defecto:</b><br>
+                           <code style="background:#0d1f33; color:#00C16E; padding:4px 8px; border-radius:4px;">Unaj2026@golahora</code>`,
+                    confirmButtonColor: '#00C16E'
+                });
+                document.getElementById("register-form-profesional").reset();
+
+            } catch (error) {
+                await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
             }
-
-            // Registrar certificacion
-            const idNuevoUsuario = dataUsuario.id;
-            const certEndpoint = user_level === "10" ? `/admin/profesores/${idNuevoUsuario}/certificaciones` : `/admin/entrenadores/${idNuevoUsuario}/certificaciones`;
-
-            await fetch(certEndpoint, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-user-id": userId
-                },
-                credentials: "include",
-                body: JSON.stringify({ matricula, fecha_caducidad, link_archivo })
-            });
-
-            await Swal.fire({
-                icon: 'success',
-                title: 'Profesional registrado!',
-                html: `El profesional fue registrado correctamente.<br><br>
-                       <b>Contrasena por defecto:</b><br>
-                       <code style="background:#0d1f33; color:#00C16E; padding:4px 8px; border-radius:4px;">Unaj2026@golahora</code>`,
-                confirmButtonColor: '#00C16E'
-            });
-            document.getElementById("register-form-profesional").reset();
-
-        } catch (error) {
-            await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
-        }
+        };
+        reader.readAsDataURL(file);
     });
 });
