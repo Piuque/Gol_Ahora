@@ -159,7 +159,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "x-user-id": id_usuario
                 },
                 credentials: "include",
-                body: JSON.stringify({ id_cancha, fecha, hora_inicio, hora_fin, id_metodo_pago })
+                body: JSON.stringify({
+                    idCliente: parseInt(id_usuario),
+                    idCancha: parseInt(id_cancha),
+                    fecha,
+                    horaInicio: hora_inicio,
+                    horaFin: hora_fin
+                })
             });
 
             const data = await res.json();
