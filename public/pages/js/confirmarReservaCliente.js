@@ -1,5 +1,5 @@
 /* ==========================================================================
-   GOL AHORA — confirmarReservaCliente.js (Payload exacto de API)
+   GOL AHORA — confirmarReservaCliente.js (Conectado al Controlador Real)
    ========================================================================== */
 
 const API = "https://gol-ahora.onrender.com";
@@ -7,8 +7,8 @@ const API = "https://gol-ahora.onrender.com";
 let idCancha = null;
 let fecha = null;
 let hora = null;
-let duracionCanchaMinutos = 60; // Para calcular horaFin
-let idClienteReal = 0; // Se obtiene del perfil
+let duracionCanchaMinutos = 60;
+let montoReserva = 0; // Agregamos variable para guardar el monto
 
 let idMetodoSeleccionado = null;
 let nombreMetodoSeleccionado = "";
@@ -27,8 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('resumen-fecha').textContent = cambiarFormatoFecha(fecha);
     document.getElementById('resumen-hora').textContent = `${hora} hs`;
 
-    // Disparamos las llamadas al servidor
-    obtenerPerfilCliente();
+    // Disparamos las llamadas
     obtenerDetallesResumen(idCancha);
     cargarMetodosDePago();
 
@@ -36,28 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// OBTENER ID DEL CLIENTE EN SESIÓN
-// ==========================================
-async function obtenerPerfilCliente() {
-    try {
-        const response = await fetch(`${API}/api/cliente/perfil`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
-            credentials: 'include'
-        });
-
-        if (response.ok) {
-            const perfil = await response.json();
-            // Nos aseguramos de tomar el ID ya sea que venga como 'id' o 'id_usuario'
-            idClienteReal = perfil.id || perfil.id_usuario || 0;
-        }
-    } catch (error) {
-        console.error("Error obteniendo perfil del cliente:", error);
-    }
-}
-
-// ==========================================
-// OBTENER DETALLES DE CANCHA (Para precio y duracion)
+// OBTENER DETALLES (Monto y Duración)
 // ==========================================
 async function obtenerDetallesResumen(id) {
     try {
@@ -74,14 +52,14 @@ async function obtenerDetallesResumen(id) {
 
         if (cancha) {
             document.getElementById('resumen-cancha').textContent = cancha.nombre || `Cancha N° ${id}`;
-
-            // Guardamos la duración para calcular horaFin
             duracionCanchaMinutos = cancha.duracion_min || 60;
 
-            const precio = parseFloat(cancha.precio_hora_reserva) || 0;
+            // Guardamos el precio en la variable global para mandarlo en el POST
+            montoReserva = parseFloat(cancha.precio_hora_reserva) || 0;
+
             document.getElementById('resumen-total').textContent = new Intl.NumberFormat('es-AR', {
                 style: 'currency', currency: 'ARS', minimumFractionDigits: 0
-            }).format(precio);
+            }).format(montoReserva);
         }
     } catch (error) {
         console.error("Error al montar el resumen:", error);
@@ -127,7 +105,6 @@ function renderizarMetodosDePago(metodos) {
 
     metodos.forEach(metodo => {
         let iconClass = asignarIconoSegunNombre(metodo.nombre);
-
         const div = document.createElement('div');
         div.className = 'col-6 col-sm-4 col-md-4';
 
@@ -195,11 +172,7 @@ function calcularHoraFin(horaInicioStr, minutosDuracion) {
     h += Math.floor(m / 60);
     m = m % 60;
 
-    // Si llega a las 24:00, la base de datos (Postgres) asume '23:59:59' para evitar conflictos de días
-    if (h === 24) {
-        return "23:59:59";
-    }
-
+    if (h === 24) return "23:59:59";
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
 }
 
@@ -209,20 +182,20 @@ function calcularHoraFin(horaInicioStr, minutosDuracion) {
 async function procesarReservaFinal() {
     if (!idMetodoSeleccionado) return;
 
-    // Calculamos la hora de fin basándonos en la duración
     const horaFinCompleta = calcularHoraFin(hora, duracionCanchaMinutos);
     const horaInicioCompleta = `${hora.length === 5 ? hora : hora.padStart(5, '0')}:00`;
 
-    // PAYLOAD EXACTO COMO PIDE TU BACKEND
+    // PAYLOAD EXACTO COMO PIDE TU CONTROLADOR (clienteController.js)
     const payload = {
-        idCliente: idClienteReal,
-        idCancha: parseInt(idCancha),
+        id_cancha: parseInt(idCancha),
         fecha: fecha,
-        horaInicio: horaInicioCompleta,
-        horaFin: horaFinCompleta
+        hora_inicio: horaInicioCompleta,
+        hora_fin: horaFinCompleta,
+        id_metodo_de_pago: parseInt(idMetodoSeleccionado),
+        monto: montoReserva
     };
 
-    console.log("Enviando JSON:", payload);
+    console.log("Enviando Payload Real al Backend:", payload);
 
     const btn = document.getElementById('btn-finalizar');
     const textoOriginal = btn.innerHTML;
@@ -248,7 +221,6 @@ async function procesarReservaFinal() {
             throw new Error(data.error || data.details || "No se pudo procesar la reserva.");
         }
 
-        // Si la reserva fue exitosa, validamos qué método era para el cartel final
         let tituloSwal = '¡Reserva Confirmada!';
         let textoSwal = 'Tu pago online fue procesado y tu turno ya está asegurado.';
 
