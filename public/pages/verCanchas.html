@@ -56,6 +56,12 @@
         }
         .info-label { color: rgba(255,255,255,0.5); }
         .info-value { color: white; font-weight: 500; }
+        .search-input {
+            background-color: #0d1f33 !important;
+            border-color: rgba(255,255,255,0.15) !important;
+            color: white !important;
+        }
+        .search-input::placeholder { color: rgba(255,255,255,0.35) !important; }
     </style>
 </head>
 <body class="bg-football-dark px-3 py-5">
@@ -69,6 +75,13 @@
             <a href="/admin" style="color: #00C16E;" class="fw-bold text-decoration-none small">
                 <i class="fa-solid fa-arrow-left me-1"></i> Volver al panel
             </a>
+        </div>
+
+        <div class="mb-3 d-flex gap-2">
+            <input type="text" id="buscador" class="form-control search-input" placeholder="Buscar cancha...">
+            <select id="selector-tipo" class="form-control search-input" style="max-width: 200px;">
+                <option value="">Todos los tipos</option>
+            </select>
         </div>
 
         <div id="contenedor-canchas" class="row g-3">

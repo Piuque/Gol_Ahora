@@ -68,7 +68,7 @@ function verDetalle(t) {
         <div class="info-row"><span class="info-label">Duracion max</span><span class="info-value">${t.duracion_max} min</span></div>
         <div class="info-row"><span class="info-label">Medidas</span><span class="info-value">${t.largo}m x ${t.ancho}m</span></div>
         <div class="d-flex gap-2 mt-3">
-            <button onclick="abrirModificar(${t.id}, '${t.tipo_cancha}', ${t.duracion_min}, ${t.duracion_max}, ${t.capacidad})"
+            <button onclick="abrirModificar(${t.id}, '${t.tipo_cancha}', ${t.duracion_min}, ${t.duracion_max}, ${t.capacidad}, ${t.largo}, ${t.ancho})"
                 class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #0d6efd;">
                 <i class="fa-solid fa-pen me-1"></i> Modificar
             </button>
@@ -82,7 +82,7 @@ function verDetalle(t) {
     modal.show();
 }
 
-async function abrirModificar(id, tipo_cancha, duracion_min, duracion_max, capacidad) {
+async function abrirModificar(id, tipo_cancha, duracion_min, duracion_max, capacidad, largo, ancho) {
     bootstrap.Modal.getInstance(document.getElementById("modalTipo")).hide();
     await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -92,6 +92,14 @@ async function abrirModificar(id, tipo_cancha, duracion_min, duracion_max, capac
             <div style="text-align:left; margin-bottom:8px;">
                 <label style="color:#555; font-size:0.85rem;">Tipo de cancha</label>
                 <input id="swal-tipo" class="swal2-input" value="${tipo_cancha}">
+            </div>
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Largo (metros)</label>
+                <input id="swal-largo" type="number" step="0.01" class="swal2-input" value="${largo}">
+            </div>
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Ancho (metros)</label>
+                <input id="swal-ancho" type="number" step="0.01" class="swal2-input" value="${ancho}">
             </div>
             <div style="text-align:left; margin-bottom:8px;">
                 <label style="color:#555; font-size:0.85rem;">Duracion minima (minutos)</label>
@@ -113,6 +121,8 @@ async function abrirModificar(id, tipo_cancha, duracion_min, duracion_max, capac
         focusConfirm: false,
         preConfirm: () => ({
             tipo_cancha: document.getElementById('swal-tipo').value,
+            largo: parseFloat(document.getElementById('swal-largo').value),
+            ancho: parseFloat(document.getElementById('swal-ancho').value),
             duracion_min: parseInt(document.getElementById('swal-duracion-min').value),
             duracion_max: parseInt(document.getElementById('swal-duracion-max').value),
             capacidad: parseInt(document.getElementById('swal-capacidad').value)
