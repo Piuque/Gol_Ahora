@@ -107,6 +107,8 @@ router.delete('/ligas/:id', adminController.eliminarLiga);
 router.post('/ligas/:id/fixture', adminController.generarFixture);
 router.post('/ligas/:id/inscripciones', adminController.inscribirEnLiga);
 router.put('/ligas/:id/partidos/:idPartido/resultado', adminController.registrarResultadoLiga);
+router.delete('/ligas/:id/equipos/:id_equipo', adminController.eliminarEquipoLiga);
+
 
 // Torneos
 router.post('/torneos', adminController.crearTorneo);

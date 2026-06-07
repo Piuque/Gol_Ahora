@@ -69,6 +69,9 @@ async function verDetalle(id) {
         const equiposHTML = l.equipos && l.equipos.length > 0 ? l.equipos.map(e => `
             <div class="d-flex justify-content-between align-items-center py-1" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
                 <span class="text-white small"><i class="fa-solid fa-shield-halved me-2" style="color:#00C16E"></i>${e.nombre}</span>
+                <button onclick="eliminarEquipoLiga(${e.id_equipo}, ${l.id})" class="btn btn-sm text-white py-0" style="background-color:#ef4444; font-size:0.75rem;">
+                    <i class="fa-solid fa-x"></i>
+                </button>
             </div>
         `).join('') : `<p class="text-light-50 small">Sin equipos inscriptos.</p>`;
 
@@ -378,6 +381,37 @@ async function registrarResultado(id_partido, tipo) {
             goles_visitante: parseInt(document.getElementById('swal-visitante').value)
         })
     });
+
+async function eliminarEquipoLiga(id_equipo, id_liga) {
+    const userId = localStorage.getItem("userId");
+    const confirm = await Swal.fire({
+        icon: 'warning',
+        title: 'Eliminar equipo?',
+        confirmButtonText: 'Si, eliminar',
+        confirmButtonColor: '#ef4444',
+        cancelButtonText: 'Cancelar',
+        showCancelButton: true
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+        const res = await fetch(`/admin/ligas/${id_liga}/equipos/${id_equipo}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'x-user-id': userId }
+        });
+        if (res.ok) {
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Equipo eliminado.', confirmButtonColor: '#00C16E' });
+            verDetalle(id_liga);
+        } else {
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al eliminar.', confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
 
     if (!formValues) return;
 

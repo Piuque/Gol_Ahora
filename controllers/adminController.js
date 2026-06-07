@@ -1750,6 +1750,20 @@ const reporteEntrenamientos = async (req, res) => {
   }
 };
 
+const eliminarEquipoLiga = async (req, res) => {
+  const { id, id_equipo } = req.params;
+  try {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM participacion_ligas WHERE id_liga = $1 AND id_equipo = $2', [id, id_equipo]);
+    await db.pool.query('DELETE FROM equipos WHERE id_equipo = $1', [id_equipo]);
+    await db.pool.query('COMMIT');
+    res.status(204).end();
+  } catch (err) {
+    await db.pool.query('ROLLBACK');
+    res.status(500).json({ error: 'Error al eliminar equipo', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -1833,4 +1847,5 @@ module.exports = {
   reporteReservas,
   reporteClases,
   reporteEntrenamientos,
+  eliminarEquipoLiga,
 };
