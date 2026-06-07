@@ -10,6 +10,31 @@
     <link rel="stylesheet" href="css/style.css">
 
     <style>
+        /* =========================================
+        Forzar estilo del Botón Verde (Nueva Reserva)
+        ========================================= */
+        .btn-sports {
+            background-color: #00C16E !important;
+            border-color: #00C16E !important;
+            color: #071524 !important; /* Texto oscuro para contrastar con el verde */
+            transition: all 0.3s ease;
+        }
+
+        /* Efecto al pasar el cursor (hover) para que "se prenda" */
+        .btn-sports:hover {
+            background-color: #00e683 !important; /* Un verde un poco más brillante */
+            border-color: #00e683 !important;
+            color: #071524 !important;
+            transform: translateY(-2px); /* Se levanta un poquito */
+            box-shadow: 0 6px 15px rgba(0, 193, 110, 0.4) !important; /* Brillo verde */
+        }
+
+        /* Efecto al hacer clic (active) */
+        .btn-sports:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0, 193, 110, 0.4) !important;
+        }
+
         /* Estructura Base */
         body {
             font-family: 'Poppins', sans-serif;

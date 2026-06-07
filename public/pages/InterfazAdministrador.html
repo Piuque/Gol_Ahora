@@ -215,7 +215,7 @@
         <!-- CONTENIDO PRINCIPAL -->
         <div class="container-fluid px-4 py-4 flex-grow-1" style="overflow-y:auto;" id="main-content">
 
-            <!-- Encabezado de sección -->
+            <!-- Encabezado -->
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-25 pb-3">
                 <div>
                     <h4 class="fw-bold text-white mb-1">Panel de Administración</h4>
@@ -229,6 +229,124 @@
                 </span>
             </div>
 
+            <div class="row g-4">
+
+                <!-- ================================================
+                     COLUMNA IZQUIERDA — Datos del admin + contadores
+                     ================================================ -->
+                <div class="col-lg-4 d-flex flex-column gap-3">
+
+                    <!-- Card datos del admin -->
+                    <div class="admin-dash-card">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                 style="width:52px;height:52px;font-size:1.1rem;flex-shrink:0;">
+                                <i class="fa-solid fa-user-shield"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-white" id="admin-nombre">Gol Ahora Club</div>
+                                <span style="font-size:0.68rem;color:var(--sports-green);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;">Administrador</span>
+                            </div>
+                        </div>
+                        <hr style="border-color:rgba(255,255,255,0.07);margin:0 0 12px 0;">
+                        <div class="admin-dato-row">
+                            <span class="admin-dato-label">Email</span>
+                            <span class="admin-dato-val" id="admin-email">—</span>
+                        </div>
+                        <div class="admin-dato-row">
+                            <span class="admin-dato-label">Teléfono</span>
+                            <span class="admin-dato-val" id="admin-telefono">—</span>
+                        </div>
+                        <div class="admin-dato-row">
+                            <span class="admin-dato-label">DNI</span>
+                            <span class="admin-dato-val" id="admin-dni">—</span>
+                        </div>
+                        <div class="admin-dato-row" style="border-bottom:none;">
+                            <span class="admin-dato-label">Estado</span>
+                            <span style="display:inline-block;background:rgba(0,193,110,0.1);border:1px solid rgba(0,193,110,0.3);border-radius:4px;padding:2px 10px;font-size:0.72rem;color:#00C16E;font-weight:600;">Activo</span>
+                        </div>
+                    </div>
+
+                    <!-- Contadores de pendientes -->
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="admin-counter-card" style="border-left:3px solid #f0c040;">
+                                <div class="admin-counter-num" id="cnt-certificaciones" style="color:#f0c040;">—</div>
+                                <div class="admin-counter-label">Certificaciones<br>pendientes</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="admin-counter-card" style="border-left:3px solid #f25c54;">
+                                <div class="admin-counter-num" id="cnt-bajas" style="color:#f25c54;">—</div>
+                                <div class="admin-counter-label">Solicitudes<br>de baja</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="admin-counter-card" style="border-left:3px solid var(--sports-green);">
+                                <div class="admin-counter-num" id="cnt-horarios" style="color:var(--sports-green);">—</div>
+                                <div class="admin-counter-label">Cambios de<br>horario</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="admin-counter-card" style="border-left:3px solid #6ea8fe;">
+                                <div class="admin-counter-num" id="cnt-alumnos" style="color:#6ea8fe;">—</div>
+                                <div class="admin-counter-label">Alumnos<br>a dar de baja</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ================================================
+                     COLUMNA DERECHA — Feed de notificaciones
+                     ================================================ -->
+                <div class="col-lg-8">
+                    <div class="admin-dash-card h-100 d-flex flex-column">
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-sports text-uppercase mb-0" style="font-size:0.75rem;letter-spacing:1px;">
+                                <i class="fa-solid fa-bell me-2"></i>Solicitudes Pendientes
+                            </h6>
+                            <button class="btn btn-xs border-0 px-2 py-1"
+                                    style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);font-size:0.72rem;border-radius:4px;"
+                                    onclick="CargarNotificaciones()">
+                                <i class="fa-solid fa-rotate-right me-1"></i>Actualizar
+                            </button>
+                        </div>
+
+                        <!-- Tabs de tipo de notificación -->
+                        <ul class="nav mb-3" id="notif-tabs" style="border-bottom:1px solid rgba(255,255,255,0.08);gap:4px;">
+                            <li>
+                                <button class="notif-tab-btn active" data-tab="certificaciones" onclick="FiltrarTab(this)">
+                                    <i class="fa-solid fa-graduation-cap me-1"></i>Certificaciones
+                                </button>
+                            </li>
+                            <li>
+                                <button class="notif-tab-btn" data-tab="bajas" onclick="FiltrarTab(this)">
+                                    <i class="fa-solid fa-user-xmark me-1"></i>Bajas
+                                </button>
+                            </li>
+                            <li>
+                                <button class="notif-tab-btn" data-tab="horarios" onclick="FiltrarTab(this)">
+                                    <i class="fa-solid fa-clock me-1"></i>Horarios
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Lista de notificaciones -->
+                        <div id="notif-feed" class="d-flex flex-column gap-2"
+                             style="overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:rgba(0,193,110,0.3) transparent;max-height:420px;">
+                            <!-- Inyectado por JS -->
+                            <div class="text-center py-5" style="color:var(--text-light-50);">
+                                <div class="spinner-border spinner-border-sm text-success mb-3 d-block mx-auto" role="status"></div>
+                                <span class="small">Cargando solicitudes...</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
@@ -242,45 +360,241 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Sidebar toggle
-    document.getElementById('menu-toggle')?.addEventListener('click', () => {
-        document.getElementById('wrapper').classList.toggle('toggled');
+
+    const API = "https://gol-ahora.onrender.com";
+
+    /* ── Init ── */
+    document.addEventListener('DOMContentLoaded', () => {
+        ActivarMenuToggle();
+        ActivarBackToTop();
+        MostrarFecha();
+        CargarDatosAdmin();
+        CargarNotificaciones();
     });
 
-    // Fecha en topbar
-    const fechaEl = document.getElementById('nav-fecha');
-    if (fechaEl) {
-        fechaEl.innerHTML = `<i class="fa-regular fa-calendar text-sports me-2"></i>${
+    /* ── Sidebar toggle ── */
+    function ActivarMenuToggle() {
+        document.getElementById('menu-toggle')?.addEventListener('click', () => {
+            document.getElementById('wrapper').classList.toggle('toggled');
+        });
+    }
+
+    /* ── Fecha topbar ── */
+    function MostrarFecha() {
+        const el = document.getElementById('nav-fecha');
+        if (!el) return;
+        el.innerHTML = `<i class="fa-regular fa-calendar text-sports me-2"></i>${
             new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
         }`;
     }
 
-    // Back to top
-    const mainContent = document.getElementById('main-content');
-    const backBtn     = document.getElementById('back-to-top');
-    mainContent?.addEventListener('scroll', () => {
-        backBtn?.classList.toggle('visible', mainContent.scrollTop > 200);
-    });
-    backBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
-        mainContent?.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    /* ── Back to top ── */
+    function ActivarBackToTop() {
+        const btn  = document.getElementById('back-to-top');
+        const main = document.getElementById('main-content');
+        if (!btn || !main) return;
+        main.addEventListener('scroll', () => btn.classList.toggle('visible', main.scrollTop > 200));
+        btn.addEventListener('click', e => { e.preventDefault(); main.scrollTo({ top: 0, behavior: 'smooth' }); });
+    }
 
-    // Cerrar sesión
-    function cerrarSesionAdmin() {
-        Swal.fire({
-            title: '¿Cerrar sesión?',
-            text: 'Serás redirigido al inicio de la aplicación.',
+    /* ── Datos del admin ── */
+    async function CargarDatosAdmin() {
+        try {
+            const res = await fetch(${API}/admin/perfil, { credentials: 'include' });
+            if (!res.ok) throw new Error();
+            const d = await res.json();
+            document.getElementById('admin-nombre').textContent   = ${d.nombre || ''} ${d.apellido || ''}.trim() || 'Gol Ahora Club';
+            document.getElementById('admin-email').textContent    = d.email    || '—';
+            document.getElementById('admin-telefono').textContent = d.telefono || '—';
+            document.getElementById('admin-dni').textContent      = d.dni      || '—';
+        } catch { /* mantiene valores por defecto */ }
+    }
+
+    /* ── Notificaciones ── */
+    // Estado global de notificaciones por tipo
+    let _notifs = { certificaciones: [], bajas: [], horarios: [] };
+    let _tabActiva = 'certificaciones';
+
+    async function CargarNotificaciones() {
+        MostrarSpinner();
+        try {
+            const [resCert, resBajas, resHorarios] = await Promise.all([
+                    fetch(${API}/admin/certificaciones/pendientes, { credentials: 'include' }),
+                fetch(${API}/admin/bajas/pendientes,           { credentials: 'include' }),
+            fetch(${API}/admin/horarios/pendientes,        { credentials: 'include' })
+        ]);
+
+            _notifs.certificaciones = resCert.ok    ? await resCert.json()    : [];
+            _notifs.bajas           = resBajas.ok   ? await resBajas.json()   : [];
+            _notifs.horarios        = resHorarios.ok ? await resHorarios.json(): [];
+
+        } catch {
+            _notifs = { certificaciones: [], bajas: [], horarios: [] };
+        }
+
+        // Actualizar contadores
+        _setText('cnt-certificaciones', _notifs.certificaciones.length || '0');
+        _setText('cnt-bajas',           (_notifs.bajas.filter(b => b.tipo === 'alumno') || _notifs.bajas).length || '0');
+        _setText('cnt-horarios',        _notifs.horarios.length || '0');
+        _setText('cnt-alumnos',         (_notifs.bajas.filter(b => b.tipo === 'alumno') || []).length || '0');
+
+        RenderizarFeed(_tabActiva);
+    }
+
+    function FiltrarTab(btn) {
+        document.querySelectorAll('.notif-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        _tabActiva = btn.dataset.tab;
+        RenderizarFeed(_tabActiva);
+    }
+
+    function RenderizarFeed(tab) {
+        const feed = document.getElementById('notif-feed');
+        if (!feed) return;
+
+        const lista = _notifs[tab] || [];
+
+        if (lista.length === 0) {
+            feed.innerHTML = `
+            <div class="text-center py-5" style="color:var(--text-light-50);">
+                <i class="fa-solid fa-circle-check fa-2x mb-3 d-block" style="color:var(--sports-green);opacity:0.4;"></i>
+                <span class="small">No hay solicitudes pendientes en esta categoría.</span>
+            </div>`;
+            return;
+        }
+
+        feed.innerHTML = lista.map(n => {
+            const config = _getNotifConfig(tab, n);
+            return `
+            <div class="notif-item" style="border-left:3px solid ${config.color};">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="d-flex align-items-start gap-2 flex-grow-1 min-w-0">
+                        <div class="notif-icon" style="background:${config.bg};color:${config.color};">
+                            <i class="${config.icon}"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="fw-semibold text-white small">${config.titulo}</div>
+                            <div class="text-truncate" style="font-size:0.78rem;color:var(--text-light-50);">${config.subtitulo}</div>
+                            ${n.fecha ? <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:2px;">${n.fecha}</div> : ''}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-1 flex-shrink-0">
+                        <button class="notif-btn-ok" onclick="AcceptarSolicitud('${tab}','${n.id}', this)" title="Aprobar">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        <button class="notif-btn-x" onclick="RechazarSolicitud('${tab}','${n.id}', this)" title="Rechazar">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function _getNotifConfig(tab, n) {
+        if (tab === 'certificaciones') return {
+            icon: 'fa-solid fa-graduation-cap',
+            color: '#f0c040', bg: 'rgba(240,192,64,0.1)',
+            titulo: n.nombre_certificacion || 'Certificación sin nombre',
+            subtitulo: ${n.nombre_profesional || '—'} · ${n.institucion || '—'}
+    };
+        if (tab === 'bajas') return {
+            icon: 'fa-solid fa-user-xmark',
+            color: '#f25c54', bg: 'rgba(242,92,84,0.1)',
+            titulo: Baja de ${n.rol || 'usuario'}: ${n.nombre || '—'},
+        subtitulo: n.motivo || 'Sin motivo especificado'
+    };
+        if (tab === 'horarios') return {
+            icon: 'fa-solid fa-clock',
+            color: 'var(--sports-green)', bg: 'rgba(0,193,110,0.1)',
+            titulo: Cambio de horario: ${n.actividad || '—'},
+        subtitulo: ${n.nombre_profesional || '—'} · ${n.horario_nuevo || '—'}
+    };
+        return { icon: 'fa-solid fa-bell', color: '#aaa', bg: 'rgba(255,255,255,0.05)', titulo: '—', subtitulo: '—' };
+    }
+
+    /* ── Acciones sobre notificaciones ── */
+    async function AcceptarSolicitud(tab, id, btn) {
+        const labels = { certificaciones: 'certificación', bajas: 'solicitud de baja', horarios: 'cambio de horario' };
+        const rutas  = { certificaciones: /admin/certificaciones/${id}/aprobar, bajas: /admin/bajas/${id}/aprobar, horarios: /admin/horarios/${id}/aprobar };
+
+        const confirm = await Swal.fire({
+            title: '¿Aprobar solicitud?',
+            html: Se aprobará esta ${labels[tab]}.,
             icon: 'question', iconColor: '#00C16E',
             showCancelButton: true,
             confirmButtonColor: '#00C16E', cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fa-solid fa-right-from-bracket me-1"></i>Sí, cerrar sesión',
-            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, aprobar', cancelButtonText: 'Cancelar',
             reverseButtons: true
-        }).then(result => {
-            if (result.isConfirmed) window.location.href = '/acceder';
         });
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const res = await fetch(${API}${rutas[tab]}, { method: 'POST', credentials: 'include' });
+            if (res.ok) {
+                Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Aprobado', text: 'La solicitud fue procesada correctamente.', confirmButtonColor: '#00C16E', timer: 2000, showConfirmButton: false });
+                CargarNotificaciones();
+            } else throw new Error();
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo procesar la solicitud.', confirmButtonColor: '#00C16E' });
+        }
     }
+
+        async function RechazarSolicitud(tab, id, btn) {
+            const labels = { certificaciones: 'certificación', bajas: 'solicitud de baja', horarios: 'cambio de horario' };
+            const rutas  = { certificaciones: /admin/certificaciones/${id}/rechazar, bajas: /admin/bajas/${id}/rechazar, horarios: /admin/horarios/${id}/rechazar };
+
+            const confirm = await Swal.fire({
+                title: '¿Rechazar solicitud?',
+                html: Se rechazará esta ${labels[tab]}.,
+                icon: 'warning', iconColor: '#f25c54',
+                showCancelButton: true,
+                confirmButtonColor: '#f25c54', cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, rechazar', cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                const res = await fetch(${API}${rutas[tab]}, { method: 'POST', credentials: 'include' });
+                if (res.ok) {
+                    Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Rechazado', text: 'La solicitud fue rechazada.', confirmButtonColor: '#00C16E', timer: 2000, showConfirmButton: false });
+                    CargarNotificaciones();
+                } else throw new Error();
+            } catch {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo rechazar la solicitud.', confirmButtonColor: '#00C16E' });
+            }
+        }
+
+            function MostrarSpinner() {
+                const feed = document.getElementById('notif-feed');
+                if (feed) feed.innerHTML = `
+        <div class="text-center py-5" style="color:var(--text-light-50);">
+            <div class="spinner-border spinner-border-sm text-success mb-3 d-block mx-auto" role="status"></div>
+            <span class="small">Cargando solicitudes...</span>
+        </div>`;
+            }
+
+            /* ── Cerrar sesión ── */
+            function cerrarSesionAdmin() {
+                Swal.fire({
+                    title: '¿Cerrar sesión?',
+                    text: 'Serás redirigido al inicio de la aplicación.',
+                    icon: 'question', iconColor: '#00C16E',
+                    showCancelButton: true,
+                    confirmButtonColor: '#00C16E', cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fa-solid fa-right-from-bracket me-1"></i>Sí, cerrar sesión',
+                    cancelButtonText: 'Cancelar', reverseButtons: true
+                }).then(async result => {
+                    if (!result.isConfirmed) return;
+                    try { await fetch(${API}/logout, { method: 'POST', credentials: 'include' }); } catch {}
+                        window.location.href = '/acceder';
+                    });
+                }
+
+                /* ── Helper ── */
+                function _setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
 </script>
 </body>
 </html>
