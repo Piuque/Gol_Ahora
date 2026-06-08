@@ -215,28 +215,75 @@ async function confirmarPago(id_cobro) {
     bootstrap.Modal.getInstance(document.getElementById("modalReserva")).hide();
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    const confirm = await Swal.fire({
-        icon: 'question',
-        title: 'Confirmar pago?',
-        text: 'Se marcara la reserva como pagada.',
-        confirmButtonText: 'Si, confirmar',
+    const userId = localStorage.getItem("userId");
+
+    // Cargar descuentos disponibles
+    let descuentos = [];
+    try {
+        const resDesc = await fetch("/admin/descuentos", { credentials: "include", headers: { "x-user-id": userId } });
+        const todos = await resDesc.json();
+        descuentos = todos.filter(d => d.activo);
+    } catch (e) {}
+
+    const descuentoOptions = descuentos.map(d => `<option value="${d.id}" data-porc="${d.porcentaje_descuento}">${d.descripcion} (${d.porcentaje_descuento}%)</option>`).join('');
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Confirmar Pago',
+        html: `
+            <div style="text-align:left; margin-bottom:8px;">
+                <label style="color:#555; font-size:0.85rem;">Aplicar descuento (opcional)</label>
+                <select id="swal-descuento" class="swal2-input">
+                    <option value="">Sin descuento</option>
+                    ${descuentoOptions}
+                </select>
+            </div>
+            <p id="swal-monto-final" style="color:#555; font-size:0.85rem; margin-top:8px;"></p>
+        `,
+        confirmButtonText: 'Confirmar Pago',
         confirmButtonColor: '#00C16E',
         cancelButtonText: 'Cancelar',
-        showCancelButton: true
+        showCancelButton: true,
+        focusConfirm: false,
+        didOpen: () => {
+            const reserva = reservasData.find(r => r.id_cobro == id_cobro);
+            const monto = reserva ? parseFloat(reserva.monto) : 0;
+            const select = document.getElementById('swal-descuento');
+            const montoEl = document.getElementById('swal-monto-final');
+
+            const actualizar = () => {
+                const opt = select.options[select.selectedIndex];
+                const porc = opt?.dataset.porc ? parseInt(opt.dataset.porc) : 0;
+                const final = monto - (monto * porc / 100);
+                montoEl.textContent = porc > 0
+                    ? `Monto original: $${monto.toFixed(2)} → Con descuento: $${final.toFixed(2)}`
+                    : `Monto a cobrar: $${monto.toFixed(2)}`;
+            };
+
+            select.addEventListener('change', actualizar);
+            actualizar();
+        },
+        preConfirm: () => {
+            const select = document.getElementById('swal-descuento');
+            const opt = select.options[select.selectedIndex];
+            return {
+                id_descuento: select.value || null,
+                porcentaje: opt?.dataset.porc ? parseInt(opt.dataset.porc) : 0
+            };
+        }
     });
 
-    if (!confirm.isConfirmed) return;
+    if (!formValues) return;
 
-    const userId = localStorage.getItem("userId");
     try {
         const res = await fetch(`/admin/cobros/${id_cobro}/confirmar`, {
             method: 'POST',
             credentials: 'include',
-            headers: { 'x-user-id': userId }
+            headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+            body: JSON.stringify({ porcentaje_descuento: formValues.porcentaje })
         });
         if (res.ok) {
             const reserva = reservasData.find(r => r.id_cobro == id_cobro);
-            if (reserva) generarPdfPagoConfirmado(reserva);
+            if (reserva) generarPdfPagoConfirmado(reserva, formValues.porcentaje);
             await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Pago confirmado. Se descargo el recibo.', confirmButtonColor: '#00C16E' });
             await cargarReservas();
         } else {
@@ -387,7 +434,7 @@ function generarPdfCancelacionAdmin(r) {
     doc.save(`golahora-cancelacion-admin-nro${nro}.pdf`);
 }
 
-function generarPdfPagoConfirmado(r) {
+function generarPdfPagoConfirmado(r, porcentajeDescuento = 0) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const nro = nroAleatorio();
@@ -402,7 +449,16 @@ function generarPdfPagoConfirmado(r) {
     pdfLinea(doc, 'Cancha',        r.cancha,                                y); y += 8;
     pdfLinea(doc, 'Fecha del turno', r.fecha,                               y); y += 8;
     pdfLinea(doc, 'Horario',       `${r.hora_inicio} — ${r.hora_fin} hs`,   y); y += 8;
-    pdfLinea(doc, 'Monto abonado', `$${r.monto}`,                           y); y += 8;
+
+    const montoOriginal = parseFloat(r.monto);
+    const descuento = montoOriginal * porcentajeDescuento / 100;
+    const montoFinal = montoOriginal - descuento;
+
+    pdfLinea(doc, 'Monto original', `$${montoOriginal.toFixed(2)}`,         y); y += 8;
+    if (porcentajeDescuento > 0) {
+        pdfLinea(doc, 'Descuento aplicado', `${porcentajeDescuento}% (-$${descuento.toFixed(2)})`, y); y += 8;
+        pdfLinea(doc, 'Monto final',   `$${montoFinal.toFixed(2)}`,         y); y += 8;
+    }
     pdfLinea(doc, 'Metodo de pago', r.metodo_pago,                          y); y += 12;
 
     y = pdfSeccion(doc, 'Estado', y);

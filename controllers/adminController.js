@@ -484,41 +484,27 @@ const listarReservasPendientes = async (req, res) => {
 // POST /admin/cobros/:id/confirmar
 const confirmarPagoEfectivo = async (req, res) => {
   const { id } = req.params;
+  const { porcentaje_descuento = 0 } = req.body;
   try {
     const cobro = await db.query.get('SELECT * FROM cobros WHERE id_cobro = $1', [id]);
-    if (!cobro) {
-      return res.status(404).json({ error: 'Cobro no encontrado' });
-    }
-    if (parseInt(cobro.id_estado_cobro) !== 1) {
-      return res.status(400).json({ error: 'El cobro no está en estado Pendiente' });
-    }
+    if (!cobro) return res.status(404).json({ error: 'Cobro no encontrado' });
+    if (parseInt(cobro.id_estado_cobro) !== 1) return res.status(400).json({ error: 'El cobro no está en estado Pendiente' });
 
     await db.pool.query('BEGIN');
 
-    // 1. Cambiar estado del cobro a "Pagado" (2)
-    await db.pool.query('UPDATE cobros SET id_estado_cobro = 2 WHERE id_cobro = $1', [id]);
+    const montoFinal = parseFloat(cobro.monto) - (parseFloat(cobro.monto) * porcentaje_descuento / 100);
+    await db.pool.query('UPDATE cobros SET id_estado_cobro = 2, monto = $1, porcentaje_descuento = $2 WHERE id_cobro = $3', [montoFinal, porcentaje_descuento, id]);
 
-    // 2. Generar el recibo oficial
-    const reciboSql = `
-      INSERT INTO recibos (nro_transaccion, detalles, id_cobro)
-      VALUES ($1, $2, $3)
-      RETURNING id_recibos
-    `;
-    const reciboRes = await db.pool.query(reciboSql, [
-      `EFEC_${Date.now()}`,
-      'Pago registrado en efectivo en recepción por el Administrador',
-      id
-    ]);
+    const reciboRes = await db.pool.query(
+      `INSERT INTO recibos (nro_transaccion, detalles, id_cobro) VALUES ($1, $2, $3) RETURNING id_recibos`,
+      [`EFEC_${Date.now()}`, `Pago en efectivo. Descuento aplicado: ${porcentaje_descuento}%`, id]
+    );
 
     await db.pool.query('COMMIT');
-
-    res.json({
-      message: 'Pago en efectivo confirmado y recibo emitido con éxito',
-      id_recibo: reciboRes.rows[0].id_recibos
-    });
+    res.json({ message: 'Pago confirmado y recibo emitido', id_recibo: reciboRes.rows[0].id_recibos });
   } catch (err) {
     await db.pool.query('ROLLBACK');
-    res.status(500).json({ error: 'Error al confirmar el pago en efectivo', message: err.message });
+    res.status(500).json({ error: 'Error al confirmar el pago', message: err.message });
   }
 };
 
