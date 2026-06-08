@@ -38,6 +38,11 @@ const upload = multer({ storage: storage });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use((req, res, next) => {
+  console.log(`[HTTP] ${req.method} ${req.url}`);
+  next();
+});
+
 // Configurar Middlewares globales
 app.use(cors({
   origin: true,
