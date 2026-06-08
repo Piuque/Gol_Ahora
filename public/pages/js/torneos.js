@@ -107,9 +107,18 @@ async function verDetalle(id) {
 
 async function abrirRegistrar() {
     const userId = localStorage.getItem("userId");
-    const resAdmins = await fetch("/admin/administradores", { credentials: "include", headers: { "x-user-id": userId } });
-    const admins = await resAdmins.json();
-    const adminOptions = admins.map(a => `<option value="${a.id_usuario}">${a.nombre} ${a.apellido}</option>`).join('');
+
+    const [resProfesores, resEntrenadores] = await Promise.all([
+        fetch("/admin/profesores", { credentials: "include", headers: { "x-user-id": userId } }),
+        fetch("/admin/entrenadores", { credentials: "include", headers: { "x-user-id": userId } })
+    ]);
+    const profesores = await resProfesores.json();
+    const entrenadores = await resEntrenadores.json();
+
+    const profesionalOptions = [
+        ...profesores.map(p => `<option value="${p.id}">[Profesor] ${p.nombre} ${p.apellido}</option>`),
+        ...entrenadores.map(e => `<option value="${e.id}">[Entrenador] ${e.nombre} ${e.apellido}</option>`)
+    ].join('');
 
     const { value: formValues } = await Swal.fire({
         title: 'Nuevo Torneo',
@@ -128,7 +137,10 @@ async function abrirRegistrar() {
             </div>
             <div style="text-align:left; margin-bottom:8px;">
                 <label style="color:#555; font-size:0.85rem;">Tutor</label>
-                <select id="swal-tutor" class="swal2-input"><option value="">Sin tutor</option>${adminOptions}</select>
+                <select id="swal-tutor" class="swal2-input">
+                    <option value="">Sin tutor</option>
+                    ${profesionalOptions}
+                </select>
             </div>
         `,
         confirmButtonText: 'Crear Torneo',
