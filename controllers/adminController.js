@@ -794,6 +794,10 @@ const eliminarReserva = async (req, res) => {
     await db.pool.query('BEGIN');
     const r = await db.query.get('SELECT id_ocupacion_cancha, id_cobro FROM reservas WHERE id_reserva = $1', [id]);
     if (!r) { await db.pool.query('ROLLBACK'); return res.status(404).json({ error: 'Reserva no encontrada' }); }
+    
+    // Eliminar recibos asociados al cobro primero
+    await db.pool.query('DELETE FROM recibos WHERE id_cobro = $1', [r.id_cobro]);
+    
     await db.pool.query('DELETE FROM reservas WHERE id_reserva = $1', [id]);
     await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = $1', [r.id_ocupacion_cancha]);
     await db.pool.query('DELETE FROM cobros WHERE id_cobro = $1', [r.id_cobro]);
