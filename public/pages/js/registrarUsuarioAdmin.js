@@ -125,7 +125,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        // Comparar fechas como strings YYYY-MM-DD
         const hoyStr = new Date().toISOString().split('T')[0];
         const hace100Str = new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0];
         if (datos.fecha_nacimiento >= hoyStr) {
@@ -136,7 +135,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento no puede ser hace más de 100 años.', confirmButtonColor: '#00C16E' });
             return;
         }
-
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'El email no tiene un formato válido.', confirmButtonColor: '#00C16E' });
             return;
@@ -157,12 +155,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'La calle debe tener al menos 3 caracteres.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.numero) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'El número de calle es obligatorio.', confirmButtonColor: '#00C16E' });
+        if (!/^\d{1,6}$/.test(datos.numero)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El número de calle debe ser numérico y tener entre 1 y 6 dígitos.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.localidad || datos.localidad.length < 3) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'La localidad debe tener al menos 3 caracteres.', confirmButtonColor: '#00C16E' });
+        if (datos.pais && !soloLetras.test(datos.pais)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El país no puede contener caracteres especiales y debe tener al menos 3 letras.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (datos.provincia && !soloLetras.test(datos.provincia)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La provincia no puede contener caracteres especiales y debe tener al menos 3 letras.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (datos.ciudad && !soloLetras.test(datos.ciudad)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La ciudad no puede contener caracteres especiales y debe tener al menos 3 letras.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.localidad || !soloLetras.test(datos.localidad)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La localidad es obligatoria, debe tener al menos 3 letras y no puede contener caracteres especiales.', confirmButtonColor: '#00C16E' });
             return;
         }
 
