@@ -12,11 +12,16 @@ function generarHorariosClub(duracionMinutos) {
         finMinuto = finMinuto % 60;
         if (finHora > 24 || (finHora === 24 && finMinuto > 0)) break;
         const strInicio = `${String(inicioHora).padStart(2, '0')}:${String(inicioMinuto).padStart(2, '0')}`;
-        const strFinHora = finHora === 24 ? '00' : String(finHora).padStart(2, '0');
-        const strFin = `${strFinHora}:${String(finMinuto).padStart(2, '0')}`;
+        let strFin;
+        if (finHora === 24) {
+            strFin = '23:59';
+        } else {
+            strFin = `${String(finHora).padStart(2, '0')}:${String(finMinuto).padStart(2, '0')}`;
+        }
         bloques.push({ horaInicio: strInicio, horaFin: strFin, rangoTexto: `${strInicio} - ${strFin} hs` });
         inicioHora = finHora;
         inicioMinuto = finMinuto;
+        if (finHora === 24) break;
     }
     return bloques;
 }
@@ -36,13 +41,11 @@ function abrirBloqueoCancha(cancha) {
     document.getElementById('contenedor-bloqueo-turnos').innerHTML =
         '<div class="text-light-50 small py-3 text-center" style="grid-column:1/-1;">Seleccioná una fecha para ver turnos.</div>';
 
-    const hoy = new Date();
-    hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
     const fechaInput = document.getElementById('bloqueo-fecha');
-    fechaInput.min = hoy.toISOString().split('T')[0];
-    const limiteMax = new Date(hoy);
+    fechaInput.min = fechaLocalHoy();
+    const limiteMax = new Date();
     limiteMax.setMonth(limiteMax.getMonth() + 3);
-    fechaInput.max = limiteMax.toISOString().split('T')[0];
+    fechaInput.max = `${limiteMax.getFullYear()}-${String(limiteMax.getMonth() + 1).padStart(2, '0')}-${String(limiteMax.getDate()).padStart(2, '0')}`;
 
     const modal = new bootstrap.Modal(document.getElementById('modalBloqueo'));
     modal.show();
@@ -53,17 +56,20 @@ async function cargarTurnosBloqueo() {
     const fecha = document.getElementById('bloqueo-fecha').value;
     const diaCompleto = document.getElementById('bloqueo-dia-completo').checked;
 
-    bloqueoSeleccionados.clear();
-
     if (!fecha || !bloqueoCanchaActual) {
+        bloqueoSeleccionados.clear();
         contenedor.innerHTML = '<div class="text-light-50 small py-3 text-center" style="grid-column:1/-1;">Seleccioná una fecha.</div>';
         return;
     }
 
     if (diaCompleto) {
+        bloqueoSeleccionados.clear();
         contenedor.innerHTML = '<div class="text-warning small py-3 text-center" style="grid-column:1/-1;"><i class="fa-solid fa-calendar-day me-1"></i> Se bloqueará el día completo (08:00 a 23:59).</div>';
         return;
     }
+
+    const seleccionPrevio = new Set(bloqueoSeleccionados);
+    bloqueoSeleccionados.clear();
 
     contenedor.innerHTML = '<div class="text-light-50 small py-3 text-center" style="grid-column:1/-1;">Cargando turnos...</div>';
 
@@ -84,9 +90,7 @@ async function cargarTurnosBloqueo() {
     });
 
     const bloques = generarHorariosClub(bloqueoDuracionMin);
-    const hoyStr = new Date().toISOString().split('T')[0];
-    const esHoy = fecha === hoyStr;
-    const ahora = new Date();
+    const esHoy = fecha === fechaLocalHoy();
 
     contenedor.innerHTML = '';
     bloques.forEach(b => {
@@ -103,18 +107,17 @@ async function cargarTurnosBloqueo() {
             btn.classList.add('ocupado');
             btn.textContent += ` (${ocupadas[b.horaInicio]})`;
         }
-        if (esHoy) {
-            const [hh, mm] = b.horaInicio.split(':').map(Number);
-            const slotDate = new Date();
-            slotDate.setHours(hh, mm, 0, 0);
-            if (slotDate <= ahora) {
-                disponible = false;
-                btn.disabled = true;
-                btn.textContent = b.rangoTexto + ' (pasado)';
-            }
+        if (esHoy && slotHorarioYaPaso(fecha, b.horaInicio)) {
+            disponible = false;
+            btn.disabled = true;
+            btn.textContent = b.rangoTexto + ' (pasado)';
         }
 
         if (disponible) {
+            if (seleccionPrevio.has(b.horaInicio)) {
+                bloqueoSeleccionados.add(b.horaInicio);
+                btn.classList.add('selected');
+            }
             btn.addEventListener('click', () => {
                 const key = b.horaInicio;
                 if (bloqueoSeleccionados.has(key)) {
@@ -147,13 +150,14 @@ async function confirmarBloqueoCancha() {
     }
 
     let turnos = [];
-    if (diaCompleto) {
-        turnos = null;
-    } else {
+    if (!diaCompleto) {
         const bloques = generarHorariosClub(bloqueoDuracionMin);
         turnos = bloques
             .filter(b => bloqueoSeleccionados.has(b.horaInicio))
-            .map(b => ({ hora_inicio: b.horaInicio, hora_fin: b.horaFin }));
+            .map(b => ({
+                hora_inicio: b.horaInicio,
+                hora_fin: normalizarHoraFinCliente(b.horaFin)
+            }));
         if (turnos.length === 0) {
             await Swal.fire({ icon: 'warning', title: 'Sin turnos', text: 'Seleccioná al menos un turno o marcá día completo.', confirmButtonColor: '#00C16E' });
             return;
@@ -175,9 +179,9 @@ async function confirmarBloqueoCancha() {
 
     const userId = localStorage.getItem('userId');
     const body = {
-        id_cancha: bloqueoCanchaActual.id,
+        id_cancha: parseInt(bloqueoCanchaActual.id, 10),
         fecha,
-        dia_completo: diaCompleto,
+        dia_completo: !!diaCompleto,
         motivo
     };
     if (!diaCompleto) body.turnos = turnos;
@@ -192,6 +196,7 @@ async function confirmarBloqueoCancha() {
         const data = await res.json();
         if (res.ok) {
             bootstrap.Modal.getInstance(document.getElementById('modalBloqueo')).hide();
+            bloqueoSeleccionados.clear();
             await Swal.fire({ icon: 'success', title: 'Bloqueo registrado', text: data.message, confirmButtonColor: '#00C16E' });
         } else {
             await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });

@@ -272,7 +272,7 @@
         if (!container) return;
 
         try {
-            const res = await fetch(`${API}/entrenador/certificaciones`, { credentials: 'include' });
+            const res = await fetch(`${API}/entrenador/certificaciones/lista`, { credentials: 'include' });
             if (!res.ok) throw new Error();
             const lista = await res.json();
 

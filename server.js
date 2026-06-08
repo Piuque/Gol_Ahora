@@ -154,6 +154,35 @@ app.get(['/admin/Reportes', '/pages/Reportes.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/Reportes.html'));
 });
 
+// Paneles y páginas HTML de profesor / entrenador (antes de endpoints API con rutas similares)
+app.get(['/profesor', '/Profesor', '/pages/interfazProfesor.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/interfazProfesor.html'));
+});
+app.get(['/entrenador', '/Entrenador', '/pages/interfazEntrenador.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/interfazEntrenador.html'));
+});
+app.get(['/profesor/perfil', '/pages/perfilProfesor.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/perfilProfesor.html'));
+});
+app.get(['/profesor/certificaciones', '/pages/certificacionesProfesor.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/certificacionesProfesor.html'));
+});
+app.get(['/entrenador/perfil', '/pages/perfilEntrenador.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/perfilEntrenador.html'));
+});
+app.get(['/entrenador/certificaciones', '/pages/certificacionesEntrenador.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/certificacionesEntrenador.html'));
+});
+app.get(['/entrenador/gestionEntrenamiento', '/pages/gestionEntrenamiento.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/gestionEntrenamiento.html'));
+});
+app.get(['/entrenador/gestionLigas', '/pages/gestionLigas.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/gestionLigas.html'));
+});
+app.get(['/entrenador/gestionLigasTorneos', '/pages/gestionLigasTorneos.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/gestionLigasTorneos.html'));
+});
+
 // Montar Rutas de la API por prefijos de roles
 app.use('/usuario', usuarioRoutes);
 app.use('/cliente', clienteRoutes);
@@ -485,7 +514,7 @@ app.post('/profesor/modificarPerfil', authMiddleware, requireRole(['profesor', '
   }
 });
 
-app.get('/profesor/certificaciones', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+app.get('/profesor/certificaciones/lista', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
   const idUsuario = req.user.id_usuario;
   try {
     const db = require('./config/db.js');
@@ -562,7 +591,7 @@ app.post('/entrenador/modificarPerfil', authMiddleware, requireRole(['entrenador
   }
 });
 
-app.get('/entrenador/certificaciones', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+app.get('/entrenador/certificaciones/lista', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
   const idUsuario = req.user.id_usuario;
   try {
     const db = require('./config/db.js');
@@ -672,15 +701,6 @@ app.get(['/admin/RegistrarTipoDeCancha', '/admin/RegistrarTipoDeCancha.html'], (
   res.sendFile(path.join(__dirname, 'public/pages/RegistrarTipoDeCancha.html'));
 });
 
-// Rutas amigables para los paneles de profesores y entrenadores
-app.get(['/profesor', '/Profesor', '/pages/interfazProfesor.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/interfazProfesor.html'));
-});
-
-app.get(['/entrenador', '/Entrenador', '/pages/interfazEntrenador.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/interfazEntrenador.html'));
-});
-
 // Endpoint de fallback para Swagger UI
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -736,33 +756,6 @@ const cleanupExpiredReservations = async () => {
     console.error('[Limpieza] Error al limpiar reservas vencidas:', err.message);
   }
 };
-//rutas amigables para listar mis reservas (alias legacy; rutas principales registradas arriba)
-
-// Rutas amigables adicionales del profesor
-app.get(['/profesor/perfil', '/pages/perfilProfesor.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/perfilProfesor.html'));
-});
-app.get(['/profesor/certificaciones', '/pages/certificacionesProfesor.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/certificacionesProfesor.html'));
-});
-
-// Rutas amigables adicionales del entrenador
-app.get(['/entrenador/perfil', '/pages/perfilEntrenador.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/perfilEntrenador.html'));
-});
-app.get(['/entrenador/certificaciones', '/pages/certificacionesEntrenador.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/certificacionesEntrenador.html'));
-});
-app.get(['/entrenador/gestionEntrenamiento', '/pages/gestionEntrenamiento.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/gestionEntrenamiento.html'));
-});
-app.get(['/entrenador/gestionLigas', '/pages/gestionLigas.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/gestionLigas.html'));
-});
-app.get(['/entrenador/gestionLigasTorneos', '/pages/gestionLigasTorneos.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/gestionLigasTorneos.html'));
-});
-
 app.get('/api/superficies', async (req, res) => {
   try {
     const db = require('./config/db.js');

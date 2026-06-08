@@ -68,8 +68,12 @@ function generarHorariosClub(duracionMinutos) {
 
         const strInicio = `${String(inicioHora).padStart(2, '0')}:${String(inicioMinuto).padStart(2, '0')}`;
 
-        const strFinHora = finHora === 24 ? '00' : String(finHora).padStart(2, '0');
-        const strFin = `${strFinHora}:${String(finMinuto).padStart(2, '0')}`;
+        let strFin;
+        if (finHora === 24) {
+            strFin = '23:59';
+        } else {
+            strFin = `${String(finHora).padStart(2, '0')}:${String(finMinuto).padStart(2, '0')}`;
+        }
 
         bloques.push({
             horaInicio: strInicio,
@@ -79,6 +83,7 @@ function generarHorariosClub(duracionMinutos) {
 
         inicioHora = finHora;
         inicioMinuto = finMinuto;
+        if (finHora === 24) break;
     }
     return bloques;
 }
@@ -90,13 +95,11 @@ function configurarCalendario() {
     const inputFecha = document.getElementById('input-fecha');
     inputFecha.disabled = false;
 
-    const hoy = new Date();
-    hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
-    inputFecha.min = hoy.toISOString().split('T')[0];
+    inputFecha.min = fechaLocalHoy();
 
-    const limiteMaximo = new Date(hoy);
+    const limiteMaximo = new Date();
     limiteMaximo.setMonth(limiteMaximo.getMonth() + 1);
-    inputFecha.max = limiteMaximo.toISOString().split('T')[0];
+    inputFecha.max = `${limiteMaximo.getFullYear()}-${String(limiteMaximo.getMonth() + 1).padStart(2, '0')}-${String(limiteMaximo.getDate()).padStart(2, '0')}`;
 
     document.getElementById('contenedor-horarios').innerHTML = `
         <div class="col-12 text-center py-4 text-light-50">
@@ -162,17 +165,10 @@ function procesarYMostrarGrilla(fechaElegida, ocupacionesArray) {
         });
     }
 
-    const hoyObj = new Date();
-    // Usamos fecha local (no UTC) para evitar el desfase horario en Argentina (UTC-3)
-    const hoyLocal = `${hoyObj.getFullYear()}-${String(hoyObj.getMonth() + 1).padStart(2, '0')}-${String(hoyObj.getDate()).padStart(2, '0')}`;
-    const esHoy = (fechaElegida === hoyLocal);
-    const horaActual = hoyObj.getHours();
-    const minutoActual = hoyObj.getMinutes();
+    const esHoy = fechaElegida === fechaLocalHoy();
 
     const grillaFinal = bloquesClub.map(bloque => {
-        const horaInicioNum = parseInt(bloque.horaInicio.split(':')[0]);
-
-        if (esHoy && (horaInicioNum < horaActual || (horaInicioNum === horaActual && parseInt(bloque.horaInicio.split(':')[1]) <= minutoActual))) {
+        if (esHoy && slotHorarioYaPaso(fechaElegida, bloque.horaInicio)) {
             return { ...bloque, disponible: false, motivo: "Pasado", claseCss: "ocupacion-pasado" };
         }
 

@@ -9,12 +9,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     let pagoSeleccionado = null;
 
     const fechaInput = document.getElementById("fecha");
-    const hoy = new Date();
-    hoy.setMinutes(hoy.getMinutes() - hoy.getTimezoneOffset());
-    fechaInput.min = hoy.toISOString().split('T')[0];
-    const limiteMax = new Date(hoy);
+    fechaInput.min = fechaLocalHoy();
+    const limiteMax = new Date();
     limiteMax.setMonth(limiteMax.getMonth() + 1);
-    fechaInput.max = limiteMax.toISOString().split('T')[0];
+    fechaInput.max = `${limiteMax.getFullYear()}-${String(limiteMax.getMonth() + 1).padStart(2, '0')}-${String(limiteMax.getDate()).padStart(2, '0')}`;
 
     try {
         const res = await fetch("/admin/tipos-cancha", { credentials: "include", headers: { "x-user-id": userId } });
@@ -157,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        const hoyStr = new Date().toISOString().split('T')[0];
+        const hoyStr = fechaLocalHoy();
         if (fecha < hoyStr) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'No se puede registrar una reserva en el pasado.', confirmButtonColor: '#00C16E' });
             return;
@@ -226,11 +224,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             finMinuto = finMinuto % 60;
             if (finHora > 24 || (finHora === 24 && finMinuto > 0)) break;
             const strInicio = `${String(inicioHora).padStart(2, '0')}:${String(inicioMinuto).padStart(2, '0')}`;
-            const strFinHora = finHora === 24 ? '00' : String(finHora).padStart(2, '0');
-            const strFin = `${strFinHora}:${String(finMinuto).padStart(2, '0')}`;
+            let strFin;
+            if (finHora === 24) {
+                strFin = '23:59';
+            } else {
+                strFin = `${String(finHora).padStart(2, '0')}:${String(finMinuto).padStart(2, '0')}`;
+            }
             bloques.push({ horaInicio: strInicio, horaFin: strFin, rangoTexto: `${strInicio} - ${strFin} hs` });
             inicioHora = finHora;
             inicioMinuto = finMinuto;
+            if (finHora === 24) break;
         }
         return bloques;
     }
@@ -271,9 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         const bloques = generarHorariosClub(duracionCanchaMinutos);
-        const hoyStr = new Date().toISOString().split('T')[0];
-        const esHoy = fecha === hoyStr;
-        const ahora = new Date();
+        const esHoy = fecha === fechaLocalHoy();
 
         contenedor.innerHTML = '';
         bloques.forEach(b => {
@@ -288,15 +289,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 btn.classList.add('ocupado');
                 btn.textContent += ' (ocupado)';
             }
-            if (esHoy) {
-                const [hh, mm] = b.horaInicio.split(':').map(Number);
-                const slotDate = new Date();
-                slotDate.setHours(hh, mm, 0, 0);
-                if (slotDate <= ahora) {
-                    disponible = false;
-                    btn.disabled = true;
-                    btn.textContent = b.rangoTexto + ' (pasado)';
-                }
+            if (esHoy && slotHorarioYaPaso(fecha, b.horaInicio)) {
+                disponible = false;
+                btn.disabled = true;
+                btn.textContent = b.rangoTexto + ' (pasado)';
             }
 
             if (disponible) {

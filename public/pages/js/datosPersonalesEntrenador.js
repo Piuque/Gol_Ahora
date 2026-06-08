@@ -17,11 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     ActivarMenuToggle();
     AsignarListenersFormularios();
 
-    const path = window.location.pathname.split("/").pop();
+    const segmentos = window.location.pathname.split("/").filter(Boolean);
+    const path = segmentos[segmentos.length - 1] || "";
 
-    if (path === "certificacionesEntrenador.html") {
+    if (path === "certificaciones" || path === "certificacionesEntrenador.html") {
         ConsultarCertificacionesLegajo();
-    } else if (path === "perfilEntrenador.html") {
+    } else if (path === "perfil" || path === "perfilEntrenador.html") {
         ConsultarPerfilFicha();
         const formModalPerfil = document.getElementById('form-modal-perfil');
         if (formModalPerfil) {
@@ -96,7 +97,7 @@ async function ConsultarCertificacionesLegajo() {
     </div>`;
 
     try {
-        const res = await fetch(`${API}/entrenador/certificaciones`, { method: "GET", credentials: "include" });
+        const res = await fetch(`${API}/entrenador/certificaciones/lista`, { method: "GET", credentials: "include" });
         if (!res.ok) throw new Error();
         renderizarCardsCertificadosHTML(await res.json());
     } catch {

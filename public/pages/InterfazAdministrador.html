@@ -285,8 +285,8 @@
                         </div>
                         <div class="col-6">
                             <div class="admin-counter-card" style="border-left:3px solid #6ea8fe;">
-                                <div class="admin-counter-num" id="cnt-alumnos" style="color:#6ea8fe;">—</div>
-                                <div class="admin-counter-label">Alumnos<br>a dar de baja</div>
+                                <div class="admin-counter-num" id="cnt-reservas" style="color:#6ea8fe;">—</div>
+                                <div class="admin-counter-label">Reservas<br>por confirmar</div>
                             </div>
                         </div>
                     </div>
@@ -325,6 +325,11 @@
                             <li>
                                 <button class="notif-tab-btn" data-tab="horarios" onclick="FiltrarTab(this)">
                                     <i class="fa-solid fa-clock me-1"></i>Horarios
+                                </button>
+                            </li>
+                            <li>
+                                <button class="notif-tab-btn" data-tab="reservas" onclick="FiltrarTab(this)">
+                                    <i class="fa-solid fa-calendar-check me-1"></i>Confirmaciones
                                 </button>
                             </li>
                         </ul>
@@ -428,32 +433,33 @@
 
     /* ── Notificaciones ── */
     // Estado global de notificaciones por tipo
-    let _notifs = { certificaciones: [], bajas: [], horarios: [] };
+    let _notifs = { certificaciones: [], bajas: [], horarios: [], reservas: [] };
     let _tabActiva = 'certificaciones';
 
     async function CargarNotificaciones() {
         const userId = localStorage.getItem("userId");
         MostrarSpinner();
         try {
-            const [resCert, resBajas, resHorarios] = await Promise.all([
+            const [resCert, resBajas, resHorarios, resReservas] = await Promise.all([
                 fetch(`${API}/admin/certificaciones/pendientes`, { credentials: 'include', headers: { 'x-user-id': userId } }),
                 fetch(`${API}/admin/bajas/pendientes`,           { credentials: 'include', headers: { 'x-user-id': userId } }),
-                fetch(`${API}/admin/horarios/pendientes`,        { credentials: 'include', headers: { 'x-user-id': userId } })
+                fetch(`${API}/admin/horarios/pendientes`,        { credentials: 'include', headers: { 'x-user-id': userId } }),
+                fetch(`${API}/admin/reservas/pendientes`,        { credentials: 'include', headers: { 'x-user-id': userId } })
             ]);
 
-            _notifs.certificaciones = resCert.ok    ? await resCert.json()    : [];
-            _notifs.bajas           = resBajas.ok   ? await resBajas.json()   : [];
-            _notifs.horarios        = resHorarios.ok ? await resHorarios.json(): [];
+            _notifs.certificaciones = resCert.ok     ? await resCert.json()     : [];
+            _notifs.bajas           = resBajas.ok    ? await resBajas.json()    : [];
+            _notifs.horarios        = resHorarios.ok ? await resHorarios.json() : [];
+            _notifs.reservas        = resReservas.ok ? await resReservas.json() : [];
 
         } catch {
-            _notifs = { certificaciones: [], bajas: [], horarios: [] };
+            _notifs = { certificaciones: [], bajas: [], horarios: [], reservas: [] };
         }
 
-        // Actualizar contadores
         _setText('cnt-certificaciones', _notifs.certificaciones.length || '0');
         _setText('cnt-bajas',           (_notifs.bajas.filter(b => b.tipo !== 'alumno') || []).length || '0');
         _setText('cnt-horarios',        _notifs.horarios.length || '0');
-        _setText('cnt-alumnos',         (_notifs.bajas.filter(b => b.tipo === 'alumno') || []).length || '0');
+        _setText('cnt-reservas',        _notifs.reservas.length || '0');
 
         RenderizarFeed(_tabActiva);
     }
@@ -484,6 +490,14 @@
 
         feed.innerHTML = lista.map(n => {
             const config = _getNotifConfig(tab, n);
+            const idAccion = tab === 'reservas' ? (n.id_reserva || n.id) : n.id;
+            const idCobro = tab === 'reservas' ? n.id_cobro : null;
+            const onclickOk = tab === 'reservas'
+                ? `ConfirmarReservaPendiente('${idAccion}', '${idCobro}')`
+                : `AcceptarSolicitud('${tab}','${n.id}', this)`;
+            const onclickX = tab === 'reservas'
+                ? `RechazarReservaPendiente('${idAccion}')`
+                : `RechazarSolicitud('${tab}','${n.id}', this)`;
             return `
             <div class="notif-item" style="border-left:3px solid ${config.color};">
                 <div class="d-flex justify-content-between align-items-start gap-2">
@@ -494,14 +508,15 @@
                         <div class="min-w-0">
                             <div class="fw-semibold text-white small">${config.titulo}</div>
                             <div class="text-truncate" style="font-size:0.78rem;color:var(--text-light-50);">${config.subtitulo}</div>
+                            ${config.detalle ? `<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px;">${config.detalle}</div>` : ''}
                             ${n.fecha ? `<div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:2px;">${n.fecha}</div>` : ''}
                         </div>
                     </div>
                     <div class="d-flex gap-1 flex-shrink-0">
-                        <button class="notif-btn-ok" onclick="AcceptarSolicitud('${tab}','${n.id}', this)" title="Aprobar">
+                        <button class="notif-btn-ok" onclick="${onclickOk}" title="Aprobar">
                             <i class="fa-solid fa-check"></i>
                         </button>
-                        <button class="notif-btn-x" onclick="RechazarSolicitud('${tab}','${n.id}', this)" title="Rechazar">
+                        <button class="notif-btn-x" onclick="${onclickX}" title="Rechazar">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
@@ -529,7 +544,71 @@
             titulo: `Cambio de horario: ${n.actividad || '—'}`,
         subtitulo: `${n.nombre_profesional || '—'} · ${n.horario_nuevo || '—'}`
     };
+        if (tab === 'reservas') return {
+            icon: 'fa-solid fa-calendar-check',
+            color: '#6ea8fe', bg: 'rgba(110,168,254,0.12)',
+            titulo: `Reserva #${n.id_reserva || n.id} · ${n.cancha_nombre || 'Cancha'}`,
+            subtitulo: `${n.cliente_nombre || ''} ${n.cliente_apellido || ''}`.trim() || 'Cliente',
+            detalle: `${n.fecha_turno || '—'} ${n.hora_inicio || ''}-${n.hora_fin || ''} · $${n.monto || '0'} · ${n.metodo_pago || 'Pago pendiente'}`
+        };
         return { icon: 'fa-solid fa-bell', color: '#aaa', bg: 'rgba(255,255,255,0.05)', titulo: '—', subtitulo: '—' };
+    }
+
+    async function ConfirmarReservaPendiente(idReserva, idCobro) {
+        const userId = localStorage.getItem("userId");
+        const confirm = await Swal.fire({
+            title: '¿Confirmar pago de reserva?',
+            html: `Se confirmará el cobro pendiente de la reserva <b>#${idReserva}</b>.`,
+            icon: 'question', iconColor: '#00C16E',
+            showCancelButton: true,
+            confirmButtonColor: '#00C16E', cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Confirmar pago', cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        });
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const res = await fetch(`${API}/admin/cobros/${idCobro}/confirmar`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+                body: JSON.stringify({ porcentaje_descuento: 0 })
+            });
+            if (res.ok) {
+                Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Pago confirmado', text: 'La reserva quedó confirmada.', confirmButtonColor: '#00C16E', timer: 2000, showConfirmButton: false });
+                CargarNotificaciones();
+            } else throw new Error();
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo confirmar el pago.', confirmButtonColor: '#00C16E' });
+        }
+    }
+
+    async function RechazarReservaPendiente(idReserva) {
+        const userId = localStorage.getItem("userId");
+        const confirm = await Swal.fire({
+            title: '¿Rechazar reserva?',
+            html: `Se cancelará la reserva <b>#${idReserva}</b> y se liberará el turno.`,
+            icon: 'warning', iconColor: '#f25c54',
+            showCancelButton: true,
+            confirmButtonColor: '#f25c54', cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, rechazar', cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        });
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const res = await fetch(`${API}/admin/reservas/${idReserva}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'x-user-id': userId }
+            });
+            if (res.ok || res.status === 204) {
+                Swal.fire({ icon: 'success', iconColor: '#00C16E', title: 'Reserva rechazada', text: 'El turno fue liberado.', confirmButtonColor: '#00C16E', timer: 2000, showConfirmButton: false });
+                CargarNotificaciones();
+            } else throw new Error();
+        } catch {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo rechazar la reserva.', confirmButtonColor: '#00C16E' });
+        }
     }
 
     /* ── Acciones sobre notificaciones ── */

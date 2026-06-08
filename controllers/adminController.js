@@ -5,6 +5,13 @@ const {
   marcarSolicitud,
   obtenerSolicitudPendiente
 } = require('../utils/solicitudesAdmin.js');
+const {
+  fechaHoyArgentina,
+  turnoYaPasoArgentina,
+  normalizarHoraFin,
+  normalizarHoraInicio,
+  turnosSeSolapan
+} = require('../utils/fechaHora.js');
 
 // GET /admin/clientes (Listar todos los clientes)
 const listarClientes = async (req, res) => {
@@ -429,16 +436,26 @@ const bloquearCanchaMantenimiento = async (req, res) => {
     slots = [{ hora_inicio: '08:00:00', hora_fin: '23:59:59' }];
   } else if (Array.isArray(turnos) && turnos.length > 0) {
     slots = turnos.map(t => ({
-      hora_inicio: String(t.hora_inicio).length === 5 ? `${t.hora_inicio}:00` : t.hora_inicio,
-      hora_fin: String(t.hora_fin).length === 5 ? `${t.hora_fin}:00` : t.hora_fin
+      hora_inicio: normalizarHoraInicio(t.hora_inicio),
+      hora_fin: normalizarHoraFin(t.hora_fin)
     }));
   } else if (hora_inicio && hora_fin) {
     slots = [{
-      hora_inicio: String(hora_inicio).length === 5 ? `${hora_inicio}:00` : hora_inicio,
-      hora_fin: String(hora_fin).length === 5 ? `${hora_fin}:00` : hora_fin
+      hora_inicio: normalizarHoraInicio(hora_inicio),
+      hora_fin: normalizarHoraFin(hora_fin)
     }];
   } else {
     return res.status(400).json({ error: 'Debés indicar turnos, día completo o un horario único' });
+  }
+
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i + 1; j < slots.length; j++) {
+      if (turnosSeSolapan(slots[i], slots[j])) {
+        return res.status(409).json({
+          error: `Los turnos ${slots[i].hora_inicio.substring(0, 5)} y ${slots[j].hora_inicio.substring(0, 5)} se solapan entre sí`
+        });
+      }
+    }
   }
 
   try {
@@ -468,7 +485,9 @@ const bloquearCanchaMantenimiento = async (req, res) => {
     for (const slot of slots) {
       const result = await db.pool.query(ocupacionSql, [fecha, slot.hora_inicio, slot.hora_fin, id_cancha]);
       idsOcupacion.push(result.rows[0].id_ocupacion_cancha);
-      await db.pool.query(excepcionSql, [motivoBloqueo, fecha, slot.hora_inicio, slot.hora_fin, id_cancha]);
+      try {
+        await db.pool.query(excepcionSql, [motivoBloqueo, fecha, slot.hora_inicio, slot.hora_fin, id_cancha]);
+      } catch (_) { /* la ocupación principal ya bloquea el turno */ }
     }
 
     await db.pool.query('COMMIT');
@@ -1947,21 +1966,18 @@ const eliminarEquipoLiga = async (req, res) => {
 
 // --- Validación de solapamiento para reservas ---
 const validarTurnoReserva = async (id_cancha, fecha, hora_inicio, hora_fin, excluirOcupacionId = null) => {
-  const ahora = new Date();
-  const hoyStr = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+  const hoyStr = fechaHoyArgentina();
+  const hi = normalizarHoraInicio(hora_inicio);
+  const hf = normalizarHoraFin(hora_fin);
+
   if (fecha < hoyStr) {
     return { ok: false, error: 'No se puede reservar o modificar a una fecha pasada' };
   }
-  if (fecha === hoyStr) {
-    const [h, m] = String(hora_inicio).substring(0, 5).split(':').map(Number);
-    const inicio = new Date();
-    inicio.setHours(h, m || 0, 0, 0);
-    if (inicio <= ahora) {
-      return { ok: false, error: 'No se puede reservar o modificar a un horario que ya pasó' };
-    }
+  if (turnoYaPasoArgentina(fecha, hi)) {
+    return { ok: false, error: 'No se puede reservar o modificar a un horario que ya pasó' };
   }
 
-  const params = [id_cancha, fecha, hora_inicio, hora_fin];
+  const params = [id_cancha, fecha, hi, hf];
   let sql = `
     SELECT id_ocupacion_cancha FROM ocupaciones_cancha
     WHERE id_cancha = $1 AND fecha = $2
