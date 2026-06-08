@@ -107,7 +107,7 @@ async function abrirRegistrar() {
     const clienteOptions = clientes.map(c => `<option value="${c.id_usuario}">${c.nombre} ${c.apellido}</option>`).join('');
 
     const { value: formValues } = await Swal.fire({
-        title: 'Nuevo Cobro',
+        
         html: `
             <div style="text-align:left; margin-bottom:8px;">
                 <label style="color:#555; font-size:0.85rem;">Cliente</label>
