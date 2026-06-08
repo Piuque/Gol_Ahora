@@ -157,7 +157,7 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
                 const num = (document.getElementById(`${uid}-numero`)?.value || '').replace(/\s/g, '');
                 const venc = document.getElementById(`${uid}-venc`)?.value || '';
                 const cvv = document.getElementById(`${uid}-cvv`)?.value || '';
-                if (num.length !== 16 || venc.length !== 5 || cvv.length < 3) {
+                if (num.length !== 16 || venc.length < 4 || cvv.length < 2) {
                     Swal.showValidationMessage('Completá los datos de la tarjeta correctamente');
                     return false;
                 }
