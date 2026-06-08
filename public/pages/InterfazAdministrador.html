@@ -412,7 +412,7 @@
                 window.location.href = '/acceder';
                 return;
             }
-            if (!res.ok) throw new Error("Error en la respuesta del servidor");
+            if (!res.ok) throw new Error("Error en la respuesta del servidor (código " + res.status + ")");
             const d = await res.json();
             document.getElementById('admin-nombre').textContent   = `${d.nombre || ''} ${d.apellido || ''}`.trim() || 'Gol Ahora Club';
             document.getElementById('admin-email').textContent    = d.email    || '—';
@@ -420,6 +420,12 @@
             document.getElementById('admin-dni').textContent      = d.dni      || '—';
         } catch (err) {
             console.error("Error al cargar datos del administrador:", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Datos',
+                text: 'No se pudieron cargar los datos del administrador: ' + err.message,
+                confirmButtonColor: '#00C16E'
+            });
         }
     }
 
