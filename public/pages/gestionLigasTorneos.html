@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="bg-football-dark text-light">
 
@@ -15,7 +15,7 @@
 
     <!-- ===================== SIDEBAR ===================== -->
     <div id="sidebar-wrapper">
-        <a href="interfazEntrenador.html" class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
+        <a href="/entrenador" class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
             style="transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
             <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
         </a>
@@ -33,24 +33,24 @@
             </div>
         </div>
 
-        <ul class="nav flex-column mt-2">
-            <li>
-                <a class="nav-link sidebar-link d-flex align-items-center" href="interfazEntrenador.html">
+        <ul class="nav flex-column py-3 px-2 gap-1 flex-grow-1">
+            <li class="nav-item">
+                <a class="nav-link sidebar-link d-flex align-items-center" href="/entrenador">
                     <i class="fa-solid fa-house me-3"></i>Inicio
                 </a>
             </li>
-            <li>
-                <a class="nav-link sidebar-link d-flex align-items-center" href="interfazEntrenador.html">
+            <li class="nav-item">
+                <a class="nav-link sidebar-link d-flex align-items-center" href="/entrenador">
                     <i class="fa-solid fa-dumbbell me-3"></i>Gestión de Entrenamientos
                 </a>
             </li>
-            <li>
-                <a class="nav-link sidebar-link active d-flex align-items-center" href="gestionLigasTorneos.html">
+            <li class="nav-item">
+                <a class="nav-link sidebar-link active d-flex align-items-center" href="/entrenador/gestionLigasTorneos">
                     <i class="fa-solid fa-trophy me-3"></i>Torneos y Ligas
                 </a>
             </li>
-            <li>
-                <a class="nav-link sidebar-link d-flex align-items-center" href="perfilEntrenador.html">
+            <li class="nav-item">
+                <a class="nav-link sidebar-link d-flex align-items-center" href="/entrenador/perfil">
                     <i class="fa-solid fa-user-gear me-3"></i>Mi Perfil Técnico
                 </a>
             </li>
@@ -117,6 +117,6 @@
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="js/datosPersonalesEntrenador.js"></script>
+<script src="/js/datosPersonalesEntrenador.js"></script>
 </body>
 </html>
