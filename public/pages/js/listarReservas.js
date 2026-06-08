@@ -150,12 +150,25 @@ async function abrirModificarReserva(id) {
         showCancelButton: true,
         focusConfirm: false,
         preConfirm: () => {
-            const fecha = document.getElementById('swal-fecha').value;
-            const hora_inicio = document.getElementById('swal-hora-inicio').value;
-            const hora_fin = document.getElementById('swal-hora-fin').value;
-            if (!fecha) { Swal.showValidationMessage('La fecha es obligatoria'); return false; }
-            return { fecha, hora_inicio, hora_fin };
+        const fecha = document.getElementById('swal-fecha').value;
+        const hora_inicio = document.getElementById('swal-hora-inicio').value;
+        const hora_fin = document.getElementById('swal-hora-fin').value;
+
+        if (!fecha) { Swal.showValidationMessage('La fecha es obligatoria'); return false; }
+
+        const hoyStr = new Date().toISOString().split('T')[0];
+        if (fecha < hoyStr) { Swal.showValidationMessage('No se puede modificar a una fecha pasada'); return false; }
+
+        if (fecha === hoyStr) {
+            const ahora = new Date();
+            const [h, m] = hora_inicio.split(':').map(Number);
+            const horaInicioDate = new Date();
+            horaInicioDate.setHours(h, m, 0, 0);
+            if (horaInicioDate <= ahora) { Swal.showValidationMessage('No se puede modificar a un horario que ya pasó'); return false; }
         }
+
+        return { fecha, hora_inicio, hora_fin };
+    }
     });
 
     if (!formValues) return;
