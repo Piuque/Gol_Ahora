@@ -8,73 +8,55 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        html, body { height: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #071524 !important; }
+        #wrapper { display: flex; width: 100%; height: 100vh; }
+        #sidebar-wrapper { min-width: 290px; max-width: 290px; background-color: #0A2540; display: flex; flex-direction: column;
+            transition: margin-left 0.25s ease-in-out, min-width 0.25s ease-in-out, max-width 0.25s ease-in-out; }
+        #wrapper.toggled #sidebar-wrapper { min-width: 0; max-width: 0; overflow: hidden; }
+        .sidebar-data-scroll { flex-grow: 1; overflow-y: auto; }
+        #page-content-wrapper { flex-grow: 1; height: 100vh; display: flex; flex-direction: column; background-color: #071524; }
+        #page-content-wrapper main { overflow-y: auto; }
+    </style>
 </head>
-<body class="bg-football-dark text-light">
- 
-<div class="d-flex" id="wrapper">
- 
-    <!-- ===================== SIDEBAR ===================== -->
-    <div id="sidebar-wrapper">
-        <a href="interfazProfesor.html" class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
-            style="transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-            <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
-        </a>
- 
-        <div id="user-profile-summary" class="p-3 border-bottom border-secondary border-opacity-25">
+<body class="bg-football-dark text-white">
+
+<div id="wrapper">
+    <aside id="sidebar-wrapper" class="border-end border-secondary border-opacity-10 shadow-lg">
+        <div class="p-4 border-bottom border-secondary border-opacity-25">
             <div class="d-flex align-items-center">
-                <div class="avatar-box bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center me-2"
-                    style="width:40px;height:40px;flex-shrink:0;">
-                    <i class="fa-solid fa-chalkboard-user"></i>
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width:54px;height:54px;background:rgba(255,193,7,0.12);">
+                    <i class="fa-solid fa-chalkboard-user text-warning fs-4"></i>
                 </div>
                 <div class="overflow-hidden">
-                    <div class="fw-bold text-white text-truncate lh-1 small" id="sidebar-user-fullname">Cargando...</div>
-                    <small class="text-sports text-uppercase fw-bold" style="font-size:0.63rem;letter-spacing:0.8px;">Profesor</small>
+                    <h6 class="fw-bold text-white mb-0 text-truncate id-nombre-completo">Cargando...</h6>
+                    <span class="badge mt-1 text-uppercase fw-bold" style="background:rgba(255,193,7,0.15);color:#ffc107;border:1px solid rgba(255,193,7,0.35);font-size:0.65rem;">Profesor</span>
                 </div>
             </div>
         </div>
- 
-        <ul class="nav flex-column mt-2 flex-grow-1">
-            <li>
-                <a class="nav-link sidebar-link d-flex align-items-center" href="interfazProfesor.html">
-                    <i class="fa-solid fa-person-chalkboard me-3"></i>Gestión de Clases
-                </a>
-            </li>
-            <li>
-                <a class="nav-link sidebar-link d-flex align-items-center" href="certificacionesProfesor.html">
-                    <i class="fa-solid fa-graduation-cap me-3"></i>Mis Certificaciones
-                </a>
-            </li>
-            <li>
-                <a class="nav-link sidebar-link active d-flex align-items-center" href="perfilProfesor.html">
-                    <i class="fa-solid fa-user-tie me-3"></i>Mi Perfil Técnico
-                </a>
-            </li>
-        </ul>
- 
-        <div class="p-3 border-top border-secondary border-opacity-25 mt-auto">
-            <button class="btn sidebar-logout w-100 d-flex align-items-center gap-2"
-                onclick="CerrarSesion()">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Cerrar sesión</span>
-            </button>
+        <div class="sidebar-data-scroll p-4">
+            <h6 class="text-warning text-uppercase fw-bold mb-3 small">Información Personal</h6>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">DNI</small><span class="text-white small input-Dni">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">EMAIL</small><span class="text-white small input-Email">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">TELÉFONO</small><span class="text-white small input-Telefono">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">FECHA NAC.</small><span class="text-white small input-Fecha">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">GÉNERO / NAC.</small><span class="text-white small"><span class="input-Genero">...</span> / <span class="input-Nacionalidad">...</span></span></div>
+            <div class="mb-2"><small class="text-light-50 d-block" style="font-size:0.7rem;">DOMICILIO</small><span class="text-white small input-Direccion">...</span></div>
         </div>
-    </div>
-    <!-- ===================== /SIDEBAR ===================== -->
- 
-    <div id="page-content-wrapper" class="w-100 d-flex flex-column">
- 
-        <!-- TOPBAR -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
-            <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div class="ms-auto">
-                <span class="small text-light-75 fw-medium" id="top-navbar-user-name">Cargando...</span>
-            </div>
-        </nav>
- 
-        <!-- CONTENIDO -->
-        <div class="container-fluid px-4 py-4 flex-grow-1">
+        <div class="p-3 border-top border-secondary border-opacity-25">
+            <a href="interfazProfesor.html" class="btn btn-outline-warning w-100 fw-bold py-2 mb-2 rounded-3 text-warning"><i class="fa-solid fa-arrow-left me-2"></i>Panel Principal</a>
+            <a href="certificacionesProfesor.html" class="btn btn-outline-warning w-100 fw-bold py-2 mb-2 rounded-3 text-warning"><i class="fa-solid fa-graduation-cap me-2"></i>Certificaciones</a>
+            <button onclick="cerrarSesion()" class="btn btn-outline-danger w-100 fw-bold py-2 rounded-3"><i class="fa-solid fa-right-from-bracket me-2"></i>Salir</button>
+        </div>
+    </aside>
+
+    <div id="page-content-wrapper">
+        <header class="navbar navbar-dark bg-navy py-3 px-4 border-bottom border-secondary border-opacity-10">
+            <button class="btn btn-outline-warning btn-sm border-warning text-warning me-3" id="menu-toggle"><i class="fa-solid fa-bars"></i></button>
+            <span class="navbar-brand fw-bold m-0 fs-5"><i class="fa-solid fa-user-tie text-warning me-2"></i>Mi Perfil Técnico</span>
+            <span class="text-light-50 small ms-auto" id="nav-welcome">...</span>
+        </header>
+        <main class="container-fluid flex-grow-1 px-4 py-4">
             <div class="row g-3">
  
                 <!-- COLUMNA IZQUIERDA — Datos del perfil -->
@@ -180,8 +162,7 @@
                 </div>
  
             </div>
-        </div>
- 
+        </main>
     </div>
 </div>
  
@@ -227,6 +208,7 @@
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/tecnicoSidebarUtil.js"></script>
 <script src="js/datosPersonalesProfesor.js"></script>
 </body>
 </html>

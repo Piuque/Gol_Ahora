@@ -3,252 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gol Ahora — Panel Técnico Entrenador</title>
+    <title>Gol Ahora — Panel Entrenador</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        html, body { height: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #071524 !important; }
+        #wrapper { display: flex; width: 100%; height: 100vh; }
+        #sidebar-wrapper {
+            min-width: 290px; max-width: 290px; background-color: #0A2540;
+            display: flex; flex-direction: column;
+            transition: margin-left 0.25s ease-in-out, min-width 0.25s ease-in-out, max-width 0.25s ease-in-out;
+        }
+        #wrapper.toggled #sidebar-wrapper { min-width: 0; max-width: 0; overflow: hidden; }
+        .sidebar-data-scroll { flex-grow: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(220, 53, 69, 0.4) transparent; }
+        #page-content-wrapper { flex-grow: 1; height: 100vh; display: flex; flex-direction: column; background-color: #071524; }
+        #page-content-wrapper main { overflow-y: auto; }
+        .menu-modulo-card {
+            background-color: #0A2540; border: 1px solid rgba(255,255,255,0.03); border-radius: 12px;
+            transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), background-color 0.2s ease, box-shadow 0.25s ease;
+            text-decoration: none !important; height: 100%; min-height: 200px;
+            display: flex; flex-direction: column; padding: 24px 18px;
+        }
+        .menu-modulo-card:hover {
+            transform: translateY(-4px); background-color: #0e3052;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; border-color: rgba(220,53,69,0.25);
+        }
+        .icon-wrapper {
+            width: 70px; height: 70px; background-color: rgba(255,255,255,0.03); border-radius: 18px;
+            display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+            margin: 0 auto 1rem auto; transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .menu-modulo-card:hover .icon-wrapper { color: #dc3545 !important; transform: scale(1.08); }
+        .panel-operativo {
+            background-color: #0A2540; border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 1.25rem;
+        }
+        .nav-tabs .nav-link { color: rgba(255,255,255,0.55); border: none; }
+        .nav-tabs .nav-link:hover { color: #fff; border-color: transparent; }
+        .nav-tabs .nav-link.active { background: rgba(220,53,69,0.12); color: #f87171; border: 1px solid rgba(220,53,69,0.25); border-radius: 8px 8px 0 0; }
+    </style>
 </head>
-<body class="bg-football-dark text-light">
+<body class="bg-football-dark text-white">
 
-<div class="d-flex" id="wrapper">
-
-    <!-- ===================== SIDEBAR ===================== -->
-    <div id="sidebar-wrapper">
-        <a href="interfazEntrenador.html" class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
-            style="transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-            <i class="fa-solid fa-futbol text-sports me-2"></i> GOL AHORA
-        </a>
-
-        <div id="user-profile-summary" class="p-3 border-bottom border-secondary border-opacity-25">
+<div id="wrapper">
+    <aside id="sidebar-wrapper" class="border-end border-secondary border-opacity-10 shadow-lg">
+        <div class="p-4 border-bottom border-secondary border-opacity-25">
             <div class="d-flex align-items-center">
-                <div class="avatar-box bg-success bg-opacity-10 text-sports rounded-circle d-flex align-items-center justify-content-center me-2"
-                    style="width:40px;height:40px;flex-shrink:0;">
-                    <i class="fa-solid fa-user-gear"></i>
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm"
+                     style="width:54px;height:54px;background:rgba(220,53,69,0.12);">
+                    <i class="fa-solid fa-dumbbell text-danger fs-4"></i>
                 </div>
                 <div class="overflow-hidden">
-                    <div class="fw-bold text-white text-truncate lh-1 small" id="sidebar-user-fullname">Conectando...</div>
-                    <small class="text-sports text-uppercase fw-bold" style="font-size:0.63rem;letter-spacing:0.8px;">Entrenador</small>
+                    <h6 class="fw-bold text-white mb-0 text-truncate id-nombre-completo" style="font-size:1rem;">Cargando...</h6>
+                    <span class="badge mt-1 text-uppercase fw-bold"
+                          style="background:rgba(220,53,69,0.15);color:#f87171;border:1px solid rgba(220,53,69,0.35);font-size:0.65rem;letter-spacing:0.5px;">Entrenador</span>
                 </div>
             </div>
         </div>
-
-        <ul class="nav flex-column mt-2 flex-grow-1">
-            <li>
-                <a class="nav-link sidebar-link active d-flex align-items-center" href="interfazEntrenador.html">
-                    <i class="fa-solid fa-dumbbell me-3"></i>Gestión Operativa
-                </a>
-            </li>
-            <li>
-                <a class="nav-link sidebar-link d-flex align-items-center" href="certificacionesEntrenador.html">
-                    <i class="fa-solid fa-graduation-cap me-3"></i>Mis Certificaciones
-                </a>
-            </li>
-            <li>
-                <a class="nav-link sidebar-link d-flex align-items-center" href="perfilEntrenador.html">
-                    <i class="fa-solid fa-user-gear me-3"></i>Mi Perfil Técnico
-                </a>
-            </li>
-        </ul>
-
-        <!-- CERRAR SESIÓN — fijo al fondo del sidebar -->
-        <div class="p-3 border-top border-secondary border-opacity-25 mt-auto">
-            <button class="btn sidebar-logout w-100 d-flex align-items-center gap-2"
-                onclick="CerrarSesion()">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Cerrar sesión</span>
+        <div class="sidebar-data-scroll p-4">
+            <h6 class="text-danger text-uppercase fw-bold mb-3" style="font-size:0.75rem;letter-spacing:1px;">Información Personal</h6>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">DOCUMENTO (DNI)</small><span class="text-white fw-medium small input-Dni">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">EMAIL</small><span class="text-white fw-medium small text-break input-Email">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">TELÉFONO</small><span class="text-white fw-medium small input-Telefono">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">FECHA DE NACIMIENTO</small><span class="text-white fw-medium small input-Fecha">...</span></div>
+            <div class="mb-3"><small class="text-light-50 d-block" style="font-size:0.7rem;">GÉNERO / NACIONALIDAD</small><span class="text-white fw-medium small"><span class="input-Genero">...</span> / <span class="input-Nacionalidad">...</span></span></div>
+            <div class="mb-2"><small class="text-light-50 d-block" style="font-size:0.7rem;">DOMICILIO</small><span class="text-white fw-medium small input-Direccion">...</span></div>
+        </div>
+        <div class="p-3 border-top border-secondary border-opacity-25" style="background:rgba(0,0,0,0.15);">
+            <a href="perfilEntrenador.html" class="btn btn-danger w-100 fw-bold py-2 mb-2 rounded-3 text-white">
+                <i class="fa-solid fa-user-gear me-2"></i> Mi Perfil Técnico
+            </a>
+            <button onclick="cerrarSesion()" class="btn btn-outline-danger w-100 fw-bold py-2 rounded-3">
+                <i class="fa-solid fa-right-from-bracket me-2"></i> Salir
             </button>
         </div>
-    </div>
-    <!-- ===================== /SIDEBAR ===================== -->
+    </aside>
 
-    <div id="page-content-wrapper" class="w-100 d-flex flex-column">
-
-        <!-- TOPBAR -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-navy border-bottom border-secondary border-opacity-25 px-4 py-2">
-            <button class="btn btn-outline-success btn-sm border-sports text-sports" id="menu-toggle">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div class="ms-auto">
-                <span class="small text-light-75 fw-medium" id="top-navbar-user-name">Conectando...</span>
+    <div id="page-content-wrapper">
+        <header class="navbar navbar-dark bg-navy py-3 px-4 border-bottom border-secondary border-opacity-10 shadow-sm">
+            <div class="container-fluid p-0 d-flex align-items-center">
+                <button class="btn btn-outline-danger btn-sm border-danger text-danger me-3" id="menu-toggle"><i class="fa-solid fa-bars"></i></button>
+                <span class="navbar-brand fw-bold m-0 text-uppercase fs-5"><i class="fa-solid fa-futbol text-sports me-2"></i>Gol Ahora</span>
+                <span class="text-light-50 small fw-medium text-uppercase ms-auto" id="nav-welcome" style="font-size:0.75rem;">...</span>
             </div>
-        </nav>
+        </header>
 
-        <!-- CONTENIDO PRINCIPAL -->
-        <div class="container-fluid px-4 py-4 flex-grow-1">
-            <div class="card bg-navy border-0 shadow-lg p-4">
+        <main class="container-fluid flex-grow-1 px-4 pt-3 pb-4" style="max-width:1200px;">
+            <div class="mb-4 text-center text-md-start">
+                <h2 class="fw-bold mb-1">Panel de Entrenador</h2>
+                <p class="text-light-50 mb-0">Gestioná entrenamientos, alumnos y competencias del club.</p>
+            </div>
 
-                <!-- TABS -->
-                <ul class="nav nav-tabs mb-4" id="tecnicoTabs" role="tablist">
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <a href="#panel-operativo" class="menu-modulo-card text-center">
+                        <div class="icon-wrapper text-danger"><i class="fa-solid fa-list-check"></i></div>
+                        <h5 class="fw-bold text-white mb-2">Gestión Operativa</h5>
+                        <p class="text-light-50 small mb-0">Entrenamientos, alumnos y planificación.</p>
+                        <div class="text-danger fw-bold mt-3 small">Ver panel <i class="fa-solid fa-arrow-down ms-1"></i></div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="certificacionesEntrenador.html" class="menu-modulo-card text-center">
+                        <div class="icon-wrapper text-sports"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <h5 class="fw-bold text-white mb-2">Mis Certificaciones</h5>
+                        <p class="text-light-50 small mb-0">Legajo técnico y documentación avalada.</p>
+                        <div class="text-sports fw-bold mt-3 small">Ir <i class="fa-solid fa-arrow-right ms-1"></i></div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="perfilEntrenador.html" class="menu-modulo-card text-center">
+                        <div class="icon-wrapper" style="color:#63b3ed;"><i class="fa-solid fa-id-card"></i></div>
+                        <h5 class="fw-bold text-white mb-2">Mi Perfil Técnico</h5>
+                        <p class="text-light-50 small mb-0">Datos personales y solicitud de baja.</p>
+                        <div class="fw-bold mt-3 small" style="color:#63b3ed;">Ir <i class="fa-solid fa-arrow-right ms-1"></i></div>
+                    </a>
+                </div>
+            </div>
+
+            <div id="panel-operativo" class="panel-operativo">
+                <ul class="nav nav-tabs mb-3" id="tecnicoTabs" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active" id="actividades-tab"
-                            data-bs-toggle="tab" data-bs-target="#panel-actividades" type="button">
-                            <i class="fa-solid fa-list me-1"></i>Planificación y Alumnos
+                        <button class="nav-link active" id="actividades-tab" data-bs-toggle="tab" data-bs-target="#panel-actividades" type="button">
+                            <i class="fa-solid fa-dumbbell me-1"></i>Planificación y Alumnos
                         </button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="competencias-tab"
-                            data-bs-toggle="tab" data-bs-target="#panel-competencias" type="button">
+                        <button class="nav-link" id="competencias-tab" data-bs-toggle="tab" data-bs-target="#panel-competencias" type="button">
                             <i class="fa-solid fa-trophy me-1"></i>Torneos y Ligas
                         </button>
                     </li>
                 </ul>
-
-                <div class="tab-content" id="tecnicoTabsContent">
-
-                    <!-- TAB 1: Planificación y Alumnos -->
-                    <div class="tab-pane fade show active" id="panel-actividades" role="tabpanel">
-
-                        <h6 class="text-sports fw-bold mb-3 text-uppercase small">
-                            <i class="fa-solid fa-list me-2"></i>Cronograma Operativo de Entrenamientos
-                        </h6>
-
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="panel-actividades">
+                        <h6 class="text-danger fw-bold mb-3 text-uppercase small"><i class="fa-solid fa-calendar me-2"></i>Cronograma de Entrenamientos</h6>
                         <div class="table-responsive mb-4">
-                            <table class="table table-dark table-hover table-striped align-middle mb-0 small">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre Entrenamiento</th>
-                                        <th>Horario</th>
-                                        <th>Cancha</th>
-                                        <th>Capacidad</th>
-                                        <th>Inscriptos</th>
-                                        <th class="text-center">Alumnos</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-entrenamientos-body">
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4" style="color:var(--text-light-50);">
-                                            <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
-                                            Cargando entrenamientos...
-                                        </td>
-                                    </tr>
-                                </tbody>
+                            <table class="table table-dark table-hover align-middle mb-0 small">
+                                <thead><tr><th>Entrenamiento</th><th>Horario</th><th>Cancha</th><th>Capacidad</th><th>Inscriptos</th><th class="text-center">Alumnos</th></tr></thead>
+                                <tbody id="tabla-entrenamientos-body"><tr><td colspan="6" class="text-center py-4 text-light-50">Cargando...</td></tr></tbody>
                             </table>
                         </div>
-
-                        <h6 class="text-sports fw-bold mb-3 text-uppercase small mt-4">
-                            <i class="fa-solid fa-users me-2"></i>
-                            <span id="titulo-tabla-alumnos">Nómina Oficial de Alumnos</span>
-                            <small class="text-light-50 ms-2 fw-normal text-lowercase" style="font-size:0.7rem;">
-                                — hacé clic en "Ver alumnos" de un entrenamiento para cargarlos
-                            </small>
-                        </h6>
-
+                        <h6 class="text-danger fw-bold mb-3 text-uppercase small"><i class="fa-solid fa-users me-2"></i><span id="titulo-tabla-alumnos">Nómina de Alumnos</span></h6>
                         <div class="table-responsive">
-                            <table class="table table-dark table-hover table-striped align-middle mb-0 small">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre y Apellido</th>
-                                        <th>DNI</th>
-                                        <th>Teléfono</th>
-                                        <th>Asistencia</th>
-                                        <th class="text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-alumnos-body">
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4" style="color:var(--text-light-50);">
-                                            <i class="fa-solid fa-hand-pointer me-2"></i>Seleccioná un entrenamiento para ver sus alumnos.
-                                        </td>
-                                    </tr>
-                                </tbody>
+                            <table class="table table-dark table-hover align-middle mb-0 small">
+                                <thead><tr><th>Nombre</th><th>DNI</th><th>Teléfono</th><th>Asistencia</th><th class="text-center">Acciones</th></tr></thead>
+                                <tbody id="tabla-alumnos-body"><tr><td colspan="5" class="text-center py-4 text-light-50">Seleccioná un entrenamiento para ver alumnos.</td></tr></tbody>
                             </table>
                         </div>
-
                     </div>
-
-                    <!-- TAB 2: Torneos y Ligas -->
-                    <div class="tab-pane fade" id="panel-competencias" role="tabpanel">
-
-                        <h6 class="text-sports fw-bold mb-3 text-uppercase small">
-                            <i class="fa-solid fa-trophy me-2"></i>Fixture y Ligas Activas
-                        </h6>
-
+                    <div class="tab-pane fade" id="panel-competencias">
+                        <h6 class="text-danger fw-bold mb-3 text-uppercase small"><i class="fa-solid fa-trophy me-2"></i>Ligas y Torneos (como tutor)</h6>
                         <div class="table-responsive">
-                            <table class="table table-dark table-hover table-striped align-middle mb-0 small">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre del Torneo</th>
-                                        <th>Fecha Encuentro</th>
-                                        <th>Categoría</th>
-                                        <th>Estado Actual</th>
-                                        <th>Participantes</th>
-                                        <th class="text-center">Planilla</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-ligas-body">
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4" style="color:var(--text-light-50);">
-                                            <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
-                                            Cargando ligas...
-                                        </td>
-                                    </tr>
-                                </tbody>
+                            <table class="table table-dark table-hover align-middle mb-0 small">
+                                <thead><tr><th>Nombre</th><th>Fechas</th><th>Categoría</th><th>Estado</th><th>Participantes</th><th class="text-center">Planilla</th></tr></thead>
+                                <tbody id="tabla-ligas-body"><tr><td colspan="6" class="text-center py-4 text-light-50">Abrí esta pestaña para cargar competencias.</td></tr></tbody>
                             </table>
                         </div>
-
                     </div>
-
                 </div>
             </div>
-        </div>
-
+        </main>
     </div>
 </div>
 
-<!-- ============================================================
-     MODAL — MODIFICAR USUARIO / HORARIO (BLANCO RECTANGULAR)
-     ============================================================ -->
-<div class="modal fade" id="modalModificarUsuario" tabindex="-1" aria-labelledby="modalModificarTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
-        <div class="modal-content bg-white text-dark p-4" style="border-radius:6px;border:none;box-shadow:0 12px 48px rgba(0,0,0,0.45);">
-
-            <div class="text-center mb-4">
-                <h4 class="fw-normal" id="modalModificarTitle"
-                    style="color:#5f6368;font-family:'Poppins',sans-serif;font-size:1.25rem;">
-                    Modificar Usuario
-                </h4>
-            </div>
-
-            <form id="form-modal-modificar" novalidate>
-                <div id="modalModificarBody">
-                    <!-- Campos inyectados dinámicamente por JS -->
-                </div>
-                <div class="d-flex justify-content-center gap-2 mt-4">
-                    <button type="submit" class="btn btn-guardar-modal px-4 py-2">
-                        Guardar
-                    </button>
-                    <button type="button" class="btn btn-cancelar-modal px-4 py-2" data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================
-     MODAL — FICHA DETALLADA DE ALUMNO (OSCURO)
-     ============================================================ -->
-<div class="modal fade" id="modalFichaUsuario" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:460px;">
-        <div class="modal-content bg-navy border border-secondary border-opacity-25 text-white p-3 shadow-lg"
-            style="border-radius:8px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-white" id="fichaUserTitle">Ficha de Alumno</h5>
-                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-3" id="modalFichaUserBody">
-                <!-- Inyectado por JS -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="js/datosPersonalesEntrenador.js"></script>
+<script src="js/tecnicoSidebarUtil.js"></script>
+<script src="js/interfazEntrenador.js"></script>
 </body>
 </html>

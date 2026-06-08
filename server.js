@@ -12,6 +12,13 @@ const usuarioController = require('./controllers/usuarioController.js');
 const multer = require('multer');
 const fs = require('fs');
 
+function parseMatriculaCertificacion(matricula) {
+  const texto = (matricula || '').trim();
+  const match = texto.match(/^(.+?)\s*\((.+)\)\s*$/);
+  if (match) return { nombre: match[1].trim(), institucion: match[2].trim() };
+  return { nombre: texto || 'Certificación', institucion: '—' };
+}
+
 // Configuración de almacenamiento para certificaciones de profesores/entrenadores
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -41,6 +48,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/css', express.static(path.join(__dirname, 'public/pages/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/pages/js')));
 app.use('/img', express.static(path.join(__dirname, 'public/pages/img')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Primero las rutas HTML (sin autenticación)
 app.get(['/admin', '/Admin'], (req, res) => {
@@ -268,7 +276,136 @@ app.delete('/entrenador/entrenamientos/:id_entrenamiento/alumnos/:id_alumno', au
   }
 });
 
+const listarCompetenciasTutor = async (idUsuario) => {
+  const db = require('./config/db.js');
+  const ligasSql = `
+    SELECT 'Liga' AS categoria, l.id_liga AS id, l.nombre,
+           to_char(l.fecha_inicio, 'DD/MM/YYYY') AS fecha_encuentro,
+           to_char(l.fecha_fin, 'DD/MM/YYYY') AS fecha_fin,
+           CASE
+             WHEN NOW() < l.fecha_inicio THEN 'Programado'
+             WHEN NOW() BETWEEN l.fecha_inicio AND l.fecha_fin THEN 'En curso'
+             ELSE 'Finalizado'
+           END AS estado,
+           (SELECT COUNT(*)::int FROM participacion_ligas pl WHERE pl.id_liga = l.id_liga) AS participantes
+    FROM ligas l
+    WHERE l.id_usuario_tutor = $1
+    ORDER BY l.fecha_inicio DESC
+  `;
+  const torneosSql = `
+    SELECT 'Torneo' AS categoria, t.id_torneo AS id, t.nombre,
+           to_char(t.fecha_inicio, 'DD/MM/YYYY') AS fecha_encuentro,
+           to_char(t.fecha_fin, 'DD/MM/YYYY') AS fecha_fin,
+           CASE
+             WHEN NOW() < t.fecha_inicio THEN 'Programado'
+             WHEN NOW() BETWEEN t.fecha_inicio AND t.fecha_fin THEN 'En curso'
+             ELSE 'Finalizado'
+           END AS estado,
+           (SELECT COUNT(*)::int FROM participacion_torneos pt WHERE pt.id_torneo = t.id_torneo) AS participantes
+    FROM torneos t
+    WHERE t.id_usuario_tutor = $1
+    ORDER BY t.fecha_inicio DESC
+  `;
+  const ligas = await db.query.all(ligasSql, [idUsuario]);
+  const torneos = await db.query.all(torneosSql, [idUsuario]);
+  return [...ligas, ...torneos];
+};
+
+app.get('/entrenador/competencias', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  try {
+    const rows = await listarCompetenciasTutor(req.user.id_usuario);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar competencias del entrenador', message: err.message });
+  }
+});
+
+app.get('/entrenador/competencias/:tipo/:id/planilla', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
+  const { tipo, id } = req.params;
+  const idUsuario = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    if (tipo.toLowerCase() === 'liga') {
+      const liga = await db.query.get(
+        'SELECT id_liga FROM ligas WHERE id_liga = $1 AND id_usuario_tutor = $2',
+        [id, idUsuario]
+      );
+      if (!liga) return res.status(404).json({ error: 'Liga no encontrada o sin permisos' });
+      const equipos = await db.query.all(`
+        SELECT e.id_equipo, e.nombre
+        FROM participacion_ligas pl
+        JOIN equipos e ON pl.id_equipo = e.id_equipo
+        WHERE pl.id_liga = $1
+        ORDER BY e.nombre ASC
+      `, [id]);
+      return res.json({ equipos });
+    }
+    const torneo = await db.query.get(
+      'SELECT id_torneo FROM torneos WHERE id_torneo = $1 AND id_usuario_tutor = $2',
+      [id, idUsuario]
+    );
+    if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado o sin permisos' });
+    const equipos = await db.query.all(`
+      SELECT e.id_equipo, e.nombre
+      FROM participacion_torneos pt
+      JOIN equipos e ON pt.id_equipo = e.id_equipo
+      WHERE pt.id_torneo = $1
+      ORDER BY e.nombre ASC
+    `, [id]);
+    res.json({ equipos });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener planilla', message: err.message });
+  }
+});
+
 // --- ENDPOINTS DE API ADICIONALES PARA PROFESORES ---
+app.get('/profesor/competencias', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  try {
+    const rows = await listarCompetenciasTutor(req.user.id_usuario);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar competencias del profesor', message: err.message });
+  }
+});
+
+app.get('/profesor/competencias/:tipo/:id/planilla', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
+  const { tipo, id } = req.params;
+  const idUsuario = req.user.id_usuario;
+  try {
+    const db = require('./config/db.js');
+    if (tipo.toLowerCase() === 'liga') {
+      const liga = await db.query.get(
+        'SELECT id_liga FROM ligas WHERE id_liga = $1 AND id_usuario_tutor = $2',
+        [id, idUsuario]
+      );
+      if (!liga) return res.status(404).json({ error: 'Liga no encontrada o sin permisos' });
+      const equipos = await db.query.all(`
+        SELECT e.id_equipo, e.nombre
+        FROM participacion_ligas pl
+        JOIN equipos e ON pl.id_equipo = e.id_equipo
+        WHERE pl.id_liga = $1
+        ORDER BY e.nombre ASC
+      `, [id]);
+      return res.json({ equipos });
+    }
+    const torneo = await db.query.get(
+      'SELECT id_torneo FROM torneos WHERE id_torneo = $1 AND id_usuario_tutor = $2',
+      [id, idUsuario]
+    );
+    if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado o sin permisos' });
+    const equipos = await db.query.all(`
+      SELECT e.id_equipo, e.nombre
+      FROM participacion_torneos pt
+      JOIN equipos e ON pt.id_equipo = e.id_equipo
+      WHERE pt.id_torneo = $1
+      ORDER BY e.nombre ASC
+    `, [id]);
+    res.json({ equipos });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener planilla', message: err.message });
+  }
+});
+
 app.post('/profesor/modificarPerfil', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
   const { telefono, email } = req.body;
   const idUsuario = req.user.id_usuario;
@@ -292,13 +429,16 @@ app.get('/profesor/certificaciones', authMiddleware, requireRole(['profesor', 'a
       ORDER BY id_certificacion DESC
     `;
     const rows = await db.query.all(sql, [idUsuario]);
-    res.json(rows.map(r => ({
-      nombre: r.matricula,
-      institucion: 'Establecimiento',
-      fecha_emision: r.fecha_caducidad,
-      archivo_url: r.link_archivo,
-      validada: r.validada
-    })));
+    res.json(rows.map(r => {
+      const parsed = parseMatriculaCertificacion(r.matricula);
+      return {
+        nombre: parsed.nombre,
+        institucion: parsed.institucion,
+        fecha_emision: r.fecha_caducidad,
+        archivo_url: r.link_archivo,
+        validada: r.validada
+      };
+    }));
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener certificaciones', message: err.message });
   }
@@ -351,13 +491,16 @@ app.get('/entrenador/certificaciones', authMiddleware, requireRole(['entrenador'
       ORDER BY id_certificacion DESC
     `;
     const rows = await db.query.all(sql, [idUsuario]);
-    res.json(rows.map(r => ({
-      nombre: r.matricula,
-      institucion: 'Establecimiento',
-      fecha_emision: r.fecha_caducidad,
-      archivo_url: r.link_archivo,
-      validada: r.validada
-    })));
+    res.json(rows.map(r => {
+      const parsed = parseMatriculaCertificacion(r.matricula);
+      return {
+        nombre: parsed.nombre,
+        institucion: parsed.institucion,
+        fecha_emision: r.fecha_caducidad,
+        archivo_url: r.link_archivo,
+        validada: r.validada
+      };
+    }));
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener certificaciones', message: err.message });
   }

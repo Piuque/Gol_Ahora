@@ -1700,6 +1700,38 @@ const obtenerAsistenciasEntrenamiento = async (req, res) => {
   }
 };
 
+// GET /admin/reportes/tipos-cancha
+const reporteTiposCancha = async (req, res) => {
+  try {
+    const sql = `
+      SELECT
+        tc.id_tipo_de_cancha AS id,
+        tc.tipo_cancha,
+        tc.ancho,
+        tc.largo,
+        tc.capacidad,
+        tc.duracion_min,
+        tc.duracion_max,
+        s.tipo_superficie AS superficie,
+        COUNT(c.id_cancha)::int AS total_canchas,
+        COALESCE(ROUND(AVG(c.precio_hora_reserva)::numeric, 2), 0) AS precio_promedio
+      FROM tipos_de_cancha tc
+      LEFT JOIN superficies s ON tc.id_superficie = s.id_superficie
+      LEFT JOIN canchas c ON c.id_tipo_de_cancha = tc.id_tipo_de_cancha
+      GROUP BY
+        tc.id_tipo_de_cancha, tc.tipo_cancha,
+        tc.ancho, tc.largo, tc.capacidad,
+        tc.duracion_min, tc.duracion_max,
+        s.tipo_superficie
+      ORDER BY tc.id_tipo_de_cancha ASC
+    `;
+    const rows = await db.query.all(sql);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar reporte de tipos de cancha', message: err.message });
+  }
+};
+
 // GET /admin/reportes/canchas
 const reporteCanchas = async (req, res) => {
   try {
@@ -1884,6 +1916,7 @@ module.exports = {
   crearReserva,
   obtenerAsistenciasClase,
   obtenerAsistenciasEntrenamiento,
+  reporteTiposCancha,
   reporteCanchas,
   reporteReservas,
   reporteClases,

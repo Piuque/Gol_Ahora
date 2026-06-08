@@ -610,7 +610,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
-    const API = "https://gol-ahora.onrender.com";
+    const API = window.location.origin;
 
     /* ── Init ── */
     document.addEventListener('DOMContentLoaded', () => {
@@ -679,19 +679,19 @@
     const REPORTES = {
 
         canchas: {
-            // Combina tipos de cancha + canchas físicas
             fetch: async () => {
                 const r = await fetch(`${API}/admin/reportes/tipos-cancha`, { credentials:'include' });
                 if (!r.ok) throw new Error();
-                return { tipos: await r.json(), canchas: [] };
+                return await r.json();
             },
-            render: ({ tipos }) => {
+            render: (tipos) => {
                 const tbody = document.getElementById('tbody-canchas');
-                if (!tipos || !tipos.length) {
+                const lista = Array.isArray(tipos) ? tipos : [];
+                if (!lista.length) {
                     tbody.innerHTML = `<tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>`;
                     return 0;
                 }
-                tbody.innerHTML = tipos.map(t => `
+                tbody.innerHTML = lista.map(t => `
                 <tr>
                     <td>${t.tipo_cancha ?? '—'}</td>
                     <td>${t.ancho != null ? t.ancho + ' m' : '—'}</td>
@@ -700,7 +700,7 @@
                     <td>${t.duracion_min ?? '—'} – ${t.duracion_max ?? '—'} min</td>
                     <td>${t.total_canchas ?? 0}</td>
                 </tr>`).join('');
-                return tipos.length;
+                return lista.length;
             }
         },
 

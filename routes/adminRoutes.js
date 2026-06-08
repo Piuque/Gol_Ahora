@@ -44,6 +44,7 @@ router.post('/ligas', adminController.crearLiga);
 
 // Reportes agregados
 router.get('/reportes/ingresos', adminController.reporteFinanciero);
+router.get('/reportes/tipos-cancha', adminController.reporteTiposCancha);
 router.get('/reportes/canchas', adminController.reporteCanchas);
 router.get('/reportes/reservas', adminController.reporteReservas);
 router.get('/reportes/clases', adminController.reporteClases);
