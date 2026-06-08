@@ -126,6 +126,31 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
+        if (!document.getElementById("calle").value.trim() || document.getElementById("calle").value.trim().length < 3) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La calle debe tener al menos 3 caracteres.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!/^\d{1,6}$/.test(document.getElementById("numero").value.trim())) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El número de calle debe ser numérico y tener entre 1 y 6 dígitos.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (document.getElementById("pais").value.trim() && !soloLetras.test(document.getElementById("pais").value.trim())) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El país no puede contener caracteres especiales y debe tener al menos 3 letras.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (document.getElementById("provincia").value.trim() && !soloLetras.test(document.getElementById("provincia").value.trim())) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La provincia no puede contener caracteres especiales y debe tener al menos 3 letras.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (document.getElementById("ciudad").value.trim() && !soloLetras.test(document.getElementById("ciudad").value.trim())) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La ciudad no puede contener caracteres especiales y debe tener al menos 3 letras.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!document.getElementById("localidad").value.trim() || !soloLetras.test(document.getElementById("localidad").value.trim())) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La localidad es obligatoria, debe tener al menos 3 letras y no puede contener caracteres especiales.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = async () => {
             const link_archivo = reader.result;
@@ -142,15 +167,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                     },
                     credentials: "include",
                     body: JSON.stringify({
-                        username: email.split('@')[0],
-                        nombre,
-                        apellido,
-                        email,
-                        password: "Unaj2026@golahora",
-                        dni,
-                        telefono,
-                        fecha_nacimiento
-                    })
+                    username: email.split('@')[0],
+                    nombre,
+                    apellido,
+                    email,
+                    password: "Unaj2026@golahora",
+                    dni,
+                    telefono,
+                    fecha_nacimiento,
+                    calle: document.getElementById("calle").value.trim(),
+                    numero: document.getElementById("numero").value.trim(),
+                    codigo_postal: document.getElementById("codigo_postal").value.trim(),
+                    localidad: document.getElementById("localidad").value.trim()
+                })
                 });
 
                 const dataUsuario = await resUsuario.json();
