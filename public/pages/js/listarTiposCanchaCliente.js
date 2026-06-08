@@ -20,7 +20,7 @@ async function cargarTiposDeCancha() {
         });
 
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
 
@@ -105,5 +105,5 @@ function avanzarPaso(idTipo) {
         sessionStorage.setItem('imagen_tipo_cancha', tipoSeleccionado.imagenSaneada);
     }
 
-    window.location.href = `listarCanchasCliente.html?idTipo=${idTipo}`;
+    window.location.href = `/cliente/canchas?idTipo=${idTipo}`;
 }

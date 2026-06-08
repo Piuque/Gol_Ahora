@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hora = urlParams.get('hora');
 
     if (!idCancha || !fecha || !hora) {
-        window.location.href = 'listarTiposCanchaCliente.html';
+        window.location.href = '/cliente/tipos-cancha';
         return;
     }
 
@@ -271,7 +271,7 @@ async function procesarReservaFinal() {
         });
 
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
 
@@ -311,7 +311,7 @@ async function procesarReservaFinal() {
             confirmButtonText: 'Entendido'
         });
 
-        window.location.href = 'misReservas.html';
+        window.location.href = '/misReservas';
 
     } catch (error) {
         console.error("Error en el POST de reserva:", error);

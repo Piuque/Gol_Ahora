@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Si entra a la página sin ID, lo devolvemos al Paso 1
     if (!idTipoCancha) {
-        window.location.href = 'listarTiposCanchaCliente.html';
+        window.location.href = '/cliente/tipos-cancha';
         return;
     }
 
@@ -30,7 +30,7 @@ async function cargarCanchasFiltradas(idTipoCancha) {
         });
 
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
 
@@ -109,5 +109,5 @@ function renderizarTarjetas(canchas) {
 
 function avanzarPaso(idCancha) {
     // Redirige al paso 3: Seleccionar Fecha y Hora
-    window.location.href = `seleccionarFechaHora.html?idCancha=${idCancha}`;
+    window.location.href = `/cliente/seleccionarFechaHora?idCancha=${idCancha}`;
 }
