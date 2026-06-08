@@ -492,8 +492,8 @@ const confirmarPagoEfectivo = async (req, res) => {
 
     await db.pool.query('BEGIN');
 
-    const montoFinal = parseFloat(cobro.monto) - (parseFloat(cobro.monto) * porcentaje_descuento / 100);
-    await db.pool.query('UPDATE cobros SET id_estado_cobro = 2, monto = $1, porcentaje_descuento = $2 WHERE id_cobro = $3', [montoFinal, porcentaje_descuento, id]);
+    const montoFinal = parseFloat(cobro.monto) - (parseFloat(cobro.monto) * parseFloat(porcentaje_descuento) / 100);
+    await db.pool.query('UPDATE cobros SET id_estado_cobro = 2, monto = $1, porcentaje_descuento = $2 WHERE id_cobro = $3', [montoFinal.toFixed(2), parseFloat(porcentaje_descuento), id]);
 
     const reciboRes = await db.pool.query(
       `INSERT INTO recibos (nro_transaccion, detalles, id_cobro) VALUES ($1, $2, $3) RETURNING id_recibos`,
