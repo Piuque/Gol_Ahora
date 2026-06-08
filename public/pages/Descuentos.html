@@ -11,13 +11,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap');
 
-    #modalNuevoDescuento .modal-body {
-  background: #0f2318;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
+ 
         .descuento-card {
             background-color: background: #0f2318;
             border: 1px solid rgba(255,255,255,0.1);
@@ -27,9 +21,47 @@
             padding: 16px;
         }
         .descuento-card:hover { transform: translateY(-3px); border-color: #00C16E; }
-        .modal-content { background-color: #0A2540; border: 1px solid rgba(255,255,255,0.1); color: white; }
-        .modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
+       .modal-content{
+    background: linear-gradient(
+        180deg,
+        #082016 0%,
+        #04120c 100%
+    );
+
+    border: 1px solid rgba(0,193,110,.35);
+    border-radius: 28px;
+
+    box-shadow:
+        0 0 40px rgba(0,193,110,.15),
+        inset 0 0 30px rgba(0,193,110,.05);
+
+    color: white;
+}
+
+.modal-header{
+    border-bottom: none;
+    padding: 25px 30px 10px;
+}
+
+.modal-body{
+    padding: 20px 30px;
+}
+
+.modal-footer{
+    border-top: none;
+    padding: 15px 30px 30px;
+}
+
+.modal-title{
+    font-size: 2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-close{
+    filter: invert(1);
+}
         .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 0.9rem; }
         .info-label { color: rgba(255,255,255,0.5); }
         .info-value { color: white; font-weight: 500; }
