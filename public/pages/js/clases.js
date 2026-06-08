@@ -326,6 +326,10 @@ async function asignarAlumno(id_clase) {
     const userId = localStorage.getItem("userId");
     const res = await fetch("/admin/clientes", { credentials: "include", headers: { "x-user-id": userId } });
     const clientes = await res.json();
+    if (!clientes || clientes.length === 0) {
+        await Swal.fire({ icon: 'info', title: 'Sin clientes', text: 'No hay clientes registrados para asignar.', confirmButtonColor: '#00C16E' });
+        return;
+    }
     const clienteOptions = clientes.map(c => `<option value="${c.id_usuario}">${c.nombre} ${c.apellido} - DNI: ${c.dni}</option>`).join('');
 
     const { value: formValues } = await Swal.fire({
