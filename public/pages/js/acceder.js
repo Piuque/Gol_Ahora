@@ -47,7 +47,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else if (data.usuario.role === 'entrenador') {
                     window.location.href = "/pages/perfilEntrenador.html";
                 } else {
-                    window.location.href = "/misReservas";
+                    const nextFlow = sessionStorage.getItem('nextFlow');
+                    sessionStorage.removeItem('nextFlow');
+                    if (nextFlow === 'reservar') {
+                        window.location.href = "/misReservas";
+                    } else {
+                        window.location.href = "/cliente";
+                    }
                 }
             } else {
                 errorEl.textContent = data.details || data.error || "Credenciales incorrectas";
