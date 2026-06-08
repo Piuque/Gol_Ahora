@@ -62,6 +62,12 @@
             color: white !important;
         }
         .search-input::placeholder { color: rgba(255,255,255,0.35) !important; }
+        .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; }
+        .slot-btn { border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+        .slot-btn:hover:not(:disabled) { border-color: #f59e0b; }
+        .slot-btn.selected { border-color: #f59e0b; background: rgba(245,158,11,0.15); color: #f59e0b; font-weight: 600; }
+        .slot-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .slot-btn.ocupado { border-color: rgba(239,68,68,0.4); color: rgba(255,255,255,0.35); }
     </style>
 </head>
 <body class="bg-football-dark px-3 py-5">
@@ -92,6 +98,45 @@
         </div>
     </div>
 
+    <!-- Modal Bloqueo Mantenimiento -->
+    <div class="modal fade" id="modalBloqueo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content p-2">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-screwdriver-wrench me-2" style="color:#f59e0b;"></i>Bloquear por mantenimiento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-light-50 small mb-3">Cancha: <strong class="text-white" id="bloqueo-nombre-cancha"></strong></p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-white">Fecha</label>
+                        <input type="date" id="bloqueo-fecha" class="form-control search-input">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="bloqueo-dia-completo">
+                        <label class="form-check-label text-white small" for="bloqueo-dia-completo">Bloquear día completo</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-white">Turnos (selección múltiple)</label>
+                        <div id="contenedor-bloqueo-turnos" class="slot-grid">
+                            <div class="text-light-50 small py-3 text-center" style="grid-column:1/-1;">Seleccioná una fecha para ver turnos.</div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-white">Motivo</label>
+                        <input type="text" id="bloqueo-motivo" class="form-control search-input" value="Mantenimiento preventivo">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm text-white" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btn-confirmar-bloqueo" class="btn btn-sm fw-bold text-white" style="background-color:#f59e0b;">
+                        <i class="fa-solid fa-lock me-1"></i> Confirmar bloqueo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal -->
     <div class="modal fade" id="modalCancha" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -114,5 +159,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/verCanchas.js"></script>
+    <script src="/js/bloquearCancha.js"></script>
 </body>
 </html>

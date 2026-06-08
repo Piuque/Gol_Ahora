@@ -58,7 +58,7 @@ function confirmarCierreSesion() {
     }).then(async (r) => {
         if (!r.isConfirmed) return;
         try { await fetch(`${window.location.origin}/logout`, { method: 'POST', credentials: 'include' }); } catch {}
-        window.location.href = '/pages/acceder.html';
+        window.location.href = '/acceder';
     });
 }
 

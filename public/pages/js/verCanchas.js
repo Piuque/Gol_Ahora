@@ -1,4 +1,5 @@
 let canchasData = [];
+let canchaDetalleActual = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
     const buscador = document.getElementById("buscador");
@@ -107,18 +108,23 @@ async function verDetalle(id) {
             headers: { "x-user-id": userId }
         });
         const c = await res.json();
+        canchaDetalleActual = c;
 
         document.getElementById("modal-nombre").textContent = c.nombre;
         document.getElementById("modal-info").innerHTML = `
             <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">${c.tipo_cancha || '-'}</span></div>
             <div class="info-row"><span class="info-label">Precio/hora</span><span class="info-value">$${c.precio_hora_reserva}</span></div>
             <div class="info-row"><span class="info-label">Cancelacion</span><span class="info-value">${c.tiempo_cancelacion} min de anticipacion</span></div>
-            <div class="d-flex gap-2 mt-3">
-                <button onclick="abrirModificar(${c.id}, '${c.nombre}', ${c.precio_hora_reserva}, ${c.tiempo_cancelacion})"
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <button onclick="abrirBloqueoCancha(canchaDetalleActual)"
+                    class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #f59e0b;">
+                    <i class="fa-solid fa-screwdriver-wrench me-1"></i> Bloquear
+                </button>
+                <button onclick="abrirModificar(${c.id}, '${c.nombre.replace(/'/g, "\\'")}', ${c.precio_hora_reserva}, ${c.tiempo_cancelacion})"
                     class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #0d6efd;">
                     <i class="fa-solid fa-pen me-1"></i> Modificar
                 </button>
-                <button onclick="confirmarEliminar(${c.id}, '${c.nombre}')"
+                <button onclick="confirmarEliminar(${c.id}, '${c.nombre.replace(/'/g, "\\'")}')"
                     class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #ef4444;">
                     <i class="fa-solid fa-trash me-1"></i> Eliminar
                 </button>

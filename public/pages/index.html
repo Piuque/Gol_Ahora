@@ -203,7 +203,7 @@
             <h1 class="display-4 fw-bold mb-3 text-uppercase tracking-tight">Reservá tu cancha en segundos</h1>
             <p class="lead mb-4 mx-auto style-sub text-light-75">Gestioná tus turnos, prendete en ligas y entrená en el complejo más moderno de la zona.</p>
             <div class="d-sm-flex justify-content-center gap-3">
-                <a href="/registro" onclick="sessionStorage.setItem('nextFlow', 'reservar');" class="btn btn-sports btn-lg px-5 py-3 fw-bold shadow mb-3 mb-sm-0 w-100 w-sm-auto">Reservar Turno</a>
+                <a href="/acceder" onclick="sessionStorage.setItem('nextFlow', 'reservar');" class="btn btn-sports btn-lg px-5 py-3 fw-bold shadow mb-3 mb-sm-0 w-100 w-sm-auto">Reservar Turno</a>
                 <a href="#servicios" class="btn btn-outline-light btn-lg px-5 py-3 w-100 w-sm-auto">Ver Actividades</a>
             </div>
         </div>
@@ -217,7 +217,7 @@
             </div>
             
             <div class="row g-4 justify-content-center">
-                <div class="col-md-6 col-lg-3" onclick="sessionStorage.setItem('nextFlow', 'reservar'); window.location.href='/registro';" style="cursor: pointer;">
+                <div class="col-md-6 col-lg-3" onclick="sessionStorage.setItem('nextFlow', 'reservar'); window.location.href='/acceder';" style="cursor: pointer;">
                     <div class="card card-sport h-100 border-0 bg-navy text-white shadow-lg">
                         <div class="card-img-container">
                             <img src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?q=80&w=600" class="card-img-top" alt="Alquiler de Canchas">
@@ -230,7 +230,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 col-lg-3" onclick="window.location.href='gestionClasesTorneos.html';" style="cursor: pointer;">
+                <div class="col-md-6 col-lg-3" onclick="window.location.href='/ligas-torneos';" style="cursor: pointer;">
                     <div class="card card-sport h-100 border-0 bg-navy text-white shadow-lg">
                         <div class="card-img-container">
                             <img src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=600" class="card-img-top" alt="Ligas y Torneos">
@@ -243,10 +243,10 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 col-lg-3" onclick="window.location.href='gestionClasesTorneos.html';" style="cursor: pointer;">
+                <div class="col-md-6 col-lg-3" onclick="sessionStorage.setItem('nextFlow', 'entrenamientos'); window.location.href='/acceder';" style="cursor: pointer;">
                     <div class="card card-sport h-100 border-0 bg-navy text-white shadow-lg">
                         <div class="card-img-container">
-                            <img src="" class="card-img-top" alt="Entrenamientos">
+                            <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=600" class="card-img-top" alt="Entrenamientos">
                         </div>
                         <div class="card-body p-4">
                             <div class="text-sports mb-2 small fw-bold text-nowrap"><i class="fa-solid fa-dumbbell me-1"></i> Preparación Física</div>
@@ -256,10 +256,10 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 col-lg-3" onclick="window.location.href='gestionClasesTorneos.html';" style="cursor: pointer;">
+                <div class="col-md-6 col-lg-3" onclick="sessionStorage.setItem('nextFlow', 'clases'); window.location.href='/acceder';" style="cursor: pointer;">
                     <div class="card card-sport h-100 border-0 bg-navy text-white shadow-lg">
                         <div class="card-img-container">
-                            <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=600" class="card-img-top" alt="Clases Dirigidas">
+                            <img src="https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?q=80&w=600" class="card-img-top" alt="Clases Dirigidas">
                         </div>
                         <div class="card-body p-4">
                             <div class="text-sports mb-2 small fw-bold text-nowrap"><i class="fa-solid fa-chalkboard-user me-1"></i> Instrucción Técnica</div>

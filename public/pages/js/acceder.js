@@ -51,6 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     sessionStorage.removeItem('nextFlow');
                     if (nextFlow === 'reservar') {
                         window.location.href = "/cliente/misReservas";
+                    } else if (nextFlow === 'entrenamientos') {
+                        window.location.href = "/cliente/misEntrenamientos";
+                    } else if (nextFlow === 'clases') {
+                        window.location.href = "/cliente/misClases";
                     } else {
                         window.location.href = "/cliente";
                     }

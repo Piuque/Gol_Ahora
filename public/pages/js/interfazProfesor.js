@@ -24,7 +24,7 @@ async function verificarSesionYPerfil() {
     try {
         const res = await fetch(`${API}/profesor/info`, { credentials: 'include' });
         if (res.status === 401 || res.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
         if (!res.ok) throw new Error();

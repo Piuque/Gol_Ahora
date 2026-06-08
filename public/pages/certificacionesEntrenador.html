@@ -255,7 +255,7 @@
         try {
             const res = await fetch(`${API}/entrenador/info`, { credentials: 'include' });
             if (res.status === 401 || res.status === 403) {
-                window.location.href = '/pages/acceder.html'; return;
+                window.location.href = '/acceder'; return;
             }
             if (!res.ok) throw new Error();
             const datos = await res.json();

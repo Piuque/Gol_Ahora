@@ -144,6 +144,15 @@ app.get(['/cliente/misEntrenamientos', '/pages/misEntrenamientos.html'], (req, r
 app.get(['/registro', '/pages/registro.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/registro.html'));
 });
+app.get(['/inicio', '/pages/index.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/index.html'));
+});
+app.get(['/ligas-torneos', '/pages/ligasTorneosInfo.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/ligasTorneosInfo.html'));
+});
+app.get(['/admin/Reportes', '/pages/Reportes.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/Reportes.html'));
+});
 
 // Montar Rutas de la API por prefijos de roles
 app.use('/usuario', usuarioRoutes);

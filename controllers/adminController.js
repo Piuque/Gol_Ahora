@@ -415,29 +415,67 @@ const listarCanchas = async (req, res) => {
   }
 };
 
-// POST /admin/canchas/bloqueo (Mantenimiento de canchas)
+// POST /admin/canchas/bloqueo (Mantenimiento de canchas — uno o varios turnos, o día completo)
 const bloquearCanchaMantenimiento = async (req, res) => {
-  const { id_cancha, fecha, hora_inicio, hora_fin, motivo } = req.body;
+  const { id_cancha, fecha, hora_inicio, hora_fin, turnos, dia_completo, motivo } = req.body;
+  const motivoBloqueo = motivo || 'Mantenimiento preventivo';
+
+  if (!id_cancha || !fecha) {
+    return res.status(400).json({ error: 'id_cancha y fecha son obligatorios' });
+  }
+
+  let slots = [];
+  if (dia_completo) {
+    slots = [{ hora_inicio: '08:00:00', hora_fin: '23:59:59' }];
+  } else if (Array.isArray(turnos) && turnos.length > 0) {
+    slots = turnos.map(t => ({
+      hora_inicio: String(t.hora_inicio).length === 5 ? `${t.hora_inicio}:00` : t.hora_inicio,
+      hora_fin: String(t.hora_fin).length === 5 ? `${t.hora_fin}:00` : t.hora_fin
+    }));
+  } else if (hora_inicio && hora_fin) {
+    slots = [{
+      hora_inicio: String(hora_inicio).length === 5 ? `${hora_inicio}:00` : hora_inicio,
+      hora_fin: String(hora_fin).length === 5 ? `${hora_fin}:00` : hora_fin
+    }];
+  } else {
+    return res.status(400).json({ error: 'Debés indicar turnos, día completo o un horario único' });
+  }
+
   try {
     await db.pool.query('BEGIN');
-    // 1. Crear ocupación de tipo Mantenimiento (id_tipo_ocupacion = 6)
+
+    for (const slot of slots) {
+      const validacion = await validarTurnoReserva(id_cancha, fecha, slot.hora_inicio, slot.hora_fin);
+      if (!validacion.ok) {
+        await db.pool.query('ROLLBACK');
+        return res.status(409).json({
+          error: `Conflicto en ${slot.hora_inicio.substring(0, 5)}-${slot.hora_fin.substring(0, 5)}: ${validacion.error}`
+        });
+      }
+    }
+
+    const idsOcupacion = [];
     const ocupacionSql = `
       INSERT INTO ocupaciones_cancha (fecha, hora_inicio, hora_fin, id_tipo_ocupacion, id_cancha)
       VALUES ($1, $2, $3, 6, $4)
       RETURNING id_ocupacion_cancha
     `;
-    const result = await db.pool.query(ocupacionSql, [fecha, hora_inicio, hora_fin, id_cancha]);
-    const idOcupacion = result.rows[0].id_ocupacion_cancha;
-
-    // 2. Opcional: registrar en tabla de excepciones de disponibilidad
     const excepcionSql = `
       INSERT INTO disponibilidad_excepciones (motivo, dia, hora_inicio, hora_fin, id_cancha)
       VALUES ($1, $2, $3, $4, $5)
     `;
-    await db.pool.query(excepcionSql, [motivo || 'Mantenimiento preventivo', fecha, hora_inicio, hora_fin, id_cancha]);
+
+    for (const slot of slots) {
+      const result = await db.pool.query(ocupacionSql, [fecha, slot.hora_inicio, slot.hora_fin, id_cancha]);
+      idsOcupacion.push(result.rows[0].id_ocupacion_cancha);
+      await db.pool.query(excepcionSql, [motivoBloqueo, fecha, slot.hora_inicio, slot.hora_fin, id_cancha]);
+    }
 
     await db.pool.query('COMMIT');
-    res.status(201).json({ message: 'Cancha bloqueada por mantenimiento correctamente', id_ocupacion: idOcupacion });
+    res.status(201).json({
+      message: `Cancha bloqueada por mantenimiento (${idsOcupacion.length} turno${idsOcupacion.length > 1 ? 's' : ''})`,
+      ids_ocupacion: idsOcupacion
+    });
   } catch (err) {
     await db.pool.query('ROLLBACK');
     res.status(500).json({ error: 'Error al registrar bloqueo por mantenimiento', message: err.message });
