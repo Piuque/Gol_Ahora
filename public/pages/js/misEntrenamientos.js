@@ -285,9 +285,9 @@ async function iniciarInscripcionEntrenamiento(idEntrenamiento) {
 
         await Swal.fire({
             icon: 'success',
-            title: '¡Inscripción solicitada!',
-            html: `<p style="font-size:0.88rem;line-height:1.5;">Tu solicitud fue registrada. Un administrador confirmará el pago y tu lugar en el entrenamiento.</p>
-                   <p style="font-size:0.78rem;opacity:0.65;margin:0;">Si no se confirma en las próximas 3 horas, la solicitud puede cancelarse automáticamente.</p>`,
+            title: '¡Inscripción registrada!',
+            html: `<p style="font-size:0.88rem;line-height:1.5;">Tu inscrpción fue registrada. Tu lugar en la clase está reservado y asegurado.</p>
+                   <p style="font-size:0.78rem;opacity:0.65;margin:0;">Puedes cancelar la inscripción en cualquier momento.</p>`,
             background: '#071524', color: '#fff', confirmButtonColor: '#00C16E'
         });
 

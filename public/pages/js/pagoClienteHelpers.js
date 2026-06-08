@@ -109,12 +109,8 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
                             style="background:rgba(7,21,36,0.6);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 10px;border-radius:7px;font-size:0.85rem;">
                     </div>
                 </div>
-                <div id="${uid}-efectivo" style="display:none;font-size:0.78rem;color:#eab308;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-                    <i class="fa-solid fa-circle-info me-1"></i> La inscripción quedará <b>solicitada</b>. Tenés 3 horas para abonar en recepción y confirmarla.
-                </div>
                 <div id="${uid}-transferencia" style="display:none;font-size:0.78rem;color:#38bdf8;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
                     CBU: 0000003123456789123456 · Alias: EL.BUEN.DEPORTE<br>
-                    Presentá el comprobante en recepción dentro de las próximas 3 horas.
                 </div>
             </div>`,
         preConfirm: () => {
