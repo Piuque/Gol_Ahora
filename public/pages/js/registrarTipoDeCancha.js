@@ -54,15 +54,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             ancho: parseFloat(document.querySelector('[name="ancho"]').value),
             largo: parseFloat(document.querySelector('[name="largo"]').value),
             capacidad: parseInt(document.querySelector('[name="capacidad"]').value),
-            duracion_min: parseInt(document.querySelector('[name="duracion_min"]').value),
-            duracion_max: parseInt(document.querySelector('[name="duracion_max"]').value),
+            duracion_min: parseInt(document.querySelector('[name="duracion_reserva"]').value),
+            duracion_max: parseInt(document.querySelector('[name="duracion_reserva"]').value),
             id_superficie
         };
-
-        if (datos.duracion_min >= datos.duracion_max) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'La duracion minima debe ser menor a la maxima.', confirmButtonColor: '#00C16E' });
-            return;
-        }
 
         if (datos.capacidad <= 0) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'La capacidad debe ser mayor a 0.', confirmButtonColor: '#00C16E' });
