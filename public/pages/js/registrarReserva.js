@@ -127,6 +127,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("id_cancha").addEventListener("change", calcularPrecio);
 
+    // Validar fecha y hora
+    const ahora = new Date();
+    const hoyStr = ahora.toISOString().split('T')[0];
+
+    if (!fecha) {
+        await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha es obligatoria.', confirmButtonColor: '#00C16E' });
+        return;
+    }
+    if (fecha < hoyStr) {
+        await Swal.fire({ icon: 'error', title: 'Error', text: 'No se puede registrar una reserva en el pasado.', confirmButtonColor: '#00C16E' });
+        return;
+    }
+    if (fecha === hoyStr) {
+        const [h, m] = hora_inicio.split(':').map(Number);
+        const horaInicioDate = new Date();
+        horaInicioDate.setHours(h, m, 0, 0);
+        if (horaInicioDate <= ahora) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'No se puede reservar en un horario que ya pasó.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+    }
+
     // Envío del formulario
     document.getElementById("form-reserva").addEventListener("submit", async (e) => {
         e.preventDefault();
