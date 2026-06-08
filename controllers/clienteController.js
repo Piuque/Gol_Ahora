@@ -1,4 +1,5 @@
 const db = require('../config/db.js');
+const { crearSolicitudAdmin } = require('../utils/solicitudesAdmin.js');
 
 // GET /cliente/perfil
 const obtenerPerfil = async (req, res) => {
@@ -564,7 +565,7 @@ const listarReservasCliente = async (req, res) => {
   const idUsuario = req.user.id_usuario;
   try {
     const sql = `
-      SELECT r.id_reserva, 
+      SELECT r.id_reserva, r.id_cancha,
              to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
              to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
              to_char(oc.hora_fin, 'HH24:MI') AS hora_fin, 
@@ -685,30 +686,88 @@ const listarEntrenamientosDisponibles = async (req, res) => {
   }
 };
 
-// PUT /cliente/reservas/:id (Modificar Horario)
+// PUT /cliente/reservas/:id (Solicitar modificación de horario — pendiente de admin)
 const modificarReserva = async (req, res) => {
   const idUsuario = req.user.id_usuario;
   const { id } = req.params;
   const { fecha, hora_inicio, hora_fin } = req.body;
 
+  if (!fecha || !hora_inicio || !hora_fin) {
+    return res.status(400).json({ error: 'Fecha y horario son obligatorios' });
+  }
+
+  const hi = hora_inicio.length === 5 ? `${hora_inicio}:00` : hora_inicio;
+  const hf = hora_fin.length === 5 ? `${hora_fin}:00` : hora_fin;
+
   try {
-    const updateSql = `
-      UPDATE ocupaciones_cancha oc
-      SET fecha = $1, hora_inicio = $2, hora_fin = $3
+    const reserva = await db.query.get(`
+      SELECT r.id_reserva, r.id_cancha, c.nombre AS cancha_nombre,
+             to_char(oc.fecha, 'YYYY-MM-DD') AS fecha_actual,
+             to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio_actual,
+             to_char(oc.hora_fin, 'HH24:MI') AS hora_fin_actual
       FROM reservas r
-      WHERE oc.id_ocupacion_cancha = r.id_ocupacion_cancha
-        AND r.id_reserva = $4 AND r.id_usuario = $5
-      RETURNING oc.id_ocupacion_cancha
-    `;
-    const result = await db.pool.query(updateSql, [fecha, hora_inicio, hora_fin, id, idUsuario]);
-    
-    if (result.rowCount === 0) {
+      INNER JOIN ocupaciones_cancha oc ON r.id_ocupacion_cancha = oc.id_ocupacion_cancha
+      INNER JOIN canchas c ON r.id_cancha = c.id_cancha
+      WHERE r.id_reserva = $1 AND r.id_usuario = $2
+    `, [id, idUsuario]);
+
+    if (!reserva) {
       return res.status(404).json({ error: 'Reserva no encontrada o no pertenece al usuario' });
     }
 
-    res.json({ message: 'Horario de reserva modificado exitosamente' });
+    const ahora = new Date();
+    const hoyStr = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+    if (fecha < hoyStr) {
+      return res.status(400).json({ error: 'No se puede modificar a una fecha pasada' });
+    }
+    if (fecha === hoyStr) {
+      const [h, m] = hi.substring(0, 5).split(':').map(Number);
+      const inicio = new Date();
+      inicio.setHours(h, m || 0, 0, 0);
+      if (inicio <= ahora) {
+        return res.status(400).json({ error: 'No se puede modificar a un horario que ya pasó' });
+      }
+    }
+
+    const horarioNuevo = `${fecha} · ${hi.substring(0, 5)} - ${hf.substring(0, 5)} hs`;
+    await crearSolicitudAdmin({
+      tipo: 'cambio_horario',
+      id_usuario_solicitante: idUsuario,
+      id_referencia: parseInt(id, 10),
+      referencia_tipo: 'reserva',
+      motivo: `Cambio de ${reserva.fecha_actual} ${reserva.hora_inicio_actual}-${reserva.hora_fin_actual} a ${horarioNuevo}`,
+      datos: {
+        id_reserva: parseInt(id, 10),
+        id_cancha: reserva.id_cancha,
+        fecha,
+        hora_inicio: hi,
+        hora_fin: hf,
+        actividad: `Reserva · ${reserva.cancha_nombre}`,
+        horario_nuevo: horarioNuevo,
+        horario_anterior: `${reserva.fecha_actual} ${reserva.hora_inicio_actual}-${reserva.hora_fin_actual}`
+      }
+    });
+
+    res.json({ message: 'Solicitud de cambio de horario enviada. Un administrador la revisará a la brevedad.' });
   } catch (err) {
-    res.status(500).json({ error: 'Error al modificar la reserva', message: err.message });
+    res.status(500).json({ error: 'Error al solicitar modificación de la reserva', message: err.message });
+  }
+};
+
+// POST /cliente/solicitud-baja
+const solicitudBajaCuenta = async (req, res) => {
+  const idUsuario = req.user.id_usuario;
+  const { motivo } = req.body || {};
+  try {
+    await crearSolicitudAdmin({
+      tipo: 'baja',
+      id_usuario_solicitante: idUsuario,
+      rol: 'cliente',
+      motivo: motivo || 'Solicitud de baja de cuenta cliente'
+    });
+    res.json({ message: 'Solicitud de baja registrada. Un administrador la procesará a la brevedad.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar solicitud de baja', message: err.message });
   }
 };
 
@@ -1113,5 +1172,6 @@ module.exports = {
   consultarMiPago,
   listarMisRecibos,
   consultarMiRecibo,
-  realizarPago
+  realizarPago,
+  solicitudBajaCuenta
 };

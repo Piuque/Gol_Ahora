@@ -63,6 +63,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'La capacidad debe ser mayor a 0.', confirmButtonColor: '#00C16E' });
             return;
         }
+        if (datos.ancho <= 0 || datos.largo <= 0) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'Ancho y largo deben ser mayores a 0.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (datos.duracion_min <= 0) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La duración debe ser mayor a 0.', confirmButtonColor: '#00C16E' });
+            return;
+        }
 
         try {
             const userId = localStorage.getItem("userId");

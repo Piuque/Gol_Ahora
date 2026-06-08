@@ -238,19 +238,28 @@ app.get('/profesor/clases/:id/alumnos', authMiddleware, requireRole(['profesor',
 
 app.delete('/profesor/clases/:id_clase/alumnos/:id_alumno', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
   const { id_clase, id_alumno } = req.params;
+  const idProfesor = req.user.id_usuario;
   try {
     const db = require('./config/db.js');
-    const sql = `
-      DELETE FROM clientes_clases
-      WHERE id_clase = $1 AND id_cliente = $2
-    `;
-    const result = await db.pool.query(sql, [id_clase, id_alumno]);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Inscripción no encontrada' });
-    }
-    res.json({ message: 'Alumno desvinculado de la clase exitosamente' });
+    const { crearSolicitudAdmin } = require('./utils/solicitudesAdmin.js');
+    const alumno = await db.query.get(
+      'SELECT nombre, apellido FROM usuarios WHERE id_usuario = $1',
+      [id_alumno]
+    );
+    if (!alumno) return res.status(404).json({ error: 'Alumno no encontrado' });
+
+    await crearSolicitudAdmin({
+      tipo: 'alumno',
+      id_usuario_solicitante: idProfesor,
+      id_usuario_objetivo: parseInt(id_alumno, 10),
+      id_referencia: parseInt(id_clase, 10),
+      referencia_tipo: 'clase',
+      rol: 'alumno',
+      motivo: `Baja de alumno ${alumno.nombre} ${alumno.apellido} de clase #${id_clase}`
+    });
+    res.json({ message: 'Solicitud de baja de alumno registrada. Quedará pendiente de validación del administrador.' });
   } catch (err) {
-    res.status(500).json({ error: 'Error al dar de baja al alumno', message: err.message });
+    res.status(500).json({ error: 'Error al registrar solicitud de baja del alumno', message: err.message });
   }
 });
 
@@ -300,19 +309,28 @@ app.get('/entrenador/entrenamientos/:id/alumnos', authMiddleware, requireRole(['
 
 app.delete('/entrenador/entrenamientos/:id_entrenamiento/alumnos/:id_alumno', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
   const { id_entrenamiento, id_alumno } = req.params;
+  const idEntrenador = req.user.id_usuario;
   try {
     const db = require('./config/db.js');
-    const sql = `
-      DELETE FROM clientes_entrenamientos
-      WHERE id_entrenamiento = $1 AND id_cliente = $2
-    `;
-    const result = await db.pool.query(sql, [id_entrenamiento, id_alumno]);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Inscripción no encontrada' });
-    }
-    res.json({ message: 'Alumno desvinculado del entrenamiento exitosamente' });
+    const { crearSolicitudAdmin } = require('./utils/solicitudesAdmin.js');
+    const alumno = await db.query.get(
+      'SELECT nombre, apellido FROM usuarios WHERE id_usuario = $1',
+      [id_alumno]
+    );
+    if (!alumno) return res.status(404).json({ error: 'Alumno no encontrado' });
+
+    await crearSolicitudAdmin({
+      tipo: 'alumno',
+      id_usuario_solicitante: idEntrenador,
+      id_usuario_objetivo: parseInt(id_alumno, 10),
+      id_referencia: parseInt(id_entrenamiento, 10),
+      referencia_tipo: 'entrenamiento',
+      rol: 'alumno',
+      motivo: `Baja de alumno ${alumno.nombre} ${alumno.apellido} de entrenamiento #${id_entrenamiento}`
+    });
+    res.json({ message: 'Solicitud de baja de alumno registrada. Quedará pendiente de validación del administrador.' });
   } catch (err) {
-    res.status(500).json({ error: 'Error al dar de baja al alumno', message: err.message });
+    res.status(500).json({ error: 'Error al registrar solicitud de baja del alumno', message: err.message });
   }
 });
 
@@ -504,7 +522,22 @@ app.post('/profesor/certificaciones/alta', authMiddleware, requireRole(['profeso
 });
 
 app.post('/profesor/baja', authMiddleware, requireRole(['profesor', 'admin']), async (req, res) => {
-  res.json({ message: 'Solicitud de baja registrada correctamente' });
+  const idUsuario = req.user.id_usuario;
+  const { motivo } = req.body || {};
+  try {
+    const db = require('./config/db.js');
+    const { crearSolicitudAdmin } = require('./utils/solicitudesAdmin.js');
+    const usuario = await db.query.get('SELECT user_level FROM usuarios WHERE id_usuario = $1', [idUsuario]);
+    await crearSolicitudAdmin({
+      tipo: 'baja',
+      id_usuario_solicitante: idUsuario,
+      rol: usuario?.user_level || 'profesor',
+      motivo: motivo || 'Solicitud de baja de perfil profesor'
+    });
+    res.json({ message: 'Solicitud de baja registrada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar solicitud de baja', message: err.message });
+  }
 });
 
 // --- ENDPOINTS DE API ADICIONALES PARA ENTRENADORES ---
@@ -566,7 +599,21 @@ app.post('/entrenador/certificaciones/alta', authMiddleware, requireRole(['entre
 });
 
 app.post('/entrenador/baja', authMiddleware, requireRole(['entrenador', 'admin']), async (req, res) => {
-  res.json({ message: 'Solicitud de baja registrada correctamente' });
+  const idUsuario = req.user.id_usuario;
+  const { motivo } = req.body || {};
+  try {
+    const db = require('./config/db.js');
+    const { crearSolicitudAdmin } = require('./utils/solicitudesAdmin.js');
+    await crearSolicitudAdmin({
+      tipo: 'baja',
+      id_usuario_solicitante: idUsuario,
+      rol: 'entrenador',
+      motivo: motivo || 'Solicitud de baja de perfil entrenador'
+    });
+    res.json({ message: 'Solicitud de baja registrada correctamente' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al registrar solicitud de baja', message: err.message });
+  }
 });
 
 // Servir la especificación OpenAPI y la interfaz Swagger UI como archivos estáticos

@@ -340,13 +340,10 @@ async function modificarReserva(id) {
             throw new Error(err.error || `Error ${res.status}`);
         }
 
-        // PDF de modificación
-        generarPdfModificacion(r, nuevaFecha);
-
         await Swal.fire({
             icon: 'success', iconColor: '#00C16E', background: '#0A2540', color: '#fff',
-            title: '¡Turno modificado!',
-            text: 'El cambio fue registrado. Se descargó tu comprobante de modificación.',
+            title: '¡Solicitud enviada!',
+            text: 'Un administrador revisará el cambio de horario a la brevedad.',
             confirmButtonColor: '#00C16E'
         });
 

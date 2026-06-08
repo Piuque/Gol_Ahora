@@ -1,4 +1,10 @@
 const db = require('../config/db.js');
+const {
+  parseMatriculaCertificacion,
+  crearSolicitudAdmin,
+  marcarSolicitud,
+  obtenerSolicitudPendiente
+} = require('../utils/solicitudesAdmin.js');
 
 // GET /admin/clientes (Listar todos los clientes)
 const listarClientes = async (req, res) => {
@@ -361,13 +367,30 @@ const registrarCertificacion = async (req, res) => {
 // POST /admin/canchas (CRUD Canchas)
 const crearCancha = async (req, res) => {
   const { nombre, tiempo_cancelacion, precio_hora_reserva, id_tipo_de_cancha } = req.body;
+  if (!nombre || !String(nombre).trim()) {
+    return res.status(400).json({ error: 'El nombre de la cancha es obligatorio' });
+  }
+  if (!id_tipo_de_cancha || Number.isNaN(parseInt(id_tipo_de_cancha, 10))) {
+    return res.status(400).json({ error: 'Debe seleccionar un tipo de cancha válido' });
+  }
+  const precio = parseFloat(precio_hora_reserva);
+  const tiempo = parseInt(tiempo_cancelacion, 10);
+  if (Number.isNaN(precio) || precio < 0) {
+    return res.status(400).json({ error: 'El precio por hora debe ser un número válido' });
+  }
+  if (Number.isNaN(tiempo) || tiempo < 0) {
+    return res.status(400).json({ error: 'El tiempo de cancelación debe ser un número válido' });
+  }
   try {
+    const tipo = await db.query.get('SELECT id_tipo_de_cancha FROM tipos_de_cancha WHERE id_tipo_de_cancha = $1', [id_tipo_de_cancha]);
+    if (!tipo) return res.status(400).json({ error: 'El tipo de cancha seleccionado no existe' });
+
     const sql = `
       INSERT INTO canchas (nombre, tiempo_cancelacion, precio_hora_reserva, id_tipo_de_cancha, id_club)
       VALUES ($1, $2, $3, $4, 1)
       RETURNING id_cancha
     `;
-    const result = await db.query.run(sql, [nombre, tiempo_cancelacion, precio_hora_reserva, id_tipo_de_cancha]);
+    const result = await db.query.run(sql, [String(nombre).trim(), tiempo, precio, id_tipo_de_cancha]);
     res.status(201).json({ message: 'Cancha física creada correctamente', id: result.id });
   } catch (err) {
     res.status(500).json({ error: 'Error al crear cancha', message: err.message });
@@ -649,10 +672,37 @@ const eliminarEntrenador = async (req, res) => {
 
 const crearTipoCancha = async (req, res) => {
   const { tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max, id_superficie } = req.body;
+  if (!tipo_cancha || !String(tipo_cancha).trim()) {
+    return res.status(400).json({ error: 'El nombre del tipo de cancha es obligatorio' });
+  }
+  const anchoNum = parseFloat(ancho);
+  const largoNum = parseFloat(largo);
+  const capNum = parseInt(capacidad, 10);
+  const durMin = parseInt(duracion_min, 10);
+  const durMax = parseInt(duracion_max, 10);
+  const idSup = parseInt(id_superficie, 10);
+  if ([anchoNum, largoNum].some(v => Number.isNaN(v) || v <= 0)) {
+    return res.status(400).json({ error: 'Ancho y largo deben ser números positivos' });
+  }
+  if (Number.isNaN(capNum) || capNum <= 0) {
+    return res.status(400).json({ error: 'La capacidad debe ser mayor a 0' });
+  }
+  if ([durMin, durMax].some(v => Number.isNaN(v) || v <= 0)) {
+    return res.status(400).json({ error: 'Las duraciones deben ser números positivos' });
+  }
+  if (durMin > durMax) {
+    return res.status(400).json({ error: 'La duración mínima no puede superar la máxima' });
+  }
+  if (Number.isNaN(idSup)) {
+    return res.status(400).json({ error: 'Debe seleccionar una superficie válida' });
+  }
   try {
+    const sup = await db.query.get('SELECT id_superficie FROM superficies WHERE id_superficie = $1', [idSup]);
+    if (!sup) return res.status(400).json({ error: 'La superficie seleccionada no existe' });
+
     const sql = `INSERT INTO tipos_de_cancha (tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max, id_superficie)
                  VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id_tipo_de_cancha`;
-    const result = await db.query.run(sql, [tipo_cancha, ancho, largo, capacidad, duracion_min, duracion_max, id_superficie || 1]);
+    const result = await db.query.run(sql, [String(tipo_cancha).trim(), anchoNum, largoNum, capNum, durMin, durMax, idSup]);
     res.status(201).json({ message: 'Tipo de cancha creado', id: result.id });
   } catch (err) {
     res.status(500).json({ error: 'Error al crear tipo de cancha', message: err.message });
@@ -713,7 +763,9 @@ const eliminarTipoCancha = async (req, res) => {
 const obtenerCancha = async (req, res) => {
   const { id } = req.params;
   try {
-    const row = await db.query.get(`SELECT can.id_cancha AS id, can.nombre, can.precio_hora_reserva, can.tiempo_cancelacion, tc.tipo_cancha, tc.id_tipo_de_cancha
+    const row = await db.query.get(`SELECT can.id_cancha AS id, can.nombre, can.precio_hora_reserva, can.precio_hora_reserva AS precio,
+                                    can.tiempo_cancelacion, tc.tipo_cancha, tc.id_tipo_de_cancha,
+                                    tc.duracion_min, tc.duracion_max
                                     FROM canchas can LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
                                     WHERE can.id_cancha = $1`, [id]);
     if (!row) return res.status(404).json({ error: 'Cancha no encontrada' });
@@ -738,8 +790,10 @@ const modificarCancha = async (req, res) => {
 const listarReservas = async (req, res) => {
   try {
     const sql = `
-      SELECT r.id_reserva AS id, r.id_cobro, u.nombre AS cliente_nombre, u.apellido AS cliente_apellido,
+      SELECT r.id_reserva AS id, r.id_cobro, r.id_cancha,
+             u.nombre AS cliente_nombre, u.apellido AS cliente_apellido,
              u.email AS cliente_email, can.nombre AS cancha,
+             tc.duracion_min, tc.duracion_max,
              to_char(oc.fecha, 'YYYY-MM-DD') AS fecha,
              to_char(oc.hora_inicio, 'HH24:MI') AS hora_inicio,
              to_char(oc.hora_fin, 'HH24:MI') AS hora_fin,
@@ -747,6 +801,7 @@ const listarReservas = async (req, res) => {
       FROM reservas r
       INNER JOIN usuarios u ON r.id_usuario = u.id_usuario
       INNER JOIN canchas can ON r.id_cancha = can.id_cancha
+      LEFT JOIN tipos_de_cancha tc ON can.id_tipo_de_cancha = tc.id_tipo_de_cancha
       INNER JOIN ocupaciones_cancha oc ON r.id_ocupacion_cancha = oc.id_ocupacion_cancha
       INNER JOIN cobros c ON r.id_cobro = c.id_cobro
       INNER JOIN metodos_de_pago mp ON c.id_metodo_de_pago = mp.id_metodo_de_pago
@@ -763,11 +818,28 @@ const listarReservas = async (req, res) => {
 const modificarReserva = async (req, res) => {
   const { id } = req.params;
   const { fecha, hora_inicio, hora_fin } = req.body;
+  if (!fecha || !hora_inicio || !hora_fin) {
+    return res.status(400).json({ error: 'Fecha y horario son obligatorios' });
+  }
   try {
-    const reserva = await db.query.get('SELECT id_ocupacion_cancha FROM reservas WHERE id_reserva = $1', [id]);
+    const reserva = await db.query.get(
+      'SELECT id_ocupacion_cancha, id_cancha FROM reservas WHERE id_reserva = $1',
+      [id]
+    );
     if (!reserva) return res.status(404).json({ error: 'Reserva no encontrada' });
-    await db.query.run('UPDATE ocupaciones_cancha SET fecha=$1, hora_inicio=$2, hora_fin=$3 WHERE id_ocupacion_cancha=$4',
-      [fecha, hora_inicio, hora_fin, reserva.id_ocupacion_cancha]);
+
+    const hi = hora_inicio.length === 5 ? `${hora_inicio}:00` : hora_inicio;
+    const hf = hora_fin.length === 5 ? `${hora_fin}:00` : hora_fin;
+
+    const validacion = await validarTurnoReserva(
+      reserva.id_cancha, fecha, hi, hf, reserva.id_ocupacion_cancha
+    );
+    if (!validacion.ok) return res.status(409).json({ error: validacion.error });
+
+    await db.query.run(
+      'UPDATE ocupaciones_cancha SET fecha=$1, hora_inicio=$2, hora_fin=$3 WHERE id_ocupacion_cancha=$4',
+      [fecha, hi, hf, reserva.id_ocupacion_cancha]
+    );
     res.json({ message: 'Reserva modificada correctamente' });
   } catch (err) {
     res.status(500).json({ error: 'Error al modificar reserva', message: err.message });
@@ -1521,36 +1593,31 @@ const modificarCobro = async (req, res) => {
 };
 
 const crearReserva = async (req, res) => {
-  const { id_usuario, id_cancha, fecha, hora_inicio, hora_fin, id_metodo_de_pago, monto } = req.body;
+  const { id_usuario, id_cancha, fecha, hora_inicio, hora_fin, id_metodo_de_pago, monto, confirmar_pago } = req.body;
 
-  if (!id_usuario || !id_cancha || !fecha || !hora_inicio || !hora_fin || !id_metodo_de_pago || !monto) {
+  if (!id_usuario || !id_cancha || !fecha || !hora_inicio || !hora_fin || !id_metodo_de_pago || monto === undefined || monto === null) {
     return res.status(400).json({ error: 'Faltan campos obligatorios para realizar la reserva' });
   }
 
-  try {
-    // Verificar superposicion
-    const superposicion = await db.query.get(`
-      SELECT id_ocupacion_cancha FROM ocupaciones_cancha
-      WHERE id_cancha = $1 AND fecha = $2
-      AND (
-        (hora_inicio < $4 AND hora_fin > $3)
-      )
-    `, [id_cancha, fecha, hora_inicio, hora_fin]);
+  const hi = hora_inicio.length === 5 ? `${hora_inicio}:00` : hora_inicio;
+  const hf = hora_fin.length === 5 ? `${hora_fin}:00` : hora_fin;
 
-    if (superposicion) {
-      return res.status(409).json({ error: 'Ya existe una reserva en ese horario para esa cancha' });
-    }
+  try {
+    const validacion = await validarTurnoReserva(id_cancha, fecha, hi, hf);
+    if (!validacion.ok) return res.status(409).json({ error: validacion.error });
 
     await db.pool.query('BEGIN');
 
+    const estadoCobro = confirmar_pago ? 2 : 1;
     const cobroSql = `
       INSERT INTO cobros (monto, porcentaje_descuento, detalles, id_club, id_usuario, id_estado_cobro, id_metodo_de_pago)
       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id_cobro
     `;
+    const detalleCobro = confirmar_pago
+      ? `Reserva confirmada por administrador (${fecha} ${hi}-${hf})`
+      : `Reserva de cancha para la fecha ${fecha} de ${hi} a ${hf}`;
     const cobroRes = await db.pool.query(cobroSql, [
-      monto, 0,
-      `Reserva de cancha para la fecha ${fecha} de ${hora_inicio} a ${hora_fin}`,
-      1, id_usuario, 1, id_metodo_de_pago
+      monto, 0, detalleCobro, 1, id_usuario, estadoCobro, id_metodo_de_pago
     ]);
     const idCobro = cobroRes.rows[0].id_cobro;
 
@@ -1558,7 +1625,7 @@ const crearReserva = async (req, res) => {
       INSERT INTO ocupaciones_cancha (fecha, hora_inicio, hora_fin, id_tipo_ocupacion, id_cancha)
       VALUES ($1, $2, $3, 1, $4) RETURNING id_ocupacion_cancha
     `;
-    const ocupacionRes = await db.pool.query(ocupacionSql, [fecha, hora_inicio, hora_fin, id_cancha]);
+    const ocupacionRes = await db.pool.query(ocupacionSql, [fecha, hi, hf, id_cancha]);
     const idOcupacion = ocupacionRes.rows[0].id_ocupacion_cancha;
 
     const reservaSql = `
@@ -1566,11 +1633,24 @@ const crearReserva = async (req, res) => {
       VALUES ($1, $2, $3, $4) RETURNING id_reserva
     `;
     const reservaRes = await db.pool.query(reservaSql, [idOcupacion, id_usuario, id_cancha, idCobro]);
+    const idReserva = reservaRes.rows[0].id_reserva;
+
+    let idRecibo = null;
+    if (confirmar_pago) {
+      const reciboRes = await db.pool.query(
+        `INSERT INTO recibos (nro_transaccion, detalles, id_cobro) VALUES ($1, $2, $3) RETURNING id_recibos`,
+        [`ADMIN_${Date.now()}`, 'Pago registrado por administrador al crear la reserva', idCobro]
+      );
+      idRecibo = reciboRes.rows[0].id_recibos;
+    }
 
     await db.pool.query('COMMIT');
     res.status(201).json({
-      message: 'Reserva creada exitosamente',
-      id_reserva: reservaRes.rows[0].id_reserva
+      message: confirmar_pago ? 'Reserva creada y pago confirmado' : 'Reserva creada exitosamente',
+      id_reserva: idReserva,
+      id_cobro: idCobro,
+      id_recibo: idRecibo,
+      estado_cobro: confirmar_pago ? 'Pagado' : 'Pendiente'
     });
   } catch (err) {
     await db.pool.query('ROLLBACK');
@@ -1827,6 +1907,272 @@ const eliminarEquipoLiga = async (req, res) => {
   }
 };
 
+// --- Validación de solapamiento para reservas ---
+const validarTurnoReserva = async (id_cancha, fecha, hora_inicio, hora_fin, excluirOcupacionId = null) => {
+  const ahora = new Date();
+  const hoyStr = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+  if (fecha < hoyStr) {
+    return { ok: false, error: 'No se puede reservar o modificar a una fecha pasada' };
+  }
+  if (fecha === hoyStr) {
+    const [h, m] = String(hora_inicio).substring(0, 5).split(':').map(Number);
+    const inicio = new Date();
+    inicio.setHours(h, m || 0, 0, 0);
+    if (inicio <= ahora) {
+      return { ok: false, error: 'No se puede reservar o modificar a un horario que ya pasó' };
+    }
+  }
+
+  const params = [id_cancha, fecha, hora_inicio, hora_fin];
+  let sql = `
+    SELECT id_ocupacion_cancha FROM ocupaciones_cancha
+    WHERE id_cancha = $1 AND fecha = $2
+      AND hora_inicio < $4 AND hora_fin > $3
+  `;
+  if (excluirOcupacionId) {
+    sql += ' AND id_ocupacion_cancha <> $5';
+    params.push(excluirOcupacionId);
+  }
+  const superposicion = await db.query.get(sql, params);
+  if (superposicion) {
+    return { ok: false, error: 'Ya existe una ocupación en ese horario para esa cancha' };
+  }
+  return { ok: true };
+};
+
+// GET /admin/certificaciones/pendientes
+const listarCertificacionesPendientes = async (req, res) => {
+  try {
+    const rows = await db.query.all(`
+      SELECT c.id_certificacion AS id, c.matricula,
+             u.nombre || ' ' || u.apellido AS nombre_profesional,
+             to_char(c.fecha_caducidad, 'DD/MM/YYYY') AS fecha
+      FROM certificaciones c
+      INNER JOIN usuarios u ON c.id_usuario = u.id_usuario
+      WHERE c.validada = false
+      ORDER BY c.id_certificacion DESC
+    `);
+    res.json(rows.map(r => {
+      const parsed = parseMatriculaCertificacion(r.matricula);
+      return {
+        id: r.id,
+        nombre_certificacion: parsed.nombre,
+        institucion: parsed.institucion,
+        nombre_profesional: r.nombre_profesional,
+        fecha: r.fecha
+      };
+    }));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar certificaciones pendientes', message: err.message });
+  }
+};
+
+const aprobarCertificacionPendiente = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cert = await db.query.get('SELECT id_certificacion FROM certificaciones WHERE id_certificacion = $1 AND validada = false', [id]);
+    if (!cert) return res.status(404).json({ error: 'Certificación pendiente no encontrada' });
+    await db.query.run('UPDATE certificaciones SET validada = true WHERE id_certificacion = $1', [id]);
+    res.json({ message: 'Certificación aprobada' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al aprobar certificación', message: err.message });
+  }
+};
+
+const rechazarCertificacionPendiente = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.pool.query('DELETE FROM certificaciones WHERE id_certificacion = $1 AND validada = false', [id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Certificación pendiente no encontrada' });
+    res.json({ message: 'Certificación rechazada' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al rechazar certificación', message: err.message });
+  }
+};
+
+// GET /admin/bajas/pendientes
+const listarBajasPendientes = async (req, res) => {
+  try {
+    const rows = await db.query.all(`
+      SELECT s.id_solicitud AS id, s.tipo, s.rol, s.motivo,
+             COALESCE(uo.nombre || ' ' || uo.apellido, us.nombre || ' ' || us.apellido) AS nombre,
+             to_char(s.fecha_solicitud, 'DD/MM/YYYY') AS fecha
+      FROM solicitudes_admin s
+      LEFT JOIN usuarios us ON s.id_usuario_solicitante = us.id_usuario
+      LEFT JOIN usuarios uo ON s.id_usuario_objetivo = uo.id_usuario
+      WHERE s.estado = 'pendiente' AND s.tipo IN ('baja', 'alumno')
+      ORDER BY s.fecha_solicitud DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar solicitudes de baja', message: err.message });
+  }
+};
+
+const procesarBajaAprobada = async (solicitud) => {
+  const idUsuario = solicitud.id_usuario_solicitante;
+  const rol = (solicitud.rol || '').toLowerCase();
+
+  if (rol === 'cliente' || rol === 'client') {
+    await db.pool.query('BEGIN');
+    const resReservas = await db.pool.query('SELECT id_ocupacion_cancha, id_cobro FROM reservas WHERE id_usuario = $1', [idUsuario]);
+    const ocupacionIds = resReservas.rows.map(r => r.id_ocupacion_cancha).filter(Boolean);
+    await db.pool.query('DELETE FROM reservas WHERE id_usuario = $1', [idUsuario]);
+    if (ocupacionIds.length) {
+      await db.pool.query('DELETE FROM ocupaciones_cancha WHERE id_ocupacion_cancha = ANY($1::int[])', [ocupacionIds]);
+    }
+    const resCobros = await db.pool.query('SELECT id_cobro FROM cobros WHERE id_usuario = $1', [idUsuario]);
+    const cobroIds = resCobros.rows.map(r => r.id_cobro);
+    if (cobroIds.length) {
+      await db.pool.query('DELETE FROM recibos WHERE id_cobro = ANY($1::int[])', [cobroIds]);
+      await db.pool.query('DELETE FROM cobros WHERE id_cobro = ANY($1::int[])', [cobroIds]);
+    }
+    await db.pool.query('DELETE FROM clientes_clases WHERE id_cliente = $1', [idUsuario]);
+    await db.pool.query('DELETE FROM clientes_entrenamientos WHERE id_cliente = $1', [idUsuario]);
+    await db.pool.query('DELETE FROM usuarios WHERE id_usuario = $1', [idUsuario]);
+    await db.pool.query('COMMIT');
+    return;
+  }
+
+  if (rol === 'profesor' || rol === 'profesor de educación física') {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM certificaciones WHERE id_usuario = $1', [idUsuario]);
+    await db.pool.query('DELETE FROM usuarios WHERE id_usuario = $1', [idUsuario]);
+    await db.pool.query('COMMIT');
+    return;
+  }
+
+  if (rol === 'entrenador') {
+    await db.pool.query('BEGIN');
+    await db.pool.query('DELETE FROM certificaciones WHERE id_usuario = $1', [idUsuario]);
+    await db.pool.query('DELETE FROM usuarios WHERE id_usuario = $1', [idUsuario]);
+    await db.pool.query('COMMIT');
+  }
+};
+
+const aprobarBajaPendiente = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const solicitud = await obtenerSolicitudPendiente(id);
+    if (!solicitud || !['baja', 'alumno'].includes(solicitud.tipo)) {
+      return res.status(404).json({ error: 'Solicitud de baja no encontrada' });
+    }
+
+    if (solicitud.tipo === 'alumno') {
+      if (solicitud.referencia_tipo === 'clase') {
+        await db.pool.query(
+          'DELETE FROM clientes_clases WHERE id_clase = $1 AND id_cliente = $2',
+          [solicitud.id_referencia, solicitud.id_usuario_objetivo]
+        );
+      } else if (solicitud.referencia_tipo === 'entrenamiento') {
+        await db.pool.query(
+          'DELETE FROM clientes_entrenamientos WHERE id_entrenamiento = $1 AND id_cliente = $2',
+          [solicitud.id_referencia, solicitud.id_usuario_objetivo]
+        );
+      }
+    } else {
+      await procesarBajaAprobada(solicitud);
+    }
+
+    await marcarSolicitud(id, 'aprobada');
+    res.json({ message: 'Solicitud de baja aprobada' });
+  } catch (err) {
+    await db.pool.query('ROLLBACK').catch(() => {});
+    res.status(500).json({ error: 'Error al aprobar solicitud de baja', message: err.message });
+  }
+};
+
+const rechazarBajaPendiente = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const solicitud = await obtenerSolicitudPendiente(id);
+    if (!solicitud || !['baja', 'alumno'].includes(solicitud.tipo)) {
+      return res.status(404).json({ error: 'Solicitud de baja no encontrada' });
+    }
+    await marcarSolicitud(id, 'rechazada');
+    res.json({ message: 'Solicitud de baja rechazada' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al rechazar solicitud de baja', message: err.message });
+  }
+};
+
+// GET /admin/horarios/pendientes
+const listarHorariosPendientes = async (req, res) => {
+  try {
+    const rows = await db.query.all(`
+      SELECT s.id_solicitud AS id, s.datos, s.motivo,
+             u.nombre || ' ' || u.apellido AS nombre_profesional,
+             to_char(s.fecha_solicitud, 'DD/MM/YYYY') AS fecha
+      FROM solicitudes_admin s
+      LEFT JOIN usuarios u ON s.id_usuario_solicitante = u.id_usuario
+      WHERE s.estado = 'pendiente' AND s.tipo = 'cambio_horario'
+      ORDER BY s.fecha_solicitud DESC
+    `);
+    res.json(rows.map(r => {
+      const d = typeof r.datos === 'string' ? JSON.parse(r.datos) : (r.datos || {});
+      return {
+        id: r.id,
+        actividad: d.actividad || 'Modificación de reserva',
+        nombre_profesional: r.nombre_profesional,
+        horario_nuevo: d.horario_nuevo || '—',
+        fecha: r.fecha
+      };
+    }));
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar cambios de horario pendientes', message: err.message });
+  }
+};
+
+const aprobarHorarioPendiente = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const solicitud = await obtenerSolicitudPendiente(id);
+    if (!solicitud || solicitud.tipo !== 'cambio_horario') {
+      return res.status(404).json({ error: 'Solicitud de cambio de horario no encontrada' });
+    }
+    const datos = typeof solicitud.datos === 'string' ? JSON.parse(solicitud.datos) : (solicitud.datos || {});
+    const { id_reserva, fecha, hora_inicio, hora_fin, id_cancha } = datos;
+
+    const reserva = await db.query.get(
+      'SELECT id_ocupacion_cancha, id_cancha FROM reservas WHERE id_reserva = $1',
+      [id_reserva]
+    );
+    if (!reserva) return res.status(404).json({ error: 'Reserva asociada no encontrada' });
+
+    const validacion = await validarTurnoReserva(
+      id_cancha || reserva.id_cancha,
+      fecha,
+      hora_inicio,
+      hora_fin,
+      reserva.id_ocupacion_cancha
+    );
+    if (!validacion.ok) return res.status(409).json({ error: validacion.error });
+
+    await db.query.run(
+      'UPDATE ocupaciones_cancha SET fecha=$1, hora_inicio=$2, hora_fin=$3 WHERE id_ocupacion_cancha=$4',
+      [fecha, hora_inicio, hora_fin, reserva.id_ocupacion_cancha]
+    );
+    await marcarSolicitud(id, 'aprobada');
+    res.json({ message: 'Cambio de horario aprobado' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al aprobar cambio de horario', message: err.message });
+  }
+};
+
+const rechazarHorarioPendiente = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const solicitud = await obtenerSolicitudPendiente(id);
+    if (!solicitud || solicitud.tipo !== 'cambio_horario') {
+      return res.status(404).json({ error: 'Solicitud de cambio de horario no encontrada' });
+    }
+    await marcarSolicitud(id, 'rechazada');
+    res.json({ message: 'Cambio de horario rechazado' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al rechazar cambio de horario', message: err.message });
+  }
+};
+
 module.exports = {
   listarClientes,
   obtenerCliente,
@@ -1913,4 +2259,13 @@ module.exports = {
   reporteEntrenamientos,
   eliminarEquipoLiga,
   eliminarEquipoTorneo,
+  listarCertificacionesPendientes,
+  aprobarCertificacionPendiente,
+  rechazarCertificacionPendiente,
+  listarBajasPendientes,
+  aprobarBajaPendiente,
+  rechazarBajaPendiente,
+  listarHorariosPendientes,
+  aprobarHorarioPendiente,
+  rechazarHorarioPendiente
 };

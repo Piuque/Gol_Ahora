@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             credentials: "include",
             headers: { "x-user-id": userId }
         });
+        if (!res.ok) throw new Error('Error al cargar tipos');
         tipos = await res.json();
     } catch (e) {
         console.error("Error cargando tipos de cancha", e);
@@ -54,10 +55,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
+        const nombre = document.getElementById("nombre").value.trim();
+        const precio = parseFloat(document.getElementById("precio_hora_reserva").value);
+        const tiempo = parseInt(document.getElementById("tiempo_cancelacion").value, 10);
+        if (!nombre) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El nombre es obligatorio.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (Number.isNaN(precio) || precio < 0) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'Ingresá un precio válido.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (Number.isNaN(tiempo) || tiempo < 0) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'Ingresá un tiempo de cancelación válido.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+
         const datos = {
-            nombre: document.getElementById("nombre").value,
-            tiempo_cancelacion: parseInt(document.getElementById("tiempo_cancelacion").value),
-            precio_hora_reserva: parseFloat(document.getElementById("precio_hora_reserva").value),
+            nombre,
+            tiempo_cancelacion: tiempo,
+            precio_hora_reserva: precio,
             id_tipo_de_cancha: id_tipo
         };
 

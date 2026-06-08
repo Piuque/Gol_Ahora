@@ -41,6 +41,8 @@ const initDatabase = async () => {
   try {
     console.log('Verificando conexión con PostgreSQL (Neon)...');
     await pool.query('SELECT NOW()');
+    const { ensureSolicitudesTable } = require('../utils/solicitudesAdmin.js');
+    await ensureSolicitudesTable();
     console.log('Conexión PostgreSQL validada exitosamente.');
   } catch (err) {
     console.error('Error crítico al conectar a PostgreSQL:', err.message);

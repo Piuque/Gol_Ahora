@@ -40,7 +40,7 @@ function formatearMontoARS(valor) {
  * Abre un modal de confirmación con resumen y selección de método de pago.
  * @returns {Promise<{id_metodo_de_pago: number, nombreMetodo: string}|null>}
  */
-async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent = '#00C16E' }) {
+async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent = '#00C16E', confirmButtonText = 'Confirmar y solicitar' }) {
     const metodos = await fetchMetodosPagoCliente();
     const uid = `pago-${Date.now()}`;
 
@@ -85,7 +85,7 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
         showCancelButton: true,
         confirmButtonColor: colorAccent,
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Confirmar y solicitar',
+        confirmButtonText: confirmButtonText,
         cancelButtonText: 'Volver',
         reverseButtons: true,
         html: `
@@ -158,7 +158,7 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
                 // CORRECCIÓN: Quitamos los espacios antes de medir la longitud
                 const num = (document.getElementById(`${uid}-numero`)?.value || '').replace(/\s/g, '');
                 const venc = document.getElementById(`${uid}-venc`)?.value || '';
-                const ccv = document.getElementById(`${uid}-cvc`)?.value || '';
+                const ccv = document.getElementById(`${uid}-ccv`)?.value || '';
 
                 // Ahora validamos sobre los dígitos puros (deberían ser 16)
                 if (num.length !== 16) {

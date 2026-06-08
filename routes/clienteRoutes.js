@@ -13,6 +13,7 @@ router.get('/info', usuarioController.obtenerInfoUsuarioLogueado);
 router.get('/perfil', clienteController.obtenerPerfil);
 router.put('/perfil', clienteController.modificarPerfil);
 router.put('/perfil/password', clienteController.cambiarPassword);
+router.post('/solicitud-baja', clienteController.solicitudBajaCuenta);
 
 // Canchas y Reservas
 router.get('/canchas', clienteController.listarCanchasCliente);
