@@ -159,7 +159,7 @@ async function explorarClases() {
 }
 
 // =========================================================
-// 4. FLUJO DE PAGO CON VALIDACIÓN
+// 4. FLUJO DE PAGO CON VALIDACIÓN RIGUROSA DE TARJETA
 // =========================================================
 async function inscribirAClase(idClase, monto, nombreClase) {
     // Cerramos el modal del catálogo
@@ -213,6 +213,11 @@ async function inscribirAClase(idClase, monto, nombreClase) {
                     <p class="mb-2 small text-warning fw-bold"><i class="fa-solid fa-building-columns me-2"></i>Datos para transferir:</p>
                     <p class="mb-0 small text-light-75">CBU: <strong class="text-white">0000003123456789123456</strong><br>Alias: <strong class="text-white">EL.BUEN.DEPORTE</strong></p>
                     <hr class="border-secondary border-opacity-25 my-2">
+                    <p class="mb-0 small text-light-50" style="font-size: 0.75rem;"><i class="fa-solid fa-circle-info me-1"></i>Deberás mostrar el comprobante en recepción para efectivizar tu lugar.</p>
+                </div>
+
+                <div id="swal-mp-info" class="d-none p-3 rounded border border-primary border-opacity-25 mt-2" style="background-color: rgba(59, 130, 246, 0.05);">
+                    <p class="mb-0 small" style="color: #60a5fa;"><i class="fa-solid fa-handshake me-2"></i>Al confirmar, serás redirigido a tu app de <b>Mercado Pago</b> para abonar de forma segura.</p>
                 </div>
             </div>
         `,
