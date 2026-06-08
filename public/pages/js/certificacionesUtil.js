@@ -80,7 +80,7 @@ function renderizarCardCertificacion(c, colorAccent = '#00C16E') {
                 </div>
                 ${urlAdj ? `
                     <div class="mt-3">
-                        <button type="button" onclick="verAdjuntoCertificacion('${urlAdj.replace(/'/g, "\\'")}', '${parsed.nombre.replace(/'/g, "\\'")}')"
+                        <button type="button" onclick=""
                             class="btn btn-xs btn-outline-success border-sports text-sports w-100">
                             <i class="fa-solid fa-file-pdf me-1"></i>Ver adjunto
                         </button>
