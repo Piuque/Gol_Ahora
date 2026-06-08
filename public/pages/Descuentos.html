@@ -9,6 +9,158 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/login.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap');
+
+/* ── Variables ── */
+:root {
+  --bg-page:        #0a1a12;
+  --bg-card:        #0f2318;
+  --bg-field:       #132b1c;
+  --bg-field-focus: #1a3825;
+  --border:         #1e4a2b;
+  --border-focus:   #22c55e;
+  --accent:         #22c55e;
+  --text-primary:   #e8f5ec;
+  --text-secondary: #6b9a7a;
+  --text-placeholder: #3d6b4f;
+  --radius-card:    18px;
+  --radius-field:   10px;
+  --font-main:      'Barlow', sans-serif;
+  --font-display:   'Barlow Condensed', sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-page);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ── Card ── */
+.form-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  padding: 2.5rem 2.75rem;
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+  overflow: hidden;
+}
+.form-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+/* ── Header ── */
+.form-header { text-align: center; margin-bottom: 2.25rem; }
+.form-header .form-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
+.form-header h1 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.form-header h1 span { color: var(--accent); }
+.form-header p { margin-top: 0.6rem; font-size: 0.95rem; color: var(--text-secondary); }
+
+/* ── Grid ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem 1.5rem; }
+.form-grid .full-width { grid-column: 1 / -1; }
+
+/* ── Campos ── */
+.form-group { display: flex; flex-direction: column; gap: 0.45rem; }
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  background: var(--bg-field);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-field);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 0.97rem;
+  padding: 0.8rem 1rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder { color: var(--text-placeholder); }
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--border-focus);
+  background: var(--bg-field-focus);
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.25);
+}
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5) sepia(1) saturate(3) hue-rotate(90deg);
+  cursor: pointer;
+}
+.form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2322c55e' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+.form-group select option { background: var(--bg-card); color: var(--text-primary); }
+.form-group textarea { resize: vertical; min-height: 100px; }
+
+/* ── Divider ── */
+.form-divider { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border); }
+
+/* ── Botones ── */
+.form-actions { display: flex; gap: 1rem; margin-top: 1.75rem; grid-column: 1 / -1; }
+.btn {
+  flex: 1;
+  padding: 0.9rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-field);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--accent);
+  color: #052010;
+  box-shadow: 0 4px 20px rgba(34,197,94,0.3);
+}
+.btn-primary:hover { background: #4ade80; box-shadow: 0 6px 28px rgba(34,197,94,0.45); }
+.btn-secondary { background: #2a3d30; color: var(--text-secondary); border: 1.5px solid var(--border); }
+.btn-secondary:hover { background: #354d3c; color: var(--text-primary); }
+
+/* ── Responsive ── */
+@media (max-width: 540px) {
+  .form-card { padding: 1.75rem 1.25rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full-width { grid-column: 1; }
+  .form-actions { flex-direction: column; }
+}
         .descuento-card {
             background-color: #0d1f33;
             border: 1px solid rgba(255,255,255,0.1);
