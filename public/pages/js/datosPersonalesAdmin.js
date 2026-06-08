@@ -5,7 +5,7 @@ async function CargarDatosAdmin() {
         if (userId && userId !== 'null' && userId !== 'undefined') {
             headers['x-user-id'] = userId;
         }
-        const res = await fetch(`${API}/admin/info`, {
+        const res = await fetch(`/admin/info`, {
             credentials: 'include',
             headers: headers
         });
