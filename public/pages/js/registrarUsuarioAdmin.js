@@ -4,12 +4,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const generoInput = document.getElementById("genero");
     const generoSuggestions = document.getElementById("genero-suggestions");
     let generos = [];
+    let generoSeleccionado = false;
+
     try {
         const res = await fetch("/api/generos");
         generos = await res.json();
     } catch (e) {}
 
     generoInput.addEventListener("input", () => {
+        generoSeleccionado = false;
         const query = generoInput.value.toLowerCase();
         generoSuggestions.innerHTML = "";
         if (!query) { generoSuggestions.style.display = "none"; return; }
@@ -18,7 +21,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             matches.forEach(g => {
                 const div = document.createElement("div");
                 div.textContent = g;
-                div.addEventListener("click", () => { generoInput.value = g; generoSuggestions.style.display = "none"; });
+                div.addEventListener("click", () => {
+                    generoInput.value = g;
+                    generoSeleccionado = true;
+                    generoSuggestions.style.display = "none";
+                });
                 generoSuggestions.appendChild(div);
             });
             generoSuggestions.style.display = "block";
@@ -69,66 +76,67 @@ document.addEventListener("DOMContentLoaded", async () => {
         } else { paisSuggestions.style.display = "none"; }
     });
 
-    // Cerrar sugerencias al clickear fuera
     document.addEventListener("click", (e) => {
         [generoSuggestions, nacionalidadSuggestions, paisSuggestions].forEach(s => {
             if (!s.contains(e.target)) s.style.display = "none";
         });
     });
 
-    // Envío del formulario
+    // Helper validaciones
+    const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{3,}$/;
+
     document.getElementById("register-form-admin").addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const datos = {
-            nombre: document.getElementById("nombre").value,
-            apellido: document.getElementById("apellido").value,
-            dni: document.getElementById("dni").value,
+            nombre: document.getElementById("nombre").value.trim(),
+            apellido: document.getElementById("apellido").value.trim(),
+            dni: document.getElementById("dni").value.trim(),
             fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
-            email: document.getElementById("email").value,
-            telefono: document.getElementById("telefono").value,
-            genero: document.getElementById("genero").value,
-            nacionalidad: document.getElementById("nacionalidad").value,
+            email: document.getElementById("email").value.trim(),
+            telefono: document.getElementById("telefono").value.trim(),
+            genero: document.getElementById("genero").value.trim(),
+            nacionalidad: document.getElementById("nacionalidad").value.trim(),
             user_level: document.getElementById("user_level").value,
-            calle: document.getElementById("calle").value,
-            numero: document.getElementById("numero").value,
-            codigo_postal: document.getElementById("codigo_postal").value,
-            pais: document.getElementById("pais").value,
-            provincia: document.getElementById("provincia").value,
-            ciudad: document.getElementById("ciudad").value,
-            localidad: document.getElementById("localidad").value
+            calle: document.getElementById("calle").value.trim(),
+            numero: document.getElementById("numero").value.trim(),
+            codigo_postal: document.getElementById("codigo_postal").value.trim(),
+            pais: document.getElementById("pais").value.trim(),
+            provincia: document.getElementById("provincia").value.trim(),
+            ciudad: document.getElementById("ciudad").value.trim(),
+            localidad: document.getElementById("localidad").value.trim()
         };
-        
-        // Validaciones
-        const hoy = new Date();
-        const fechaNac = new Date(datos.fecha_nacimiento);
-        const hace100anos = new Date();
-        hace100anos.setFullYear(hoy.getFullYear() - 100);
 
-        if (!datos.nombre.trim() || datos.nombre.trim().length < 2) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'El nombre debe tener al menos 2 caracteres.', confirmButtonColor: '#00C16E' });
+        // Validaciones
+        if (!soloLetras.test(datos.nombre)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El nombre debe tener al menos 3 letras y no puede contener caracteres especiales.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.apellido.trim() || datos.apellido.trim().length < 2) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'El apellido debe tener al menos 2 caracteres.', confirmButtonColor: '#00C16E' });
+        if (!soloLetras.test(datos.apellido)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El apellido debe tener al menos 3 letras y no puede contener caracteres especiales.', confirmButtonColor: '#00C16E' });
             return;
         }
         if (!/^\d{7,8}$/.test(datos.dni)) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'El DNI debe tener 7 u 8 dígitos sin puntos.', confirmButtonColor: '#00C16E' });
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El DNI debe tener 7 u 8 dígitos sin puntos ni espacios.', confirmButtonColor: '#00C16E' });
             return;
         }
         if (!datos.fecha_nacimiento) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento es obligatoria.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (fechaNac >= hoy) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento no puede ser en el futuro.', confirmButtonColor: '#00C16E' });
+
+        // Comparar fechas como strings YYYY-MM-DD
+        const hoyStr = new Date().toISOString().split('T')[0];
+        const hace100Str = new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0];
+        if (datos.fecha_nacimiento >= hoyStr) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento no puede ser hoy ni en el futuro.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (fechaNac < hace100anos) {
+        if (datos.fecha_nacimiento < hace100Str) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento no puede ser hace más de 100 años.', confirmButtonColor: '#00C16E' });
             return;
         }
+
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'El email no tiene un formato válido.', confirmButtonColor: '#00C16E' });
             return;
@@ -137,24 +145,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'El teléfono debe tener entre 7 y 15 dígitos.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.genero.trim()) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'El género es obligatorio.', confirmButtonColor: '#00C16E' });
+        if (!generoSeleccionado || !datos.genero) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'Seleccioná un género de la lista.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.nacionalidad.trim()) {
+        if (!datos.nacionalidad) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'La nacionalidad es obligatoria.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.calle.trim()) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'La calle es obligatoria.', confirmButtonColor: '#00C16E' });
+        if (!datos.calle || datos.calle.length < 3) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La calle debe tener al menos 3 caracteres.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.numero.trim()) {
+        if (!datos.numero) {
             await Swal.fire({ icon: 'error', title: 'Error', text: 'El número de calle es obligatorio.', confirmButtonColor: '#00C16E' });
             return;
         }
-        if (!datos.localidad.trim()) {
-            await Swal.fire({ icon: 'error', title: 'Error', text: 'La localidad es obligatoria.', confirmButtonColor: '#00C16E' });
+        if (!datos.localidad || datos.localidad.length < 3) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La localidad debe tener al menos 3 caracteres.', confirmButtonColor: '#00C16E' });
             return;
         }
 
@@ -162,7 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const userId = localStorage.getItem("userId");
             const res = await fetch("/admin/usuarios/registrar", {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
                     "x-user-id": userId
                 },
@@ -183,6 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     confirmButtonColor: '#00C16E'
                 });
                 document.getElementById("register-form-admin").reset();
+                generoSeleccionado = false;
             } else {
                 await Swal.fire({
                     icon: 'error',
@@ -191,7 +200,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     confirmButtonColor: '#00C16E'
                 });
             }
-
         } catch (error) {
             await Swal.fire({
                 icon: 'error',
