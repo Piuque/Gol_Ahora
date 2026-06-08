@@ -40,6 +40,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use((req, res, next) => {
   console.log(`[HTTP] ${req.method} ${req.url}`);
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   next();
 });
 
