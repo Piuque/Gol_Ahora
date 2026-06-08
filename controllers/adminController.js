@@ -948,8 +948,8 @@ const crearEntrenamiento = async (req, res) => {
                           VALUES ($1, $2, $3, 3, $4) RETURNING id_ocupacion_cancha`;
     const ocupacion = await db.pool.query(ocupacionSql, [fecha, hora_inicio, hora_fin, id_cancha]);
     const id_ocupacion = ocupacion.rows[0].id_ocupacion_cancha;
-    const entSql = `INSERT INTO entrenamientos (capacidad_max, id_profesional, id_cancha, id_ocupacion_cancha)
-                    VALUES ($1, $2, $3, $4) RETURNING id_entrenamiento`;
+    const entSql = `INSERT INTO entrenamientos (capacidad_max, id_profesional, id_cancha, id_ocupacion_cancha, id_estado_capacitaciones, id_club)
+                VALUES ($1, $2, $3, $4, 1, 1) RETURNING id_entrenamiento`;
     const ent = await db.pool.query(entSql, [capacidad_max, id_profesional, id_cancha, id_ocupacion]);
     await db.pool.query('COMMIT');
     res.status(201).json({ message: 'Entrenamiento creado correctamente', id: ent.rows[0].id_entrenamiento });

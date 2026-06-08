@@ -53,25 +53,48 @@ function renderCobros(cobros) {
         return;
     }
     contenedor.innerHTML = "";
+
+    // Agrupar por fecha
+    const grupos = {};
     cobros.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "cobro-card d-flex align-items-center gap-3";
-        div.onclick = () => verDetalle(c.id);
-        div.innerHTML = `
-            <div class="flex-grow-1">
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <p class="text-white fw-bold mb-0">${c.cliente}</p>
-                    ${badgeEstado(c.estado_cobro)}
-                </div>
-                <p class="text-light-50 small mb-0">
-                    <i class="fa-solid fa-dollar-sign me-1" style="color:#00C16E"></i> $${parseFloat(c.monto).toFixed(2)} &nbsp;·&nbsp;
-                    <i class="fa-solid fa-calendar me-1" style="color:#00C16E"></i> ${c.fecha} &nbsp;·&nbsp;
-                    <i class="fa-solid fa-credit-card me-1" style="color:#00C16E"></i> ${c.metodo_pago}
-                </p>
-            </div>
-            <i class="fa-solid fa-chevron-right" style="color: #00C16E;"></i>
+        const fecha = c.fecha ? c.fecha.split(' ')[0] : 'Sin fecha';
+        if (!grupos[fecha]) grupos[fecha] = [];
+        grupos[fecha].push(c);
+    });
+
+    Object.keys(grupos).forEach(fecha => {
+        // Header de fecha
+        const header = document.createElement("div");
+        header.className = "d-flex align-items-center gap-2 mt-3 mb-2";
+        header.innerHTML = `
+            <span class="small fw-bold" style="color:#00C16E; white-space:nowrap;">
+                <i class="fa-solid fa-calendar me-1"></i>${fecha}
+            </span>
+            <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
+            <span class="small" style="color:rgba(255,255,255,0.3);">${grupos[fecha].length} cobro${grupos[fecha].length > 1 ? 's' : ''}</span>
         `;
-        contenedor.appendChild(div);
+        contenedor.appendChild(header);
+
+        // Cards del grupo
+        grupos[fecha].forEach(c => {
+            const div = document.createElement("div");
+            div.className = "cobro-card d-flex align-items-center gap-3";
+            div.onclick = () => verDetalle(c.id);
+            div.innerHTML = `
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <p class="text-white fw-bold mb-0">${c.cliente}</p>
+                        ${badgeEstado(c.estado_cobro)}
+                    </div>
+                    <p class="text-light-50 small mb-0">
+                        <i class="fa-solid fa-dollar-sign me-1" style="color:#00C16E"></i> $${parseFloat(c.monto).toFixed(2)} &nbsp;·&nbsp;
+                        <i class="fa-solid fa-credit-card me-1" style="color:#00C16E"></i> ${c.metodo_pago}
+                    </p>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color: #00C16E;"></i>
+            `;
+            contenedor.appendChild(div);
+        });
     });
 }
 
