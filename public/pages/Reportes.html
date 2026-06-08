@@ -424,6 +424,7 @@
                                     <th>Largo</th>
                                     <th>Capacidad</th>
                                     <th>Duración</th>
+                                    <th>Canchas activas</th>
                                 </tr>
                                 </thead>
                                 <tbody id="tbody-canchas"></tbody>
@@ -686,14 +687,18 @@
             },
             render: ({ tipos }) => {
                 const tbody = document.getElementById('tbody-canchas');
-                if (!tipos.length) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>`; return 0; }
+                if (!tipos || !tipos.length) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-2" style="color:rgba(255,255,255,0.3);">Sin datos</td></tr>`;
+                    return 0;
+                }
                 tbody.innerHTML = tipos.map(t => `
                 <tr>
-                    <td>${t.tipo_cancha}</td>
-                    <td>${t.ancho ?? '—'} m</td>
-                    <td>${t.largo ?? '—'} m</td>
+                    <td>${t.tipo_cancha ?? '—'}</td>
+                    <td>${t.ancho != null ? t.ancho + ' m' : '—'}</td>
+                    <td>${t.largo != null ? t.largo + ' m' : '—'}</td>
                     <td>${t.capacidad ?? '—'}</td>
                     <td>${t.duracion_min ?? '—'} – ${t.duracion_max ?? '—'} min</td>
+                    <td>${t.total_canchas ?? 0}</td>
                 </tr>`).join('');
                 return tipos.length;
             }
