@@ -129,7 +129,7 @@ async function buscarDisponibilidad(idCancha, fecha) {
 
         // Si no está logueado, lo mandamos al login
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
 
@@ -239,7 +239,7 @@ function mostrarBotonContinuar() {
             hora: horaSeleccionada
         });
 
-        window.location.href = `confirmarReservaCliente.html?${queryParams.toString()}`;
+        window.location.href = `/cliente/confirmarReserva?${queryParams.toString()}`;
     };
 }
 
