@@ -400,17 +400,27 @@
     async function CargarDatosAdmin() {
         const userId = localStorage.getItem("userId");
         try {
+            const headers = {};
+            if (userId && userId !== 'null' && userId !== 'undefined') {
+                headers['x-user-id'] = userId;
+            }
             const res = await fetch(`${API}/admin/info`, {
                 credentials: 'include',
-                headers: { 'x-user-id': userId }
+                headers: headers
             });
-            if (!res.ok) throw new Error();
+            if (res.status === 401 || res.status === 403) {
+                window.location.href = '/acceder';
+                return;
+            }
+            if (!res.ok) throw new Error("Error en la respuesta del servidor");
             const d = await res.json();
             document.getElementById('admin-nombre').textContent   = `${d.nombre || ''} ${d.apellido || ''}`.trim() || 'Gol Ahora Club';
             document.getElementById('admin-email').textContent    = d.email    || '—';
             document.getElementById('admin-telefono').textContent = d.telefono || '—';
             document.getElementById('admin-dni').textContent      = d.dni      || '—';
-        } catch { /* mantiene valores por defecto */ }
+        } catch (err) {
+            console.error("Error al cargar datos del administrador:", err);
+        }
     }
 
     /* ── Notificaciones ── */

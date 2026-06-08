@@ -137,6 +137,10 @@ const authMiddleware = async (req, res, next) => {
   // Soporte para testing/Swagger/Web: buscamos x-user-id en headers, query, body o cookies.
   let userId = req.headers['x-user-id'] || req.query.userId || (req.body && req.body.userId);
 
+  if (userId === 'null' || userId === 'undefined') {
+    userId = null;
+  }
+
   if (!userId && req.headers.cookie) {
     const cookies = req.headers.cookie.split(';').reduce((acc, c) => {
       const parts = c.split('=');
@@ -148,7 +152,11 @@ const authMiddleware = async (req, res, next) => {
     userId = cookies['x-user-id'] || cookies['userId'];
   }
 
-  if (!userId || userId === 'null' || userId === 'undefined') {
+  if (userId === 'null' || userId === 'undefined') {
+    userId = null;
+  }
+
+  if (!userId) {
     // Si no se proporciona ID, por defecto lo tratamos como público/visitante
     req.user = { id_usuario: null, user_level: 0, role: 'usuario' };
     return next();
@@ -161,12 +169,12 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // Mapeo de roles basado en user_level (administrador, profesor, entrenador, cliente)
-    const level = typeof user.user_level === 'string' ? user.user_level.trim() : user.user_level;
+    const level = typeof user.user_level === 'string' ? user.user_level.trim().toLowerCase() : user.user_level;
     let role = 'usuario';
     if (level === 'cliente'       || level === '1'   || level === 1)   role = 'cliente';
     if (level === 'profesor'      || level === '10'  || level === 10)  role = 'profesor';
     if (level === 'entrenador')                                         role = 'entrenador';
-    if (level === 'administrador' || level === '152' || level === 152) role = 'admin';
+    if (level === 'administrador' || level === 'admin' || level === '152' || level === 152) role = 'admin';
 
     req.user = {
       id_usuario: user.id_usuario,

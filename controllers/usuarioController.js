@@ -405,12 +405,12 @@ const loginUsuario = async (req, res) => {
     }
 
     // Mapeo de roles basado en user_level (administrador, profesor, entrenador, cliente)
-    const level = typeof user.user_level === 'string' ? user.user_level.trim() : user.user_level;
+    const level = typeof user.user_level === 'string' ? user.user_level.trim().toLowerCase() : user.user_level;
     let role = 'usuario';
     if (level === 'cliente' || level === '1' || level === 1) role = 'cliente';
     if (level === 'profesor' || level === '10' || level === 10) role = 'profesor';
     if (level === 'entrenador') role = 'entrenador';
-    if (level === 'administrador' || level === '152' || level === 152) role = 'admin';
+    if (level === 'administrador' || level === 'admin' || level === '152' || level === 152) role = 'admin';
 
     // Eliminar la contraseña de la respuesta por seguridad
     delete user.password;
