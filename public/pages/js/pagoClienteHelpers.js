@@ -169,10 +169,6 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
                     Swal.showValidationMessage('Completá la fecha de vencimiento (MM/AA)');
                     return false;
                 }
-                if (ccv.length < 2) {
-                    Swal.showValidationMessage('El código CCV es muy corto');
-                    return false;
-                }
             }
             return { id_metodo_de_pago: st.idMetodo, nombreMetodo: st.nombreMetodo };
         }
