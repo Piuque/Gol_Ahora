@@ -99,6 +99,65 @@ document.addEventListener("DOMContentLoaded", async () => {
             localidad: document.getElementById("localidad").value
         };
         
+        // Validaciones
+        const hoy = new Date();
+        const fechaNac = new Date(datos.fecha_nacimiento);
+        const hace100anos = new Date();
+        hace100anos.setFullYear(hoy.getFullYear() - 100);
+
+        if (!datos.nombre.trim() || datos.nombre.trim().length < 2) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El nombre debe tener al menos 2 caracteres.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.apellido.trim() || datos.apellido.trim().length < 2) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El apellido debe tener al menos 2 caracteres.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!/^\d{7,8}$/.test(datos.dni)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El DNI debe tener 7 u 8 dígitos sin puntos.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.fecha_nacimiento) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento es obligatoria.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (fechaNac >= hoy) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento no puede ser en el futuro.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (fechaNac < hace100anos) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de nacimiento no puede ser hace más de 100 años.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El email no tiene un formato válido.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!/^\d{7,15}$/.test(datos.telefono.replace(/\s/g, ''))) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El teléfono debe tener entre 7 y 15 dígitos.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.genero.trim()) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El género es obligatorio.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.nacionalidad.trim()) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La nacionalidad es obligatoria.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.calle.trim()) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La calle es obligatoria.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.numero.trim()) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'El número de calle es obligatorio.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+        if (!datos.localidad.trim()) {
+            await Swal.fire({ icon: 'error', title: 'Error', text: 'La localidad es obligatoria.', confirmButtonColor: '#00C16E' });
+            return;
+        }
+
         try {
             const userId = localStorage.getItem("userId");
             const res = await fetch("/admin/usuarios/registrar", {
