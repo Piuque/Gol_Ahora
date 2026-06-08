@@ -43,14 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.usuario.role === 'admin' || data.usuario.role === 'administrador') {
                     window.location.href = "/admin";
                 } else if (data.usuario.role === 'profesor') {
-                    window.location.href = "/pages/perfilProfesor.html";
+                    window.location.href = "/profesor";
                 } else if (data.usuario.role === 'entrenador') {
-                    window.location.href = "/pages/perfilEntrenador.html";
+                    window.location.href = "/entrenador";
                 } else {
                     const nextFlow = sessionStorage.getItem('nextFlow');
                     sessionStorage.removeItem('nextFlow');
                     if (nextFlow === 'reservar') {
-                        window.location.href = "/misReservas";
+                        window.location.href = "/cliente/misReservas";
                     } else {
                         window.location.href = "/cliente";
                     }

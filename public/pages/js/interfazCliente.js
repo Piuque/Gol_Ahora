@@ -584,6 +584,6 @@ function cerrarSesion() {
         document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "x-user-id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        window.location.href = '/pages/acceder.html';
+        window.location.href = '/acceder';
     });
 }

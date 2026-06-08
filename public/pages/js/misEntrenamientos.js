@@ -12,14 +12,14 @@ async function cargarMisEntrenamientos() {
     const contenedor = document.getElementById('contenedor-entrenamientos');
 
     try {
-        const response = await fetch('/cliente/entrenamientos', {
+        const response = await fetch('/api/cliente/entrenamientos', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
             credentials: 'include'
         });
 
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
 
@@ -134,7 +134,7 @@ async function darseDeBaja(idInscripcion) {
 
     if (result.isConfirmed) {
         try {
-            const res = await fetch(`/cliente/entrenamientos/inscripcion/${idInscripcion}`, {
+            const res = await fetch(`/api/cliente/entrenamientos/inscripcion/${idInscripcion}`, {
                 method: 'DELETE',
                 headers: { 'plataform': 'web' },
                 credentials: 'include'
@@ -158,7 +158,7 @@ async function darseDeBaja(idInscripcion) {
 // =========================================================
 async function explorarEntrenamientos() {
     try {
-        const response = await fetch('/cliente/entrenamientos/disponibles', {
+        const response = await fetch('/api/cliente/entrenamientos/disponibles', {
             method: 'GET',
             headers: { 'plataform': 'web' },
             credentials: 'include'
@@ -269,7 +269,7 @@ async function iniciarInscripcionEntrenamiento(idEntrenamiento) {
     if (!pago) return;
 
     try {
-        const res = await fetch(`/cliente/entrenamientos/inscripcion`, {
+        const res = await fetch(`/api/cliente/entrenamientos/inscripcion`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', plataform: 'web' },
             body: JSON.stringify({

@@ -70,7 +70,7 @@ async function cargarReservas() {
         });
 
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
         if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
@@ -129,7 +129,7 @@ function renderizarTarjetas(reservas) {
             <div class="w-100 text-center text-light-50 py-5">
                 <i class="fa-regular fa-calendar-xmark fa-3x mb-3 opacity-50"></i>
                 <p>No hay reservas para mostrar.</p>
-                <a href="listarTiposCanchaCliente.html" class="btn btn-sm btn-sports mt-2">¡Reservar ahora!</a>
+                <a href="/cliente/tipos-cancha" class="btn btn-sm btn-sports mt-2">¡Reservar ahora!</a>
             </div>`;
         return;
     }
@@ -236,7 +236,7 @@ function verDetalles(id) {
             <div style="background:rgba(0,193,110,0.04);border:1px solid rgba(0,193,110,0.12);border-radius:8px;padding:10px 14px;font-size:0.78rem;color:rgba(255,255,255,0.55);">
                 <i class="fa-solid fa-circle-info me-2" style="color:#00C16E;"></i>
                 Para consultar el detalle del cobro o imprimir tu recibo, visitá
-                <a href="misPagos.html" style="color:#00C16E;font-weight:600;">Mis Pagos</a>
+                <a href="/cliente/misPagos" style="color:#00C16E;font-weight:600;">Mis Pagos</a>
                 o acercate a la recepción del club.
             </div>
         </div>`

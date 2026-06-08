@@ -311,7 +311,7 @@ async function procesarReservaFinal() {
             confirmButtonText: 'Entendido'
         });
 
-        window.location.href = '/misReservas';
+        window.location.href = '/cliente/misReservas';
 
     } catch (error) {
         console.error("Error en el POST de reserva:", error);

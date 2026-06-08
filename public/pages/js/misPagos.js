@@ -62,7 +62,7 @@ async function cargarPagos() {
         });
 
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
         if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
@@ -141,7 +141,7 @@ function renderizarTarjetas(pagos) {
             <div class="w-100 text-center text-light-50 py-5">
                 <i class="fa-solid fa-receipt fa-3x mb-3 opacity-50"></i>
                 <p>No hay pagos para mostrar.</p>
-                <a href="misReservas.html" class="btn btn-sm mt-2 fw-bold" style="background:#63b3ed;border-color:#63b3ed;color:#071524;">
+                <a href="/cliente/misReservas" class="btn btn-sm mt-2 fw-bold" style="background:#63b3ed;border-color:#63b3ed;color:#071524;">
                     Ver mis reservas
                 </a>
             </div>`;

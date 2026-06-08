@@ -113,6 +113,38 @@ app.get(/^\/admin\/Cobros$/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public/pages/Cobros.html'));
 });
 
+// Rutas HTML del cliente (antes de montar la API /cliente para evitar colisiones)
+app.get(['/misReservas', '/misReservas.html', '/cliente/misReservas'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misReservas.html'));
+});
+app.get(['/misPagos', '/misPagos.html', '/cliente/misPagos'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misPagos.html'));
+});
+app.get(['/cliente', '/cliente/dashboard', '/pages/interfazCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/interfazCliente.html'));
+});
+app.get(['/cliente/tipos-cancha', '/pages/listarTiposCanchaCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/listarTiposCanchaCliente.html'));
+});
+app.get(['/cliente/canchas', '/pages/listarCanchasCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/listarCanchasCliente.html'));
+});
+app.get(['/cliente/seleccionarFechaHora', '/pages/seleccionarFechaHora.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/seleccionarFechaHora.html'));
+});
+app.get(['/cliente/confirmarReserva', '/pages/confirmarReservaCliente.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/confirmarReservaCliente.html'));
+});
+app.get(['/cliente/misClases', '/pages/misClases.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misClases.html'));
+});
+app.get(['/cliente/misEntrenamientos', '/pages/misEntrenamientos.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/misEntrenamientos.html'));
+});
+app.get(['/registro', '/pages/registro.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/pages/registro.html'));
+});
+
 // Montar Rutas de la API por prefijos de roles
 app.use('/usuario', usuarioRoutes);
 app.use('/cliente', clienteRoutes);
@@ -648,40 +680,7 @@ const cleanupExpiredReservations = async () => {
     console.error('[Limpieza] Error al limpiar reservas vencidas:', err.message);
   }
 };
-//rutas amigables para listar mis reservas
-// Ruta amigable para que el cliente acceda a "mis reservas"
-app.get(['/misReservas', '/misReservas.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/misReservas.html'));
-});
-app.get(['/misPagos', '/misPagos.html', '/cliente/misPagos'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/misPagos.html'));
-});
-
-// Rutas amigables adicionales del cliente
-app.get(['/cliente', '/cliente/dashboard', '/pages/interfazCliente.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/interfazCliente.html'));
-});
-app.get(['/cliente/tipos-cancha', '/pages/listarTiposCanchaCliente.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/listarTiposCanchaCliente.html'));
-});
-app.get(['/cliente/canchas', '/pages/listarCanchasCliente.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/listarCanchasCliente.html'));
-});
-app.get(['/cliente/seleccionarFechaHora', '/pages/seleccionarFechaHora.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/seleccionarFechaHora.html'));
-});
-app.get(['/cliente/confirmarReserva', '/pages/confirmarReservaCliente.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/confirmarReservaCliente.html'));
-});
-app.get(['/cliente/misClases', '/pages/misClases.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/misClases.html'));
-});
-app.get(['/cliente/misEntrenamientos', '/pages/misEntrenamientos.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/misEntrenamientos.html'));
-});
-app.get(['/registro', '/pages/registro.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/pages/registro.html'));
-});
+//rutas amigables para listar mis reservas (alias legacy; rutas principales registradas arriba)
 
 // Rutas amigables adicionales del profesor
 app.get(['/profesor/perfil', '/pages/perfilProfesor.html'], (req, res) => {

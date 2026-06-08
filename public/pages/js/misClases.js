@@ -12,14 +12,14 @@ async function cargarMisClases() {
     const contenedor = document.getElementById('contenedor-clases');
 
     try {
-        const response = await fetch('/cliente/clases', {
+        const response = await fetch('/api/cliente/clases', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'plataform': 'web' },
             credentials: 'include'
         });
 
         if (response.status === 401 || response.status === 403) {
-            window.location.href = '/pages/acceder.html';
+            window.location.href = '/acceder';
             return;
         }
 
@@ -134,7 +134,7 @@ async function darseDeBaja(idInscripcion) {
 
     if (result.isConfirmed) {
         try {
-            const res = await fetch(`/cliente/clases/inscripcion/${idInscripcion}`, {
+            const res = await fetch(`/api/cliente/clases/inscripcion/${idInscripcion}`, {
                 method: 'DELETE',
                 headers: { 'plataform': 'web' },
                 credentials: 'include'
@@ -158,7 +158,7 @@ async function darseDeBaja(idInscripcion) {
 // =========================================================
 async function explorarClases() {
     try {
-        const response = await fetch('/cliente/clases/disponibles', {
+        const response = await fetch('/api/cliente/clases/disponibles', {
             method: 'GET',
             headers: { 'plataform': 'web' },
             credentials: 'include'
@@ -269,7 +269,7 @@ async function iniciarInscripcionClase(idClase) {
     if (!pago) return;
 
     try {
-        const res = await fetch(`/cliente/clases/inscripcion`, {
+        const res = await fetch(`/api/cliente/clases/inscripcion`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', plataform: 'web' },
             body: JSON.stringify({
