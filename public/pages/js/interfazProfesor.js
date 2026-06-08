@@ -203,14 +203,23 @@ window.verPlanillaCompetencia = async function(categoria, id, nombre) {
         if (!res.ok) throw new Error();
         const data = await res.json();
         const equipos = data.equipos || [];
+        const partidos = data.partidos || [];
         const listaHtml = equipos.length
             ? `<ul style="text-align:left;padding-left:1.2rem;margin:0;">${equipos.map(e => `<li>${e.nombre}</li>`).join('')}</ul>`
             : '<p class="mb-0">Sin equipos inscriptos aún.</p>';
+        const partidosHtml = partidos.length
+            ? `<ul style="text-align:left;padding-left:1.2rem;margin:0;">${partidos.map(p => {
+                const resultado = p.goles_local !== null ? ` <span class="text-success">(${p.goles_local}-${p.goles_visitante})</span>` : '';
+                return `<li>${p.equipo_local} vs ${p.equipo_visitante}${resultado}</li>`;
+            }).join('')}</ul>`
+            : '<p class="mb-0">Sin partidos generados aún.</p>';
 
         Swal.fire({
-            background: '#0A2540', color: '#fff', width: '480px',
+            background: '#0A2540', color: '#fff', width: '520px',
             title: `Planilla — ${nombre}`,
-            html: `<p class="small text-light-50 mb-2">${categoria} · ${equipos.length} equipo(s)</p>${listaHtml}`,
+            html: `<p class="small text-light-50 mb-2">${categoria} · ${equipos.length} equipo(s)</p>
+                   <p class="small text-warning fw-bold mb-1">Equipos</p>${listaHtml}
+                   <p class="small text-warning fw-bold mb-1 mt-3">Partidos</p>${partidosHtml}`,
             confirmButtonColor: '#ffc107', confirmButtonText: 'Cerrar'
         });
     } catch {

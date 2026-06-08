@@ -13,6 +13,22 @@ const {
   turnosSeSolapan
 } = require('../utils/fechaHora.js');
 
+const shuffleArray = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const fechaPartidoDesdeBase = (fechaBase, indice, partidosPorDia = 4) => {
+  const fecha = new Date(fechaBase);
+  fecha.setDate(fecha.getDate() + Math.floor(indice / partidosPorDia));
+  fecha.setHours(10 + (indice % partidosPorDia) * 2, 0, 0, 0);
+  return fecha;
+};
+
 // GET /admin/clientes (Listar todos los clientes)
 const listarClientes = async (req, res) => {
   try {
@@ -1044,10 +1060,45 @@ const eliminarClase = async (req, res) => {
 
 const asignarClaseParticular = async (req, res) => {
   const { id_cliente, id_clase } = req.body;
+
+  if (!id_cliente || !id_clase) {
+    return res.status(400).json({ error: 'id_cliente e id_clase son obligatorios' });
+  }
+
   try {
-    await db.query.run('INSERT INTO clientes_clases (id_cliente, id_clase) VALUES ($1, $2)', [id_cliente, id_clase]);
-    res.status(201).json({ message: 'Cliente asignado a la clase correctamente' });
+    const clase = await db.query.get(
+      `SELECT c.id_clase, c.nombre, c.capacidad_max,
+              (SELECT COUNT(*)::int FROM clientes_clases WHERE id_clase = c.id_clase) AS inscriptos
+       FROM clases c WHERE c.id_clase = $1`,
+      [id_clase]
+    );
+    if (!clase) {
+      return res.status(404).json({ error: 'Clase no encontrada' });
+    }
+    if (clase.inscriptos >= clase.capacidad_max) {
+      return res.status(400).json({ error: 'La clase no tiene cupos disponibles' });
+    }
+
+    const yaInscripto = await db.query.get(
+      'SELECT id_cliente_clase FROM clientes_clases WHERE id_cliente = $1 AND id_clase = $2',
+      [id_cliente, id_clase]
+    );
+    if (yaInscripto) {
+      return res.status(400).json({ error: 'El cliente ya está inscripto en esta clase' });
+    }
+
+    const inscripcion = await db.query.run(
+      'INSERT INTO clientes_clases (id_cliente, id_clase, id_asistencia) VALUES ($1, $2, 2) RETURNING id_cliente_clase',
+      [id_cliente, id_clase]
+    );
+    res.status(201).json({
+      message: 'Cliente asignado a la clase correctamente',
+      id: inscripcion.id
+    });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'El cliente ya está inscripto en esta clase' });
+    }
     res.status(500).json({ error: 'Error al asignar cliente a clase', message: err.message });
   }
 };
@@ -1167,10 +1218,45 @@ const eliminarEntrenamiento = async (req, res) => {
 
 const asignarEntrenamientoParticular = async (req, res) => {
   const { id_cliente, id_entrenamiento } = req.body;
+
+  if (!id_cliente || !id_entrenamiento) {
+    return res.status(400).json({ error: 'id_cliente e id_entrenamiento son obligatorios' });
+  }
+
   try {
-    await db.query.run('INSERT INTO clientes_entrenamientos (id_cliente, id_entrenamiento) VALUES ($1, $2)', [id_cliente, id_entrenamiento]);
-    res.status(201).json({ message: 'Cliente asignado al entrenamiento correctamente' });
+    const entrenamiento = await db.query.get(
+      `SELECT e.id_entrenamiento, e.capacidad_max,
+              (SELECT COUNT(*)::int FROM clientes_entrenamientos WHERE id_entrenamiento = e.id_entrenamiento) AS inscriptos
+       FROM entrenamientos e WHERE e.id_entrenamiento = $1`,
+      [id_entrenamiento]
+    );
+    if (!entrenamiento) {
+      return res.status(404).json({ error: 'Entrenamiento no encontrado' });
+    }
+    if (entrenamiento.inscriptos >= entrenamiento.capacidad_max) {
+      return res.status(400).json({ error: 'El entrenamiento no tiene cupos disponibles' });
+    }
+
+    const yaInscripto = await db.query.get(
+      'SELECT id_cliente_capacitacion FROM clientes_entrenamientos WHERE id_cliente = $1 AND id_entrenamiento = $2',
+      [id_cliente, id_entrenamiento]
+    );
+    if (yaInscripto) {
+      return res.status(400).json({ error: 'El cliente ya está inscripto en este entrenamiento' });
+    }
+
+    const inscripcion = await db.query.run(
+      'INSERT INTO clientes_entrenamientos (id_cliente, id_entrenamiento, id_asistencia) VALUES ($1, $2, 2) RETURNING id_cliente_capacitacion',
+      [id_cliente, id_entrenamiento]
+    );
+    res.status(201).json({
+      message: 'Cliente asignado al entrenamiento correctamente',
+      id: inscripcion.id
+    });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'El cliente ya está inscripto en este entrenamiento' });
+    }
     res.status(500).json({ error: 'Error al asignar cliente a entrenamiento', message: err.message });
   }
 };
@@ -1289,28 +1375,41 @@ const eliminarLiga = async (req, res) => {
 const generarFixture = async (req, res) => {
   const { id } = req.params;
   try {
+    const liga = await db.query.get(
+      'SELECT id_liga, fecha_inicio FROM ligas WHERE id_liga = $1',
+      [id]
+    );
+    if (!liga) return res.status(404).json({ error: 'Liga no encontrada' });
+
     const inscriptos = await db.query.all(
       'SELECT id_equipo FROM participacion_ligas WHERE id_liga = $1', [id]
     );
-    if (inscriptos.length < 2) return res.status(400).json({ error: 'Se necesitan al menos 2 equipos' });
+    if (inscriptos.length < 2) {
+      return res.status(400).json({ error: 'Se necesitan al menos 2 equipos inscriptos' });
+    }
 
     await db.pool.query('DELETE FROM partidos WHERE id_liga = $1', [id]);
 
-    const equipos = inscriptos.map(i => i.id_equipo);
+    const equipos = shuffleArray(inscriptos.map(i => i.id_equipo));
     const partidos = [];
     for (let i = 0; i < equipos.length; i++) {
       for (let j = i + 1; j < equipos.length; j++) {
-        partidos.push([equipos[i], equipos[j], id]);
+        partidos.push([equipos[i], equipos[j]]);
       }
     }
+    partidos.sort(() => Math.random() - 0.5);
 
-    for (const p of partidos) {
+    const fechaBase = liga.fecha_inicio ? new Date(liga.fecha_inicio) : new Date();
+    for (let idx = 0; idx < partidos.length; idx++) {
+      const [local, visitante] = partidos[idx];
       await db.pool.query(
-        'INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_liga) VALUES ($1, $2, $3)', p
+        `INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_liga, fecha_hora)
+         VALUES ($1, $2, $3, $4)`,
+        [local, visitante, id, fechaPartidoDesdeBase(fechaBase, idx)]
       );
     }
 
-    res.json({ message: `Fixture generado con ${partidos.length} partidos` });
+    res.json({ message: `Fixture generado con ${partidos.length} partidos (todos contra todos)` });
   } catch (err) {
     res.status(500).json({ error: 'Error al generar fixture', message: err.message });
   }
@@ -1318,7 +1417,10 @@ const generarFixture = async (req, res) => {
 
 const inscribirEnLiga = async (req, res) => {
   const { id } = req.params;
-  const { nombre } = req.body;
+  const nombre = (req.body.nombre || '').trim();
+  if (!nombre) {
+    return res.status(400).json({ error: 'El nombre del equipo es obligatorio' });
+  }
   try {
     await db.pool.query('BEGIN');
     const equipo = await db.pool.query(
@@ -1410,7 +1512,20 @@ const obtenerTorneo = async (req, res) => {
       WHERE pt.id_torneo = $1
     `, [id]);
 
-    res.json({ ...torneo, equipos });
+    const partidos = await db.query.all(`
+      SELECT p.id_partido AS id,
+             e1.nombre AS equipo_local,
+             e2.nombre AS equipo_visitante,
+             p.goles_local, p.goles_visitante,
+             to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
+      FROM partidos p
+      LEFT JOIN equipos e1 ON p.id_equipo_local = e1.id_equipo
+      LEFT JOIN equipos e2 ON p.id_equipo_visitante = e2.id_equipo
+      WHERE p.id_torneo = $1
+      ORDER BY p.id_partido ASC
+    `, [id]);
+
+    res.json({ ...torneo, equipos, partidos });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener torneo', message: err.message });
   }
@@ -1446,22 +1561,48 @@ const eliminarTorneo = async (req, res) => {
 const generarCuadroTorneo = async (req, res) => {
   const { id } = req.params;
   try {
+    const torneo = await db.query.get(
+      'SELECT id_torneo, fecha_inicio FROM torneos WHERE id_torneo = $1',
+      [id]
+    );
+    if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado' });
+
     const inscriptos = await db.query.all(
       'SELECT id_equipo FROM participacion_torneos WHERE id_torneo = $1', [id]
     );
-    if (inscriptos.length < 2) return res.status(400).json({ error: 'Se necesitan al menos 2 equipos' });
+    if (inscriptos.length < 2) {
+      return res.status(400).json({ error: 'Se necesitan al menos 2 equipos inscriptos' });
+    }
 
     await db.pool.query('DELETE FROM partidos WHERE id_torneo = $1', [id]);
 
-    const equipos = inscriptos.map(i => i.id_equipo);
+    const equipos = shuffleArray(inscriptos.map(i => i.id_equipo));
+    const fechaBase = torneo.fecha_inicio ? new Date(torneo.fecha_inicio) : new Date();
+    let totalPartidos = 0;
+
     for (let i = 0; i < equipos.length - 1; i += 2) {
       await db.pool.query(
-        'INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_torneo) VALUES ($1, $2, $3)',
-        [equipos[i], equipos[i + 1], id]
+        `INSERT INTO partidos (id_equipo_local, id_equipo_visitante, id_torneo, fecha_hora)
+         VALUES ($1, $2, $3, $4)`,
+        [
+          equipos[i],
+          equipos[i + 1],
+          id,
+          fechaPartidoDesdeBase(fechaBase, totalPartidos, 2)
+        ]
       );
+      totalPartidos++;
     }
 
-    res.json({ message: 'Cuadro generado correctamente' });
+    const equipoLibre = equipos.length % 2 === 1
+      ? await db.query.get('SELECT nombre FROM equipos WHERE id_equipo = $1', [equipos[equipos.length - 1]])
+      : null;
+
+    res.json({
+      message: equipoLibre
+        ? `Cuadro generado con ${totalPartidos} partidos. ${equipoLibre.nombre} pasa de ronda (bye).`
+        : `Cuadro generado con ${totalPartidos} partidos de primera ronda`
+    });
   } catch (err) {
     res.status(500).json({ error: 'Error al generar cuadro', message: err.message });
   }
@@ -1483,7 +1624,10 @@ const eliminarEquipoTorneo = async (req, res) => {
 
 const inscribirEnTorneo = async (req, res) => {
   const { id } = req.params;
-  const { nombre } = req.body;
+  const nombre = (req.body.nombre || '').trim();
+  if (!nombre) {
+    return res.status(400).json({ error: 'El nombre del equipo es obligatorio' });
+  }
   try {
     await db.pool.query('BEGIN');
     const equipo = await db.pool.query(

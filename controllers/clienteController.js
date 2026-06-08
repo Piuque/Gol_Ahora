@@ -605,7 +605,7 @@ const listarClasesCliente = async (req, res) => {
       FROM clientes_clases cc
       JOIN clases c ON cc.id_clase = c.id_clase
       LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
-      WHERE cc.id_cliente = $1 AND (u.user_level = 'profesor' OR c.id_profesional IS NULL)
+      WHERE cc.id_cliente = $1
       ORDER BY c.nombre ASC
     `;
     const rows = await db.query.all(sql, [idUsuario]);
@@ -628,7 +628,7 @@ const listarEntrenamientosCliente = async (req, res) => {
       JOIN entrenamientos e ON ce.id_entrenamiento = e.id_entrenamiento
       LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
       LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
-      WHERE ce.id_cliente = $1 AND (u.user_level = 'entrenador' OR e.id_profesional IS NULL)
+      WHERE ce.id_cliente = $1
       ORDER BY e.id_entrenamiento ASC
     `;
     const rows = await db.query.all(sql, [idUsuario]);
@@ -652,7 +652,6 @@ const listarClasesDisponibles = async (req, res) => {
       LEFT JOIN usuarios u ON c.id_profesional = u.id_usuario
       LEFT JOIN ocupaciones_cancha oc ON c.id_ocupacion_cancha = oc.id_ocupacion_cancha
       LEFT JOIN canchas can ON c.id_cancha = can.id_cancha
-      WHERE u.user_level = 'profesor' OR c.id_profesional IS NULL
       ORDER BY c.nombre ASC
     `;
     const rows = await db.query.all(sql);
@@ -676,7 +675,6 @@ const listarEntrenamientosDisponibles = async (req, res) => {
       LEFT JOIN canchas can ON e.id_cancha = can.id_cancha
       LEFT JOIN usuarios u ON e.id_profesional = u.id_usuario
       LEFT JOIN ocupaciones_cancha oc ON e.id_ocupacion_cancha = oc.id_ocupacion_cancha
-      WHERE u.user_level = 'entrenador' OR e.id_profesional IS NULL
       ORDER BY e.id_entrenamiento ASC
     `;
     const rows = await db.query.all(sql);

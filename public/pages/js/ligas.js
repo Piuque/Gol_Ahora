@@ -78,7 +78,7 @@ async function verDetalle(id) {
                     <span class="text-white">${p.equipo_local} vs ${p.equipo_visitante}</span>
                     ${p.goles_local !== null ?
                         `<span class="badge" style="background-color:#00C16E;">${p.goles_local} - ${p.goles_visitante}</span>` :
-                        `<button onclick="registrarResultado(${p.id}, 'liga')" class="btn btn-sm text-white py-0" style="background-color:#0d6efd; font-size:0.75rem;">
+                        `<button onclick="registrarResultado(${p.id}, 'liga', ${l.id})" class="btn btn-sm text-white py-0" style="background-color:#0d6efd; font-size:0.75rem;">
                             Cargar resultado
                         </button>`
                     }
@@ -366,7 +366,7 @@ async function generarFixture(id_liga) {
     }
 }
 
-async function registrarResultado(id_partido, tipo) {
+async function registrarResultado(id_partido, tipo, id_competencia) {
     const userId = localStorage.getItem("userId");
     const { value: formValues } = await Swal.fire({
         title: 'Registrar Resultado',
@@ -394,7 +394,9 @@ async function registrarResultado(id_partido, tipo) {
     if (!formValues) return;
 
     try {
-        const url = tipo === 'liga' ? `/admin/ligas/0/partidos/${id_partido}/resultado` : `/admin/torneos/0/partidos/${id_partido}/resultado`;
+        const url = tipo === 'liga'
+            ? `/admin/ligas/${id_competencia}/partidos/${id_partido}/resultado`
+            : `/admin/torneos/${id_competencia}/partidos/${id_partido}/resultado`;
         const res = await fetch(url, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
@@ -404,6 +406,7 @@ async function registrarResultado(id_partido, tipo) {
         const data = await res.json();
         if (res.ok) {
             await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Resultado registrado.', confirmButtonColor: '#00C16E' });
+            if (tipo === 'liga' && id_competencia) verDetalle(id_competencia);
         } else {
             await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
         }

@@ -434,7 +434,19 @@ app.get('/entrenador/competencias/:tipo/:id/planilla', authMiddleware, requireRo
         WHERE pl.id_liga = $1
         ORDER BY e.nombre ASC
       `, [id]);
-      return res.json({ equipos });
+      const partidos = await db.query.all(`
+        SELECT p.id_partido AS id,
+               e1.nombre AS equipo_local,
+               e2.nombre AS equipo_visitante,
+               p.goles_local, p.goles_visitante,
+               to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
+        FROM partidos p
+        LEFT JOIN equipos e1 ON p.id_equipo_local = e1.id_equipo
+        LEFT JOIN equipos e2 ON p.id_equipo_visitante = e2.id_equipo
+        WHERE p.id_liga = $1
+        ORDER BY p.id_partido ASC
+      `, [id]);
+      return res.json({ equipos, partidos });
     }
     const torneo = await db.query.get(
       'SELECT id_torneo FROM torneos WHERE id_torneo = $1 AND id_usuario_tutor = $2',
@@ -448,7 +460,19 @@ app.get('/entrenador/competencias/:tipo/:id/planilla', authMiddleware, requireRo
       WHERE pt.id_torneo = $1
       ORDER BY e.nombre ASC
     `, [id]);
-    res.json({ equipos });
+    const partidos = await db.query.all(`
+      SELECT p.id_partido AS id,
+             e1.nombre AS equipo_local,
+             e2.nombre AS equipo_visitante,
+             p.goles_local, p.goles_visitante,
+             to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
+      FROM partidos p
+      LEFT JOIN equipos e1 ON p.id_equipo_local = e1.id_equipo
+      LEFT JOIN equipos e2 ON p.id_equipo_visitante = e2.id_equipo
+      WHERE p.id_torneo = $1
+      ORDER BY p.id_partido ASC
+    `, [id]);
+    res.json({ equipos, partidos });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener planilla', message: err.message });
   }
@@ -482,7 +506,19 @@ app.get('/profesor/competencias/:tipo/:id/planilla', authMiddleware, requireRole
         WHERE pl.id_liga = $1
         ORDER BY e.nombre ASC
       `, [id]);
-      return res.json({ equipos });
+      const partidos = await db.query.all(`
+        SELECT p.id_partido AS id,
+               e1.nombre AS equipo_local,
+               e2.nombre AS equipo_visitante,
+               p.goles_local, p.goles_visitante,
+               to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
+        FROM partidos p
+        LEFT JOIN equipos e1 ON p.id_equipo_local = e1.id_equipo
+        LEFT JOIN equipos e2 ON p.id_equipo_visitante = e2.id_equipo
+        WHERE p.id_liga = $1
+        ORDER BY p.id_partido ASC
+      `, [id]);
+      return res.json({ equipos, partidos });
     }
     const torneo = await db.query.get(
       'SELECT id_torneo FROM torneos WHERE id_torneo = $1 AND id_usuario_tutor = $2',
@@ -496,7 +532,19 @@ app.get('/profesor/competencias/:tipo/:id/planilla', authMiddleware, requireRole
       WHERE pt.id_torneo = $1
       ORDER BY e.nombre ASC
     `, [id]);
-    res.json({ equipos });
+    const partidos = await db.query.all(`
+      SELECT p.id_partido AS id,
+             e1.nombre AS equipo_local,
+             e2.nombre AS equipo_visitante,
+             p.goles_local, p.goles_visitante,
+             to_char(p.fecha_hora, 'YYYY-MM-DD') AS fecha
+      FROM partidos p
+      LEFT JOIN equipos e1 ON p.id_equipo_local = e1.id_equipo
+      LEFT JOIN equipos e2 ON p.id_equipo_visitante = e2.id_equipo
+      WHERE p.id_torneo = $1
+      ORDER BY p.id_partido ASC
+    `, [id]);
+    res.json({ equipos, partidos });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener planilla', message: err.message });
   }
