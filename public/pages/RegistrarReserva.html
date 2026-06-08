@@ -8,19 +8,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/login.css">
+    <style>
+        .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; }
+        .slot-btn { border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); color: #fff; border-radius: 8px; padding: 8px 10px; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+        .slot-btn:hover:not(:disabled) { border-color: #00C16E; }
+        .slot-btn.selected { border-color: #00C16E; background: rgba(0,193,110,0.15); color: #00C16E; font-weight: 600; }
+        .slot-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .slot-btn.ocupado { border-color: rgba(239,68,68,0.4); color: rgba(255,255,255,0.35); }
+    </style>
 </head>
 <body class="bg-football-dark d-flex align-items-center justify-content-center py-5 px-3">
 
-    <div class="card login-card border-0 shadow-lg p-4 my-2" style="max-width: 560px;">
+    <div class="card login-card border-0 shadow-lg p-4 my-2" style="max-width: 620px; width: 100%;">
         <div class="text-center mb-4">
             <i class="fa-solid fa-calendar-plus fa-2x mb-2" style="color: #00C16E;"></i>
             <h3 class="fw-bold text-white text-uppercase mb-1">Registrar Reserva</h3>
-            <p class="text-light-50 small">Completá los datos de la reserva</p>
+            <p class="text-light-50 small">Completá los datos y confirmá el pago en el acto</p>
         </div>
 
         <form id="form-reserva">
 
-            <!-- Tipo de cancha -->
             <div class="mb-3">
                 <label class="form-label small fw-bold text-white">Tipo de Cancha</label>
                 <select id="tipo_cancha" class="form-control bg-football-dark border-secondary text-white" required>
@@ -28,7 +35,6 @@
                 </select>
             </div>
 
-            <!-- Cancha -->
             <div class="mb-3">
                 <label class="form-label small fw-bold text-white">Cancha</label>
                 <select id="id_cancha" class="form-control bg-football-dark border-secondary text-white" required disabled>
@@ -36,72 +42,45 @@
                 </select>
             </div>
 
-            <!-- Cliente -->
             <div class="mb-3" style="position: relative;">
                 <label class="form-label small fw-bold text-white">Cliente</label>
-                <input type="text" id="cliente-input" class="form-control bg-football-dark border-secondary text-white" placeholder="Buscar por nombre o DNI..." autocomplete="off">
+                <input type="text" id="cliente-input" class="form-control bg-football-dark border-secondary text-white" placeholder="Buscar por nombre o DNI..." autocomplete="off" required>
                 <input type="hidden" id="id_usuario">
                 <div id="cliente-suggestions" class="suggestions"></div>
             </div>
 
-            <!-- Fecha -->
             <div class="mb-3">
                 <label class="form-label small fw-bold text-white">Fecha</label>
-                <input type="date" id="fecha" class="form-control bg-football-dark border-secondary text-white" required>
+                <input type="date" id="fecha" class="form-control bg-football-dark border-secondary text-white" required disabled>
             </div>
 
-            <!-- Hora inicio -->
             <div class="mb-3">
-                <label class="form-label small fw-bold text-white">Hora de inicio</label>
-                <select id="hora_inicio" class="form-control bg-football-dark border-secondary text-white" required>
-                    <option value="">Seleccioná una hora</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:00">09:00</option>
-                    <option value="10:00">10:00</option>
-                    <option value="11:00">11:00</option>
-                    <option value="12:00">12:00</option>
-                    <option value="13:00">13:00</option>
-                    <option value="14:00">14:00</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:00">16:00</option>
-                    <option value="17:00">17:00</option>
-                    <option value="18:00">18:00</option>
-                    <option value="19:00">19:00</option>
-                    <option value="20:00">20:00</option>
-                    <option value="21:00">21:00</option>
-                    <option value="22:00">22:00</option>
-                    <option value="23:00">23:00</option>
-                    <option value="00:00">00:00</option>
-                    <option value="01:00">01:00</option>
-                </select>
+                <label class="form-label small fw-bold text-white">Turno disponible</label>
+                <div id="contenedor-turnos" class="slot-grid">
+                    <div class="text-light-50 small py-3 text-center" style="grid-column: 1 / -1;">
+                        Seleccioná cancha y fecha para ver turnos.
+                    </div>
+                </div>
+                <input type="hidden" id="hora_inicio">
+                <input type="hidden" id="hora_fin">
             </div>
 
-            <!-- Hora fin automática -->
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-white">Hora de fin</label>
-                <input type="text" id="hora_fin" class="form-control bg-football-dark border-secondary text-white" readonly placeholder="Se calcula automáticamente">
-            </div>
-
-            <!-- Método de pago -->
             <div class="mb-3">
                 <label class="form-label small fw-bold text-white">Método de pago</label>
-                <select id="id_metodo_pago" class="form-control bg-football-dark border-secondary text-white">
-                    <option value="1">Efectivo</option>
-                    <option value="2">Transferencia</option>
-                    <option value="3">Mercado Pago</option>
-                    <option value="4">Tarjeta de débito</option>
-                    <option value="5">Tarjeta de crédito</option>
-                </select>
+                <button type="button" id="btn-metodo-pago" class="btn w-100 text-start" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;">
+                    <i class="fa-solid fa-wallet me-2" style="color:#00C16E;"></i>
+                    <span id="texto-metodo-pago">Seleccionar método de pago</span>
+                </button>
+                <input type="hidden" id="id_metodo_pago">
             </div>
 
-            <!-- Resumen -->
             <div id="resumen-precio" class="mb-3 p-3 rounded" style="background-color: #0d1f33; display: none;">
                 <p class="text-light-50 small mb-1">Resumen</p>
                 <p class="text-white fw-bold mb-0" id="texto-resumen"></p>
             </div>
 
             <button type="submit" class="btn w-100 py-2 fw-bold text-white" style="background-color: #00C16E !important;">
-                Confirmar Reserva
+                Confirmar reserva y pago
             </button>
         </form>
 
@@ -114,6 +93,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/js/pagoClienteHelpers.js"></script>
     <script src="/js/registrarReserva.js"></script>
 </body>
 </html>

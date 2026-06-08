@@ -542,11 +542,14 @@ function solicitarBajaCuenta() {
         if (!result.isConfirmed) return;
 
         try {
-            const res = await fetch(`${API}/api/cliente/perfil`, {
-                method: 'DELETE', credentials: 'include'
+            const res = await fetch(`${API}/api/cliente/solicitud-baja`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ motivo: 'Solicitud de baja de cuenta cliente' })
             });
             if (!res.ok) throw new Error();
-        } catch { /* endpoint puede no estar listo aún */ }
+        } catch { /* fallback silencioso */ }
 
         await Swal.fire({
             icon: 'success', iconColor: '#00C16E', background: '#0A2540', color: '#fff',

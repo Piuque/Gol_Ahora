@@ -451,7 +451,7 @@
 
         // Actualizar contadores
         _setText('cnt-certificaciones', _notifs.certificaciones.length || '0');
-        _setText('cnt-bajas',           (_notifs.bajas.filter(b => b.tipo === 'alumno') || _notifs.bajas).length || '0');
+        _setText('cnt-bajas',           (_notifs.bajas.filter(b => b.tipo !== 'alumno') || []).length || '0');
         _setText('cnt-horarios',        _notifs.horarios.length || '0');
         _setText('cnt-alumnos',         (_notifs.bajas.filter(b => b.tipo === 'alumno') || []).length || '0');
 
@@ -469,7 +469,9 @@
         const feed = document.getElementById('notif-feed');
         if (!feed) return;
 
-        const lista = _notifs[tab] || [];
+        const lista = (tab === 'bajas')
+            ? (_notifs.bajas || []).filter(n => n.tipo !== 'alumno')
+            : (_notifs[tab] || []);
 
         if (lista.length === 0) {
             feed.innerHTML = `

@@ -77,8 +77,19 @@ router.put('/reservas/:id', adminController.modificarReserva);
 router.delete('/reservas/:id', adminController.eliminarReserva);
 
 // Certificaciones
+router.get('/certificaciones/pendientes', adminController.listarCertificacionesPendientes);
+router.post('/certificaciones/:id/aprobar', adminController.aprobarCertificacionPendiente);
+router.post('/certificaciones/:id/rechazar', adminController.rechazarCertificacionPendiente);
 router.get('/certificaciones/:id_usuario', adminController.listarCertificaciones);
 router.put('/certificaciones/:id/validar', adminController.validarCertificacion);
+
+// Solicitudes pendientes (bajas y cambios de horario)
+router.get('/bajas/pendientes', adminController.listarBajasPendientes);
+router.post('/bajas/:id/aprobar', adminController.aprobarBajaPendiente);
+router.post('/bajas/:id/rechazar', adminController.rechazarBajaPendiente);
+router.get('/horarios/pendientes', adminController.listarHorariosPendientes);
+router.post('/horarios/:id/aprobar', adminController.aprobarHorarioPendiente);
+router.post('/horarios/:id/rechazar', adminController.rechazarHorarioPendiente);
 
 // Clases
 router.post('/clases', adminController.crearClase);

@@ -84,7 +84,7 @@ function verDetalle(r) {
         <div class="info-row"><span class="info-label">Metodo de pago</span><span class="info-value">${r.metodo_pago}</span></div>
         <div class="info-row"><span class="info-label">Estado</span><span class="info-value">${badgeEstado(r.estado_cobro)}</span></div>
         <div class="d-flex gap-2 mt-3">
-            <button onclick="abrirModificarReserva(${r.id}, '${r.cancha}', '${r.fecha}', '${r.hora_inicio}', '${r.hora_fin}')"
+            <button onclick="abrirModificarReserva(${r.id})"
                 class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #0d6efd;">
                 <i class="fa-solid fa-pen me-1"></i> Modificar
             </button>
@@ -102,76 +102,157 @@ function verDetalle(r) {
     modal.show();
 }
 
-async function abrirModificarReserva(id, cancha, fechaOriginal, horaInicioOriginal, horaFinOriginal) {
+async function abrirModificarReserva(id) {
+    const r = reservasData.find(x => x.id === id);
+    if (!r) return;
+
     bootstrap.Modal.getInstance(document.getElementById("modalReserva")).hide();
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    const { value: formValues } = await Swal.fire({
+    const duracion = calcularDuracionMinutos(r.hora_inicio, r.hora_fin) || r.duracion_min || 60;
+
+    const { value: nuevaFecha, isConfirmed } = await Swal.fire({
+        background: '#0A2540',
+        color: '#fff',
         title: 'Modificar Reserva',
         html: `
-            <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Fecha</label>
-                <input id="swal-fecha" type="date" class="swal2-input">
-            </div>
-            <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Hora inicio</label>
-                <select id="swal-hora-inicio" class="swal2-input">
-                    ${['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00']
-                        .map(h => `<option value="${h}">${h}</option>`).join('')}
-                </select>
-            </div>
-            <div style="text-align:left; margin-bottom:8px;">
-                <label style="color:#555; font-size:0.85rem;">Hora fin</label>
-                <select id="swal-hora-fin" class="swal2-input">
-                    ${['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00','23:00','00:00']
-                        .map(h => `<option value="${h}">${h}</option>`).join('')}
-                </select>
-            </div>
+            <p style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-bottom:12px;">
+                Turno actual: <strong style="color:#fff;">${r.fecha} · ${r.hora_inicio} - ${r.hora_fin}</strong>
+            </p>
+            <label style="font-size:0.7rem;color:rgba(255,255,255,0.45);text-transform:uppercase;display:block;margin-bottom:6px;">Nueva fecha</label>
+            <input type="date" id="swal-nueva-fecha" class="swal2-input" style="width:100%;" min="${new Date().toISOString().split('T')[0]}">
+            <div id="swal-slots" style="margin-top:16px;max-height:280px;overflow-y:auto;"></div>
         `,
-        confirmButtonText: 'Guardar',
-        confirmButtonColor: '#00C16E',
-        cancelButtonText: 'Cancelar',
         showCancelButton: true,
-        focusConfirm: false,
+        confirmButtonColor: '#00C16E',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Guardar cambios',
+        cancelButtonText: 'Cancelar',
+        showLoaderOnConfirm: true,
+        didOpen: () => {
+            document.getElementById('swal-nueva-fecha').addEventListener('change', async (e) => {
+                const fecha = e.target.value;
+                if (!fecha) return;
+                const slotsDiv = document.getElementById('swal-slots');
+                slotsDiv.innerHTML = '<div style="text-align:center;padding:12px;color:rgba(255,255,255,0.5);font-size:0.82rem;">Verificando disponibilidad...</div>';
+                try {
+                    const userId = localStorage.getItem("userId");
+                    const resp = await fetch(`/api/cliente/canchas/${r.id_cancha}/ocupaciones?fecha=${fecha}`, {
+                        credentials: 'include',
+                        headers: { 'x-user-id': userId }
+                    });
+                    const ocupaciones = await resp.json();
+                    renderizarSlotsModificar(ocupaciones, fecha, duracion, r.hora_inicio);
+                } catch {
+                    slotsDiv.innerHTML = '<div style="color:#ef4444;font-size:0.8rem;">No se pudo verificar disponibilidad.</div>';
+                }
+            });
+        },
         preConfirm: () => {
-            const fecha = document.getElementById('swal-fecha').value;
-            const hora_inicio = document.getElementById('swal-hora-inicio').value;
-            const hora_fin = document.getElementById('swal-hora-fin').value;
-            if (!fecha) { Swal.showValidationMessage('La fecha es obligatoria'); return false; }
+            const fecha = document.getElementById('swal-nueva-fecha')?.value;
+            const slotSelected = document.querySelector('.slot-pill.selected-slot');
+            if (!fecha) { Swal.showValidationMessage('Seleccioná una fecha'); return false; }
             const hoyStr = new Date().toISOString().split('T')[0];
             if (fecha < hoyStr) { Swal.showValidationMessage('No se puede modificar a una fecha pasada'); return false; }
+            if (!slotSelected) { Swal.showValidationMessage('Seleccioná un horario disponible'); return false; }
+            const hora_inicio = slotSelected.dataset.inicio;
             if (fecha === hoyStr) {
-                const ahora = new Date();
                 const [h, m] = hora_inicio.split(':').map(Number);
                 const horaInicioDate = new Date();
                 horaInicioDate.setHours(h, m, 0, 0);
-                if (horaInicioDate <= ahora) { Swal.showValidationMessage('No se puede modificar a un horario que ya pasó'); return false; }
+                if (horaInicioDate <= new Date()) {
+                    Swal.showValidationMessage('No se puede modificar a un horario que ya pasó');
+                    return false;
+                }
             }
-            return { fecha, hora_inicio, hora_fin };
+            return {
+                fecha,
+                hora_inicio,
+                hora_fin: slotSelected.dataset.fin
+            };
         }
     });
 
-    if (!formValues) return;
+    if (!isConfirmed || !nuevaFecha) return;
 
     const userId = localStorage.getItem("userId");
+    const hi = nuevaFecha.hora_inicio.length === 5 ? `${nuevaFecha.hora_inicio}:00` : nuevaFecha.hora_inicio;
+    const hf = nuevaFecha.hora_fin.length === 5 ? `${nuevaFecha.hora_fin}:00` : nuevaFecha.hora_fin;
+
     try {
         const res = await fetch(`/admin/reservas/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
             credentials: 'include',
-            body: JSON.stringify(formValues)
+            body: JSON.stringify({ fecha: nuevaFecha.fecha, hora_inicio: hi, hora_fin: hf })
         });
         const data = await res.json();
         if (res.ok) {
-            generarPdfModificacionAdmin({ id, cancha, fecha: fechaOriginal, hora_inicio: horaInicioOriginal, hora_fin: horaFinOriginal }, formValues);
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Reserva modificada. Se descargo el comprobante.', confirmButtonColor: '#00C16E' });
+            generarPdfModificacionAdmin(
+                { id, cancha: r.cancha, fecha: r.fecha, hora_inicio: r.hora_inicio, hora_fin: r.hora_fin },
+                { fecha: nuevaFecha.fecha, hora_inicio: nuevaFecha.hora_inicio, hora_fin: nuevaFecha.hora_fin }
+            );
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Reserva modificada. Se descargó el comprobante.', confirmButtonColor: '#00C16E' });
             await cargarReservas();
         } else {
             await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
         }
-    } catch (e) {
+    } catch {
         await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
     }
+}
+
+function calcularDuracionMinutos(horaInicio, horaFin) {
+    const [hI, mI] = (horaInicio || '0:0').split(':').map(Number);
+    const [hF, mF] = (horaFin || '0:0').split(':').map(Number);
+    return (hF * 60 + mF) - (hI * 60 + mI);
+}
+
+function renderizarSlotsModificar(ocupaciones, fecha, duracion, horaInicioActual) {
+    const slotsDiv = document.getElementById('swal-slots');
+    if (!slotsDiv) return;
+
+    const bloques = [];
+    let cur = 8 * 60;
+    while (cur + duracion <= 24 * 60) {
+        const ini = `${String(Math.floor(cur / 60)).padStart(2, '0')}:${String(cur % 60).padStart(2, '0')}`;
+        const finMin = cur + duracion;
+        const finH = Math.floor(finMin / 60) === 24 ? '00' : String(Math.floor(finMin / 60)).padStart(2, '0');
+        const fin = `${finH}:${String(finMin % 60).padStart(2, '0')}`;
+        bloques.push({ ini, fin });
+        cur += duracion;
+    }
+
+    const ocupacionesMapeadas = {};
+    (Array.isArray(ocupaciones) ? ocupaciones : []).forEach(oc => {
+        const h = (oc.hora_inicio || '').substring(0, 5);
+        const hActual = (horaInicioActual || '').substring(0, 5);
+        if (h && h !== hActual) ocupacionesMapeadas[h] = true;
+    });
+
+    const ahora = new Date();
+    const hoyLocal = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+    const esHoy = fecha === hoyLocal;
+
+    let html = '<div style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-bottom:8px;">Horarios disponibles</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    bloques.forEach(b => {
+        let disponible = !ocupacionesMapeadas[b.ini];
+        if (esHoy) {
+            const [hh, mm] = b.ini.split(':').map(Number);
+            const slotDate = new Date();
+            slotDate.setHours(hh, mm, 0, 0);
+            if (slotDate <= ahora) disponible = false;
+        }
+        if (disponible) {
+            html += `<button type="button" class="slot-pill" data-inicio="${b.ini}" data-fin="${b.fin}"
+                onclick="this.parentElement.querySelectorAll('.slot-pill').forEach(el=>el.classList.remove('selected-slot'));this.classList.add('selected-slot');"
+                style="border:1px solid rgba(255,255,255,0.15);background:transparent;color:#fff;border-radius:6px;padding:6px 10px;font-size:0.75rem;cursor:pointer;">${b.ini} - ${b.fin}</button>`;
+        } else {
+            html += `<button type="button" disabled style="border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.25);border-radius:6px;padding:6px 10px;font-size:0.75rem;">${b.ini} (ocupado)</button>`;
+        }
+    });
+    html += '</div>';
+    slotsDiv.innerHTML = html;
 }
 
 async function confirmarEliminarReserva(id) {

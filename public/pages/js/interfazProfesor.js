@@ -143,7 +143,7 @@ window.ProcesarBajaAlumno = function(idClase, idAlumno, nombre) {
                 method: 'DELETE', credentials: 'include'
             });
             if (res.ok) {
-                Swal.fire({ icon: 'success', title: 'Baja registrada', confirmButtonColor: '#00C16E' });
+                Swal.fire({ icon: 'success', title: 'Solicitud registrada', text: 'Quedará pendiente de validación del administrador.', confirmButtonColor: '#00C16E' });
                 ConsultarAlumnosPorClase(idClase, '');
                 ConsultarDashboardOperativo();
             } else throw new Error();
