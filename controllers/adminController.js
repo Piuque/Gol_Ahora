@@ -1258,19 +1258,19 @@ const listarTorneos = async (req, res) => {
 const obtenerTorneo = async (req, res) => {
   const { id } = req.params;
   try {
-    const liga = await db.query.get(`
-      SELECT l.id_torneo AS id, l.nombre,
-            to_char(l.fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
-            to_char(l.fecha_fin, 'YYYY-MM-DD') AS fecha_fin,
-            u.nombre || ' ' || u.apellido AS tutor, l.id_usuario_tutor,
-            CASE
-              WHEN NOW() < l.fecha_inicio THEN 'Programado'
-              WHEN NOW() BETWEEN l.fecha_inicio AND l.fecha_fin THEN 'En curso'
-              ELSE 'Finalizado'
-            END AS estado
-      FROM ligas l
-      LEFT JOIN usuarios u ON l.id_usuario_tutor = u.id_usuario
-      WHERE l.id_liga = $1
+    const torneo = await db.query.get(`
+      SELECT t.id_torneo AS id, t.nombre,
+             to_char(t.fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
+             to_char(t.fecha_fin, 'YYYY-MM-DD') AS fecha_fin,
+             u.nombre || ' ' || u.apellido AS tutor,
+             CASE
+               WHEN NOW() < t.fecha_inicio THEN 'Programado'
+               WHEN NOW() BETWEEN t.fecha_inicio AND t.fecha_fin THEN 'En curso'
+               ELSE 'Finalizado'
+             END AS estado
+      FROM torneos t
+      LEFT JOIN usuarios u ON t.id_usuario_tutor = u.id_usuario
+      WHERE t.id_torneo = $1
     `, [id]);
     if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado' });
 
