@@ -105,7 +105,7 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                         <input id="${uid}-venc" type="text" placeholder="MM/AA" maxlength="5"
                             style="background:rgba(7,21,36,0.6);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 10px;border-radius:7px;font-size:0.85rem;">
-                        <input id="${uid}-ccv" type="password" placeholder="cvv" maxlength="3"
+                        <input id="${uid}-ccv" type="password" placeholder="ccv" maxlength="3"
                             style="background:rgba(7,21,36,0.6);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 10px;border-radius:7px;font-size:0.85rem;">
                     </div>
                 </div>
@@ -117,7 +117,7 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
             // === LÓGICA DE VALIDACIÓN EN TIEMPO REAL AÑADIDA AQUÍ ===
             const tarjetaInput = document.getElementById(`${uid}-numero`);
             const vencInput = document.getElementById(`${uid}-venc`);
-            const cvvInput = document.getElementById(`${uid}-cvv`);
+            const ccvInput = document.getElementById(`${uid}-ccv`);
 
             if (tarjetaInput) {
                 // Tarjeta: Solo números y separación de a 4 dígitos
@@ -139,9 +139,9 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
                 });
             }
 
-            if (cvvInput) {
-                // CVV: Solo números, máximo 4
-                cvvInput.addEventListener('input', function (e) {
+            if (ccvInput) {
+                // ccv: Solo números, máximo 4
+                ccvInput.addEventListener('input', function (e) {
                     e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
                 });
             }
@@ -152,13 +152,25 @@ async function abrirConfirmacionPago({ titulo, resumenHtml, monto, colorAccent =
                 Swal.showValidationMessage('Seleccioná un método de pago');
                 return false;
             }
+
             const nombre = (st.nombreMetodo || '').toLowerCase();
             if (nombre.includes('crédito') || nombre.includes('credito') || nombre.includes('débito') || nombre.includes('debito')) {
+                // CORRECCIÓN: Quitamos los espacios antes de medir la longitud
                 const num = (document.getElementById(`${uid}-numero`)?.value || '').replace(/\s/g, '');
                 const venc = document.getElementById(`${uid}-venc`)?.value || '';
-                const cvv = document.getElementById(`${uid}-cvv`)?.value || '';
-                if (num.length !== 16 || venc.length < 4 || cvv.length < 2) {
-                    Swal.showValidationMessage('Completá los datos de la tarjeta correctamente');
+                const ccv = document.getElementById(`${uid}-cvc`)?.value || '';
+
+                // Ahora validamos sobre los dígitos puros (deberían ser 16)
+                if (num.length !== 16) {
+                    Swal.showValidationMessage('El número de tarjeta debe tener 16 dígitos');
+                    return false;
+                }
+                if (venc.length !== 5) {
+                    Swal.showValidationMessage('Completá la fecha de vencimiento (MM/AA)');
+                    return false;
+                }
+                if (ccv.length < 3) {
+                    Swal.showValidationMessage('El código CCV es muy corto');
                     return false;
                 }
             }
