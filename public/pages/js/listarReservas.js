@@ -382,7 +382,10 @@ function generarPdfPagoConfirmado(r) {
             headers: { 'x-user-id': userId }
         });
         if (res.ok) {
-            const reserva = reservasData.find(r => r.id_cobro === id_cobro);
+            const reserva = reservasData.find(r => r.id_cobro == id_cobro);
+            console.log("reservasData:", reservasData);
+            console.log("id_cobro buscado:", id_cobro);
+            console.log("reserva encontrada:", reserva);
             if (reserva) generarPdfPagoConfirmado(reserva);
             await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Pago confirmado. Se descargo el recibo.', confirmButtonColor: '#00C16E' });
             await cargarReservas();
