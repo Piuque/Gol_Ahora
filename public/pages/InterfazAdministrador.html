@@ -17,7 +17,7 @@
     <div id="sidebar-wrapper">
 
         <!-- Logo -->
-        <a href="/admin/interfazAdministrador"
+        <a href="/admin"
            class="sidebar-heading text-white fw-bold d-flex align-items-center p-3 border-bottom border-secondary border-opacity-25 text-decoration-none"
            style="transition:opacity 0.2s;"
            onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
@@ -617,7 +617,7 @@
                     cancelButtonText: 'Cancelar', reverseButtons: true
                 }).then(async result => {
                     if (!result.isConfirmed) return;
-                    try { await fetch(${API}/logout, { method: 'POST', credentials: 'include' }); } catch {}
+                    try { await fetch(`${API}/logout`, { method: 'POST', credentials: 'include' }); } catch {}
                         window.location.href = '/acceder';
                     });
                 }
