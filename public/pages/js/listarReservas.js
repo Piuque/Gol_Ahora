@@ -217,7 +217,9 @@ async function confirmarEliminarReserva(id) {
             headers: { 'x-user-id': userId }
         });
         if (res.ok) {
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Reserva cancelada.', confirmButtonColor: '#00C16E' });
+            const reserva = reservasData.find(r => r.id === id);
+            if (reserva) generarPdfCancelacionAdmin(reserva);
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Reserva cancelada. Se descargo el comprobante.', confirmButtonColor: '#00C16E' });
             await cargarReservas();
         } else {
             const data = await res.json().catch(() => ({}));
@@ -242,6 +244,134 @@ async function confirmarPago(id_cobro) {
         showCancelButton: true
     });
 
+function nroAleatorio() {
+    return Math.floor(10000 + Math.random() * 90000);
+}
+
+function pdfLinea(doc, label, valor, y, xLabel = 22, xValor = 80) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(label.toUpperCase(), xLabel, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 30, 30);
+    doc.text(String(valor || '—'), xValor, y);
+}
+
+function pdfEncabezado(doc, tipoDoc, colorTipo, nro) {
+    doc.setFillColor(0, 193, 110);
+    doc.rect(0, 0, 210, 14, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(255, 255, 255);
+    doc.text('GOL AHORA', 22, 9.5);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('golahora.com.ar', 210 - 22, 9.5, { align: 'right' });
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colorTipo);
+    doc.text(tipoDoc, 22, 30);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(140, 140, 140);
+    doc.text(`Nro. ${nro}`, 22, 37);
+    const fecha = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+    doc.text(`Emitido: ${fecha}`, 210 - 22, 37, { align: 'right' });
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.4);
+    doc.line(22, 41, 188, 41);
+}
+
+function pdfSeccion(doc, titulo, y) {
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(20, y - 5, 170, 8, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(0, 193, 110);
+    doc.text(titulo.toUpperCase(), 22, y);
+    return y + 9;
+}
+
+function pdfPie(doc) {
+    const y = 280;
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.line(20, y, 190, y);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(170, 170, 170);
+    doc.text('Gol Ahora — comprobante generado automáticamente. Conservalo como respaldo.', 105, y + 5, { align: 'center' });
+}
+
+function generarPdfCancelacionAdmin(r) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const nro = nroAleatorio();
+
+    pdfEncabezado(doc, 'CANCELACIÓN DE RESERVA', [200, 50, 50], nro);
+
+    let y = 50;
+    y = pdfSeccion(doc, 'Turno Cancelado', y);
+
+    pdfLinea(doc, 'ID Reserva',    '#' + r.id,                        y); y += 8;
+    pdfLinea(doc, 'Cliente',       `${r.cliente_nombre} ${r.cliente_apellido}`, y); y += 8;
+    pdfLinea(doc, 'Email',         r.cliente_email,                   y); y += 8;
+    pdfLinea(doc, 'Cancha',        r.cancha,                          y); y += 8;
+    pdfLinea(doc, 'Fecha del turno', r.fecha,                         y); y += 8;
+    pdfLinea(doc, 'Horario',       `${r.hora_inicio} — ${r.hora_fin} hs`, y); y += 8;
+    pdfLinea(doc, 'Monto',         `$${r.monto}`,                     y); y += 8;
+    pdfLinea(doc, 'Metodo de pago', r.metodo_pago,                    y); y += 12;
+
+    y = pdfSeccion(doc, 'Nota', y);
+    doc.setFillColor(255, 243, 224);
+    doc.roundedRect(20, y, 170, 14, 2, 2, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Reserva cancelada por el administrador del club.', 105, y + 6, { align: 'center' });
+    doc.text('Para consultas, acercate a la recepcion del club.', 105, y + 11, { align: 'center' });
+
+    pdfPie(doc);
+    doc.save(`golahora-cancelacion-admin-nro${nro}.pdf`);
+}
+
+function generarPdfPagoConfirmado(r) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const nro = nroAleatorio();
+
+    pdfEncabezado(doc, 'RECIBO DE PAGO', [0, 150, 80], nro);
+
+    let y = 50;
+    y = pdfSeccion(doc, 'Detalle del Pago', y);
+
+    pdfLinea(doc, 'ID Reserva',    '#' + r.id,                        y); y += 8;
+    pdfLinea(doc, 'Cliente',       `${r.cliente_nombre} ${r.cliente_apellido}`, y); y += 8;
+    pdfLinea(doc, 'Email',         r.cliente_email,                   y); y += 8;
+    pdfLinea(doc, 'Cancha',        r.cancha,                          y); y += 8;
+    pdfLinea(doc, 'Fecha del turno', r.fecha,                         y); y += 8;
+    pdfLinea(doc, 'Horario',       `${r.hora_inicio} — ${r.hora_fin} hs`, y); y += 8;
+    pdfLinea(doc, 'Monto abonado', `$${r.monto}`,                     y); y += 8;
+    pdfLinea(doc, 'Metodo de pago', r.metodo_pago,                    y); y += 12;
+
+    y = pdfSeccion(doc, 'Estado', y);
+    doc.setFillColor(232, 245, 233);
+    doc.roundedRect(20, y, 170, 14, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(27, 94, 32);
+    doc.text('PAGO CONFIRMADO', 105, y + 6, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(70, 70, 70);
+    doc.text('El pago fue registrado en efectivo en recepcion por el administrador.', 105, y + 11, { align: 'center' });
+
+    pdfPie(doc);
+    doc.save(`golahora-recibo-pago-nro${nro}.pdf`);
+}
+
     if (!confirm.isConfirmed) return;
 
     const userId = localStorage.getItem("userId");
@@ -252,7 +382,9 @@ async function confirmarPago(id_cobro) {
             headers: { 'x-user-id': userId }
         });
         if (res.ok) {
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Pago confirmado.', confirmButtonColor: '#00C16E' });
+            const reserva = reservasData.find(r => r.id_cobro === id_cobro);
+            if (reserva) generarPdfPagoConfirmado(reserva);
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Pago confirmado. Se descargo el recibo.', confirmButtonColor: '#00C16E' });
             await cargarReservas();
         } else {
             const data = await res.json().catch(() => ({}));
