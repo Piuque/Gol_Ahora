@@ -3,9 +3,7 @@ let reservasData = [];
 document.addEventListener("DOMContentLoaded", async () => {
     const buscador = document.getElementById("buscador");
     const selectorEstado = document.getElementById("selector-estado");
-
     await cargarReservas();
-
     selectorEstado.addEventListener("change", () => filtrarReservas());
     buscador.addEventListener("input", () => filtrarReservas());
 });
@@ -14,20 +12,11 @@ async function cargarReservas() {
     const contenedor = document.getElementById("contenedor-reservas");
     const userId = localStorage.getItem("userId");
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>`;
-
     try {
-        const res = await fetch("/admin/reservas", {
-            credentials: "include",
-            headers: { "x-user-id": userId }
-        });
-        if (res.status === 401 || res.status === 403) {
-            window.location.href = '/acceder';
-            return;
-        }
+        const res = await fetch("/admin/reservas", { credentials: "include", headers: { "x-user-id": userId } });
+        if (res.status === 401 || res.status === 403) { window.location.href = '/acceder'; return; }
         if (!res.ok) throw new Error("Error del servidor");
-
         reservasData = await res.json();
-
         if (!reservasData || reservasData.length === 0) {
             contenedor.innerHTML = `<p class="text-light-50 text-center py-4">No hay reservas registradas.</p>`;
             return;
@@ -42,8 +31,7 @@ function filtrarReservas() {
     const query = document.getElementById("buscador").value.toLowerCase();
     const estado = document.getElementById("selector-estado").value;
     const filtradas = reservasData.filter(r => {
-        const matchNombre = `${r.cliente_nombre} ${r.cliente_apellido}`.toLowerCase().includes(query) ||
-            r.cancha.toLowerCase().includes(query);
+        const matchNombre = `${r.cliente_nombre} ${r.cliente_apellido}`.toLowerCase().includes(query) || r.cancha.toLowerCase().includes(query);
         const matchEstado = estado === "" || r.estado_cobro === estado;
         return matchNombre && matchEstado;
     });
@@ -51,11 +39,7 @@ function filtrarReservas() {
 }
 
 function badgeEstado(estado) {
-    const colores = {
-        'Pendiente': '#f59e0b',
-        'Pagado': '#00C16E',
-        'Cancelado': '#ef4444'
-    };
+    const colores = { 'Pendiente': '#f59e0b', 'Pagado': '#00C16E', 'Cancelado': '#ef4444' };
     const color = colores[estado] || '#6c757d';
     return `<span class="badge" style="background-color:${color};">${estado}</span>`;
 }
@@ -100,7 +84,7 @@ function verDetalle(r) {
         <div class="info-row"><span class="info-label">Metodo de pago</span><span class="info-value">${r.metodo_pago}</span></div>
         <div class="info-row"><span class="info-label">Estado</span><span class="info-value">${badgeEstado(r.estado_cobro)}</span></div>
         <div class="d-flex gap-2 mt-3">
-            <button onclick="abrirModificarReserva(${r.id})"
+            <button onclick="abrirModificarReserva(${r.id}, '${r.cancha}', '${r.fecha}', '${r.hora_inicio}', '${r.hora_fin}')"
                 class="btn btn-sm fw-bold text-white flex-grow-1" style="background-color: #0d6efd;">
                 <i class="fa-solid fa-pen me-1"></i> Modificar
             </button>
@@ -118,7 +102,7 @@ function verDetalle(r) {
     modal.show();
 }
 
-async function abrirModificarReserva(id) {
+async function abrirModificarReserva(id, cancha, fechaOriginal, horaInicioOriginal, horaFinOriginal) {
     bootstrap.Modal.getInstance(document.getElementById("modalReserva")).hide();
     await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -150,25 +134,21 @@ async function abrirModificarReserva(id) {
         showCancelButton: true,
         focusConfirm: false,
         preConfirm: () => {
-        const fecha = document.getElementById('swal-fecha').value;
-        const hora_inicio = document.getElementById('swal-hora-inicio').value;
-        const hora_fin = document.getElementById('swal-hora-fin').value;
-
-        if (!fecha) { Swal.showValidationMessage('La fecha es obligatoria'); return false; }
-
-        const hoyStr = new Date().toISOString().split('T')[0];
-        if (fecha < hoyStr) { Swal.showValidationMessage('No se puede modificar a una fecha pasada'); return false; }
-
-        if (fecha === hoyStr) {
-            const ahora = new Date();
-            const [h, m] = hora_inicio.split(':').map(Number);
-            const horaInicioDate = new Date();
-            horaInicioDate.setHours(h, m, 0, 0);
-            if (horaInicioDate <= ahora) { Swal.showValidationMessage('No se puede modificar a un horario que ya pasó'); return false; }
+            const fecha = document.getElementById('swal-fecha').value;
+            const hora_inicio = document.getElementById('swal-hora-inicio').value;
+            const hora_fin = document.getElementById('swal-hora-fin').value;
+            if (!fecha) { Swal.showValidationMessage('La fecha es obligatoria'); return false; }
+            const hoyStr = new Date().toISOString().split('T')[0];
+            if (fecha < hoyStr) { Swal.showValidationMessage('No se puede modificar a una fecha pasada'); return false; }
+            if (fecha === hoyStr) {
+                const ahora = new Date();
+                const [h, m] = hora_inicio.split(':').map(Number);
+                const horaInicioDate = new Date();
+                horaInicioDate.setHours(h, m, 0, 0);
+                if (horaInicioDate <= ahora) { Swal.showValidationMessage('No se puede modificar a un horario que ya pasó'); return false; }
+            }
+            return { fecha, hora_inicio, hora_fin };
         }
-
-        return { fecha, hora_inicio, hora_fin };
-    }
     });
 
     if (!formValues) return;
@@ -183,7 +163,8 @@ async function abrirModificarReserva(id) {
         });
         const data = await res.json();
         if (res.ok) {
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Reserva modificada.', confirmButtonColor: '#00C16E' });
+            generarPdfModificacionAdmin({ id, cancha, fecha: fechaOriginal, hora_inicio: horaInicioOriginal, hora_fin: horaFinOriginal }, formValues);
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Reserva modificada. Se descargo el comprobante.', confirmButtonColor: '#00C16E' });
             await cargarReservas();
         } else {
             await Swal.fire({ icon: 'error', title: 'Error', text: data.error || data.message, confirmButtonColor: '#00C16E' });
@@ -244,6 +225,32 @@ async function confirmarPago(id_cobro) {
         showCancelButton: true
     });
 
+    if (!confirm.isConfirmed) return;
+
+    const userId = localStorage.getItem("userId");
+    try {
+        const res = await fetch(`/admin/cobros/${id_cobro}/confirmar`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'x-user-id': userId }
+        });
+        if (res.ok) {
+            const reserva = reservasData.find(r => r.id_cobro == id_cobro);
+            if (reserva) generarPdfPagoConfirmado(reserva);
+            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Pago confirmado. Se descargo el recibo.', confirmButtonColor: '#00C16E' });
+            await cargarReservas();
+        } else {
+            const data = await res.json().catch(() => ({}));
+            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al confirmar.', confirmButtonColor: '#00C16E' });
+        }
+    } catch (e) {
+        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
+    }
+}
+
+// ==========================================
+// HELPERS PDF
+// ==========================================
 function nroAleatorio() {
     return Math.floor(10000 + Math.random() * 90000);
 }
@@ -302,7 +309,53 @@ function pdfPie(doc) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(7.5);
     doc.setTextColor(170, 170, 170);
-    doc.text('Gol Ahora — comprobante generado automáticamente. Conservalo como respaldo.', 105, y + 5, { align: 'center' });
+    doc.text('Gol Ahora — comprobante generado automaticamente. Conservalo como respaldo.', 105, y + 5, { align: 'center' });
+}
+
+function generarPdfModificacionAdmin(original, nuevo) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const nro = nroAleatorio();
+
+    pdfEncabezado(doc, 'MODIFICACION DE RESERVA', [21, 101, 192], nro);
+
+    let y = 50;
+    y = pdfSeccion(doc, 'Datos de la Reserva', y);
+    pdfLinea(doc, 'ID Reserva', '#' + original.id, y); y += 8;
+    pdfLinea(doc, 'Cancha', original.cancha, y); y += 12;
+
+    y = pdfSeccion(doc, 'Detalle del Cambio', y);
+
+    doc.setFillColor(255, 243, 224);
+    doc.roundedRect(20, y, 78, 24, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(180, 80, 0);
+    doc.text('FECHA ANTERIOR', 24, y + 6);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(50, 50, 50);
+    doc.text(original.fecha, 24, y + 13);
+    doc.setFontSize(8.5); doc.setTextColor(100, 100, 100);
+    doc.text(`${original.hora_inicio} — ${original.hora_fin} hs`, 24, y + 19);
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(0, 193, 110);
+    doc.text('→', 103, y + 14, { align: 'center' });
+
+    doc.setFillColor(232, 245, 233);
+    doc.roundedRect(112, y, 78, 24, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(27, 94, 32);
+    doc.text('NUEVA FECHA', 116, y + 6);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(27, 94, 32);
+    doc.text(nuevo.fecha, 116, y + 13);
+    doc.setFontSize(8.5);
+    doc.text(`${nuevo.hora_inicio} — ${nuevo.hora_fin} hs`, 116, y + 19);
+
+    y += 32;
+    doc.setFillColor(235, 245, 255);
+    doc.roundedRect(20, y, 170, 14, 2, 2, 'F');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(80, 80, 160);
+    doc.text('Modificacion realizada por el administrador del club.', 105, y + 6, { align: 'center' });
+    doc.text('El precio y la cancha no se modifican.', 105, y + 11, { align: 'center' });
+
+    pdfPie(doc);
+    doc.save(`golahora-modificacion-admin-nro${nro}.pdf`);
 }
 
 function generarPdfCancelacionAdmin(r) {
@@ -310,26 +363,23 @@ function generarPdfCancelacionAdmin(r) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const nro = nroAleatorio();
 
-    pdfEncabezado(doc, 'CANCELACIÓN DE RESERVA', [200, 50, 50], nro);
+    pdfEncabezado(doc, 'CANCELACION DE RESERVA', [200, 50, 50], nro);
 
     let y = 50;
     y = pdfSeccion(doc, 'Turno Cancelado', y);
-
-    pdfLinea(doc, 'ID Reserva',    '#' + r.id,                        y); y += 8;
+    pdfLinea(doc, 'ID Reserva',    '#' + r.id,                              y); y += 8;
     pdfLinea(doc, 'Cliente',       `${r.cliente_nombre} ${r.cliente_apellido}`, y); y += 8;
-    pdfLinea(doc, 'Email',         r.cliente_email,                   y); y += 8;
-    pdfLinea(doc, 'Cancha',        r.cancha,                          y); y += 8;
-    pdfLinea(doc, 'Fecha del turno', r.fecha,                         y); y += 8;
-    pdfLinea(doc, 'Horario',       `${r.hora_inicio} — ${r.hora_fin} hs`, y); y += 8;
-    pdfLinea(doc, 'Monto',         `$${r.monto}`,                     y); y += 8;
-    pdfLinea(doc, 'Metodo de pago', r.metodo_pago,                    y); y += 12;
+    pdfLinea(doc, 'Email',         r.cliente_email,                         y); y += 8;
+    pdfLinea(doc, 'Cancha',        r.cancha,                                y); y += 8;
+    pdfLinea(doc, 'Fecha del turno', r.fecha,                               y); y += 8;
+    pdfLinea(doc, 'Horario',       `${r.hora_inicio} — ${r.hora_fin} hs`,   y); y += 8;
+    pdfLinea(doc, 'Monto',         `$${r.monto}`,                           y); y += 8;
+    pdfLinea(doc, 'Metodo de pago', r.metodo_pago,                          y); y += 12;
 
     y = pdfSeccion(doc, 'Nota', y);
     doc.setFillColor(255, 243, 224);
     doc.roundedRect(20, y, 170, 14, 2, 2, 'F');
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(80, 80, 80);
     doc.text('Reserva cancelada por el administrador del club.', 105, y + 6, { align: 'center' });
     doc.text('Para consultas, acercate a la recepcion del club.', 105, y + 11, { align: 'center' });
 
@@ -346,54 +396,23 @@ function generarPdfPagoConfirmado(r) {
 
     let y = 50;
     y = pdfSeccion(doc, 'Detalle del Pago', y);
-
-    pdfLinea(doc, 'ID Reserva',    '#' + r.id,                        y); y += 8;
+    pdfLinea(doc, 'ID Reserva',    '#' + r.id,                              y); y += 8;
     pdfLinea(doc, 'Cliente',       `${r.cliente_nombre} ${r.cliente_apellido}`, y); y += 8;
-    pdfLinea(doc, 'Email',         r.cliente_email,                   y); y += 8;
-    pdfLinea(doc, 'Cancha',        r.cancha,                          y); y += 8;
-    pdfLinea(doc, 'Fecha del turno', r.fecha,                         y); y += 8;
-    pdfLinea(doc, 'Horario',       `${r.hora_inicio} — ${r.hora_fin} hs`, y); y += 8;
-    pdfLinea(doc, 'Monto abonado', `$${r.monto}`,                     y); y += 8;
-    pdfLinea(doc, 'Metodo de pago', r.metodo_pago,                    y); y += 12;
+    pdfLinea(doc, 'Email',         r.cliente_email,                         y); y += 8;
+    pdfLinea(doc, 'Cancha',        r.cancha,                                y); y += 8;
+    pdfLinea(doc, 'Fecha del turno', r.fecha,                               y); y += 8;
+    pdfLinea(doc, 'Horario',       `${r.hora_inicio} — ${r.hora_fin} hs`,   y); y += 8;
+    pdfLinea(doc, 'Monto abonado', `$${r.monto}`,                           y); y += 8;
+    pdfLinea(doc, 'Metodo de pago', r.metodo_pago,                          y); y += 12;
 
     y = pdfSeccion(doc, 'Estado', y);
     doc.setFillColor(232, 245, 233);
     doc.roundedRect(20, y, 170, 14, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(27, 94, 32);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(27, 94, 32);
     doc.text('PAGO CONFIRMADO', 105, y + 6, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(70, 70, 70);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(70, 70, 70);
     doc.text('El pago fue registrado en efectivo en recepcion por el administrador.', 105, y + 11, { align: 'center' });
 
     pdfPie(doc);
     doc.save(`golahora-recibo-pago-nro${nro}.pdf`);
-}
-
-    if (!confirm.isConfirmed) return;
-
-    const userId = localStorage.getItem("userId");
-    try {
-        const res = await fetch(`/admin/cobros/${id_cobro}/confirmar`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'x-user-id': userId }
-        });
-        if (res.ok) {
-            const reserva = reservasData.find(r => r.id_cobro == id_cobro);
-            console.log("reservasData:", reservasData);
-            console.log("id_cobro buscado:", id_cobro);
-            console.log("reserva encontrada:", reserva);
-            if (reserva) generarPdfPagoConfirmado(reserva);
-            await Swal.fire({ icon: 'success', title: 'Listo!', text: 'Pago confirmado. Se descargo el recibo.', confirmButtonColor: '#00C16E' });
-            await cargarReservas();
-        } else {
-            const data = await res.json().catch(() => ({}));
-            await Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Error al confirmar.', confirmButtonColor: '#00C16E' });
-        }
-    } catch (e) {
-        await Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar.', confirmButtonColor: '#00C16E' });
-    }
 }
